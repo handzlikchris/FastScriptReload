@@ -9,15 +9,19 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CSharp;
+using QuickCodeIteration.Scripts.Runtime;
+using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
-//TODO: that's an editor script, move
-// [InitializeOnLoad]
-public class QuickCodeIterationManager: MonoBehaviour
+[InitializeOnLoad]
+public class QuickCodeIterationManager
 {
     private static List<FileSystemWatcher> _fileWatchers = new List<FileSystemWatcher>();
-    
+
+    private static QuickCodeIterationManager _instance;
+    public static QuickCodeIterationManager Instance => _instance ??= new QuickCodeIterationManager();
+
     private void OnWatchedFileChange(object source, FileSystemEventArgs e)
     {
         var stopwatch = new Stopwatch();
@@ -27,7 +31,7 @@ public class QuickCodeIterationManager: MonoBehaviour
         Debug.Log($"File: {e.Name} changed - recompiled (took {stopwatch.ElapsedMilliseconds}ms)");
     }
 
-    public void StartWatchingFile(string fullFilePath)
+    public void StartWatchingFile(string fullFilePath) 
     {
         //TODO: make sure file is not already watched
         
@@ -43,16 +47,19 @@ public class QuickCodeIterationManager: MonoBehaviour
         _fileWatchers.Add(fileWatcher);
     }
 
-    private void Start()
+    static QuickCodeIterationManager()
     {
-        SetupTestOnly();
-        DynamicallyUpdateMethodsInWatchedFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Scripts\ClassDoDynamicallyUpdate.cs");
+        if (EditorApplication.isPlayingOrWillChangePlaymode)
+        {
+            Instance.SetupTestOnly();
+            // Instance.DynamicallyUpdateMethodsInWatchedFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Scripts\Runtime\ClassDoDynamicallyUpdate.cs");
+        }
     }
 
     private void SetupTestOnly()
     {
-        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Scripts\ClassDoDynamicallyUpdate.cs");
-        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Scripts\OtherClassToDynamicallyUpdate.cs");
+        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Scripts\Runtime\ClassDoDynamicallyUpdate.cs");
+        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Scripts\Runtime\OtherClassToDynamicallyUpdate.cs");
         StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Examples\Scripts\FunctionLibrary.cs");
     }
     
@@ -61,59 +68,9 @@ public class QuickCodeIterationManager: MonoBehaviour
         var fileCode = File.ReadAllText(fullFilePath);
         var dynamicallyLoadedAssemblyWithUpdates = Compile(fileCode); //TODO: make sure to unload old assy and destory
 
-        //TODO: how to unload previously generated assembly?
-        var allTypesInNonDynamicGeneratedAssemblies = AppDomain.CurrentDomain.GetAssemblies()
-            .Where(a => !a.GetCustomAttributes<DynamicallyCreatedAssemblyAttribute>().Any())
-            .SelectMany(a => a.GetTypes())
-            .ToList();
-
-        var excludeMethodsDefinedOnTypes = new List<Type>
-        {
-            typeof(MonoBehaviour),
-            typeof(Behaviour),
-            typeof(UnityEngine.Object),
-            typeof(Component),
-            typeof(System.Object)
-        }; //TODO: move out and possibly define a way to exclude all non-client created code? as this will crash editor
-
-        const BindingFlags ALL_METHODS_BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic |
-                                                       BindingFlags.Static | BindingFlags.Instance |
-                                                       BindingFlags.FlattenHierarchy; //TODO: move out
-        
-        foreach (var createdType in  dynamicallyLoadedAssemblyWithUpdates.GetTypes()
-                     .Where(t => t.IsClass 
-                                 && !typeof(Delegate).IsAssignableFrom(t) //don't redirect delegates
-                        )
-                 )
-        {
-            var matchingTypeInExistingAssemblies = allTypesInNonDynamicGeneratedAssemblies.SingleOrDefault(t => t.FullName == createdType.FullName);
-            if (matchingTypeInExistingAssemblies != null)
-            {
-                var allMethodsInExistingType = matchingTypeInExistingAssemblies.GetMethods(ALL_METHODS_BINDING_FLAGS)
-                    .Where(m => !excludeMethodsDefinedOnTypes.Contains(m.DeclaringType))
-                    .ToList();
-                foreach (var createdTypeMethodToUpdate in createdType.GetMethods(ALL_METHODS_BINDING_FLAGS)
-                             .Where(m => !excludeMethodsDefinedOnTypes.Contains(m.DeclaringType)))
-                {
-                    var matchingMethodInExistingType = allMethodsInExistingType.SingleOrDefault(m => m.FullDescription() == createdTypeMethodToUpdate.FullDescription());
-                    if (matchingMethodInExistingType != null)
-                    {
-                        Memory.DetourMethod(matchingMethodInExistingType, createdTypeMethodToUpdate);
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Method: {createdTypeMethodToUpdate.FullDescription()} does not exist in initially compiled type: {matchingTypeInExistingAssemblies.FullName}. " +
-                                         $"Adding new methods at runtime is not supported. Make sure to add method before initial compilation.");
-                    }
-                }
-            }
-            else
-            {
-                Debug.LogWarning($"Unable to find existing type for: {createdType.FullName} from file: '{fullFilePath}'");    
-            }
-        }
+        // AssemblyChangesLoader.DynamicallyUpdateMethodsForCreatedAssembly(fullFilePath, dynamicallyLoadedAssemblyWithUpdates); //TODO: reenable
     }
-    
+
     public static Assembly Compile(string source)
     {
         var providerOptions = new Dictionary<string, string>();
@@ -132,7 +89,7 @@ public class QuickCodeIterationManager: MonoBehaviour
         }
         
         param.GenerateExecutable = false;
-        param.GenerateInMemory = true;
+        param.GenerateInMemory = false; //TODO: move back to memory once it can be properly serialized into byte array without file?
 
         var dynamicallyCreatedAssemblyAttributeSourceCore = GenerateSourceCodeForAddCustomAttributeToGeneratedAssembly(param, provider, typeof(DynamicallyCreatedAssemblyAttribute), Guid.NewGuid().ToString());
         
@@ -147,7 +104,9 @@ public class QuickCodeIterationManager: MonoBehaviour
             throw new Exception(msg.ToString());
         }
         
-        // Return the assembly
+        //TODO: get that refactored so it's not always executing
+        CompiledDllSender.Instance.SendDll(File.ReadAllBytes(result.CompiledAssembly.Location));
+        
         return result.CompiledAssembly;
     }
 
@@ -167,16 +126,5 @@ public class QuickCodeIterationManager: MonoBehaviour
         var assemblyInfo = new StringWriter();
         provider.GenerateCodeFromCompileUnit(unit, assemblyInfo, new CodeGeneratorOptions());
         return assemblyInfo.ToString();
-    }
-
-    [AttributeUsage(AttributeTargets.Assembly)]
-    public class DynamicallyCreatedAssemblyAttribute : Attribute
-    {
-        public string GenerationIdentifier { get; }
-
-        public DynamicallyCreatedAssemblyAttribute(string generationIdentifier)
-        {
-            GenerationIdentifier = generationIdentifier;
-        }
     }
 }
