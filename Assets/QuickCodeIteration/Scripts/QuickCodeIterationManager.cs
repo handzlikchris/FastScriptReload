@@ -47,7 +47,7 @@ public class QuickCodeIterationManager: MonoBehaviour
     {
         StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Scripts\ClassDoDynamicallyUpdate.cs");
         StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Scripts\OtherClassToDynamicallyUpdate.cs");
-
+        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Examples\Scripts\FunctionLibrary.cs");
     }
     
     public void DynamicallyUpdateMethodsInWatchedFile(string fullFilePath)
