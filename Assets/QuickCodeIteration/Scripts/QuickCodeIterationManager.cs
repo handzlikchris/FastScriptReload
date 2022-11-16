@@ -4,11 +4,13 @@ using System.Reflection;
 using HarmonyLib;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CSharp;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 //TODO: that's an editor script, move
 // [InitializeOnLoad]
@@ -18,7 +20,11 @@ public class QuickCodeIterationManager: MonoBehaviour
     
     private void OnWatchedFileChange(object source, FileSystemEventArgs e)
     {
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+        
         DynamicallyUpdateMethodsInWatchedFile(e.FullPath);
+        Debug.Log($"File: {e.Name} changed - recompiled (took {stopwatch.ElapsedMilliseconds}ms)");
     }
 
     public void StartWatchingFile(string fullFilePath)
@@ -53,7 +59,7 @@ public class QuickCodeIterationManager: MonoBehaviour
     public void DynamicallyUpdateMethodsInWatchedFile(string fullFilePath)
     {
         var fileCode = File.ReadAllText(fullFilePath);
-        var dynamicallyLoadedAssemblyWithUpdates = Compile(fileCode);
+        var dynamicallyLoadedAssemblyWithUpdates = Compile(fileCode); //TODO: make sure to unload old assy and destory
 
         //TODO: how to unload previously generated assembly?
         var allTypesInNonDynamicGeneratedAssemblies = AppDomain.CurrentDomain.GetAssemblies()
@@ -74,7 +80,11 @@ public class QuickCodeIterationManager: MonoBehaviour
                                                        BindingFlags.Static | BindingFlags.Instance |
                                                        BindingFlags.FlattenHierarchy; //TODO: move out
         
-        foreach (var createdType in  dynamicallyLoadedAssemblyWithUpdates.GetTypes())
+        foreach (var createdType in  dynamicallyLoadedAssemblyWithUpdates.GetTypes()
+                     .Where(t => t.IsClass 
+                                 && !typeof(Delegate).IsAssignableFrom(t) //don't redirect delegates
+                        )
+                 )
         {
             var matchingTypeInExistingAssemblies = allTypesInNonDynamicGeneratedAssemblies.SingleOrDefault(t => t.FullName == createdType.FullName);
             if (matchingTypeInExistingAssemblies != null)
