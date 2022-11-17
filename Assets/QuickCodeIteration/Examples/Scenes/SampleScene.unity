@@ -167,7 +167,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b003c6d68714cc68973204cf3578af4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _runInEditor: 0
+  _runInEditor: 1
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -422,6 +422,8 @@ MonoBehaviour:
   pointPrefab: {fileID: 3202990579698914344, guid: ec31e6d0518df49b48b4a8821e725be6, type: 3}
   resolution: 100
   function: 2
+  _testIterationCounter: 1
+  _testUMove: 0
 --- !u!4 &1490306275
 Transform:
   m_ObjectHideFlags: 0

@@ -3,12 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
+using MonoMod.Utils;
 using UnityEngine;
 
 namespace QuickCodeIteration.Scripts.Runtime
 {
     public class AssemblyChangesLoader
     {
+        public const string ON_HOT_RELOAD_METHOD_NAME = "OnScriptHotReload";
+        public delegate void OnScriptHotReloadFn();
+
+
         public static void DynamicallyUpdateMethodsForCreatedAssembly(string fullFilePath, Assembly dynamicallyLoadedAssemblyWithUpdates)
         {
             //TODO: how to unload previously generated assembly?
@@ -55,6 +60,15 @@ namespace QuickCodeIteration.Scripts.Runtime
                             Debug.LogWarning($"Method: {createdTypeMethodToUpdate.FullDescription()} does not exist in initially compiled type: {matchingTypeInExistingAssemblies.FullName}. " +
                                              $"Adding new methods at runtime is not supported. Make sure to add method before initial compilation.");
                         }
+                    }
+                    
+                    var onScriptHotReloadFnForType = matchingTypeInExistingAssemblies.GetMethod(ON_HOT_RELOAD_METHOD_NAME, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    if (onScriptHotReloadFnForType != null)
+                    {
+                        foreach (var instanceOfType in GameObject.FindObjectsOfType(matchingTypeInExistingAssemblies)) //TODO: perf - could find them in different way?
+                        {
+                            onScriptHotReloadFnForType.Invoke(instanceOfType, null);
+                        } 
                     }
                 }
                 else

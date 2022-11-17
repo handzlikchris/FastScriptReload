@@ -26,9 +26,16 @@ public class QuickCodeIterationManager
     {
         var stopwatch = new Stopwatch();
         stopwatch.Start();
-        
-        DynamicallyUpdateMethodsInWatchedFile(e.FullPath);
-        Debug.Log($"File: {e.Name} changed - recompiled (took {stopwatch.ElapsedMilliseconds}ms)");
+
+        try
+        {
+            DynamicallyUpdateMethodsInWatchedFile(e.FullPath);
+            Debug.Log($"File: {e.Name} changed - recompiled (took {stopwatch.ElapsedMilliseconds}ms)");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error when updating '{e.FullPath}', {ex}");
+        }
     }
 
     public void StartWatchingFile(string fullFilePath) 
@@ -61,6 +68,7 @@ public class QuickCodeIterationManager
         StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Scripts\Runtime\ClassDoDynamicallyUpdate.cs");
         StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Scripts\Runtime\OtherClassToDynamicallyUpdate.cs");
         StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Examples\Scripts\FunctionLibrary.cs");
+        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Examples\Scripts\Graph.cs");
     }
     
     public void DynamicallyUpdateMethodsInWatchedFile(string fullFilePath)
@@ -84,7 +92,8 @@ public class QuickCodeIterationManager
         
         // Add ALL of the assembly references
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()
-                     .Where(a => excludeAssyNames.All(assyName => !a.FullName.StartsWith(assyName)))) {
+                     .Where(a => excludeAssyNames.All(assyName => !a.FullName.StartsWith(assyName) 
+                                                                  && a.GetCustomAttribute<DynamicallyCreatedAssemblyAttribute>() == null))) {
             param.ReferencedAssemblies.Add(assembly.Location);
         }
         

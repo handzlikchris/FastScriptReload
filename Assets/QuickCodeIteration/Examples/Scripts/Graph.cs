@@ -12,16 +12,22 @@ public class Graph : MonoBehaviour {
 	[SerializeField]
 	FunctionLibrary.FunctionName function;
 
+	[SerializeField] private int _testIterationCounter = 1;
+	[SerializeField] [Range(-3, 3)] private float _testUMove = 0f;
+
 	Transform[] points;
 
-	void Awake () {
+	void Awake ()
+	{
+		var pointsHolderGo = new GameObject("PointsHolder");
+		
 		float step = 2f / resolution;
 		var scale = Vector3.one * step;
 		points = new Transform[resolution * resolution];
 		for (int i = 0; i < points.Length; i++) {
 			Transform point = points[i] = Instantiate(pointPrefab);
 			point.localScale = scale;
-			point.SetParent(transform, false);
+			point.SetParent(pointsHolderGo.transform, false);
 		}
 	}
 
@@ -37,7 +43,14 @@ public class Graph : MonoBehaviour {
 				v = (z + 0.5f) * step - 1f;
 			}
 			float u = (x + 0.5f) * step - 1f;
-			points[i].localPosition = f(u, v, time);
+			points[i].localPosition = f(u + _testUMove, v, time);
 		}
+
+		_testIterationCounter++;
+	}
+
+	void OnScriptHotReload()
+	{
+		Debug.Log("Script hot reloaded");
 	}
 }
