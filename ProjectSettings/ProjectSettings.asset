@@ -155,6 +155,7 @@ PlayerSettings:
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
+    Android: com.DefaultCompany.QuickCodeIteration
     Standalone: com.DefaultCompany.QuickCodeIteration
   buildNumber:
     Standalone: 0

@@ -18,12 +18,21 @@ using Debug = UnityEngine.Debug;
 public class QuickCodeIterationManager
 {
     private static List<FileSystemWatcher> _fileWatchers = new List<FileSystemWatcher>();
+    private static PlayModeStateChange LastPlayModeStateChange;
 
     private static QuickCodeIterationManager _instance;
     public static QuickCodeIterationManager Instance => _instance ??= new QuickCodeIterationManager();
 
     private void OnWatchedFileChange(object source, FileSystemEventArgs e)
     {
+        if (LastPlayModeStateChange != PlayModeStateChange.EnteredPlayMode)
+        {
+#if QuickCodeIterationManager_DebugEnabled
+            Debug.Log($"Application not playing, change to: {e.Name} won't be compiled and hot reloaded"); //TODO: remove when not in testing?
+#endif
+            return;
+        }
+        
         var stopwatch = new Stopwatch();
         stopwatch.Start();
 
@@ -56,11 +65,18 @@ public class QuickCodeIterationManager
 
     static QuickCodeIterationManager()
     {
+        EditorApplication.playModeStateChanged += OnEditorApplicationOnplayModeStateChanged;
+        
         if (EditorApplication.isPlayingOrWillChangePlaymode)
         {
             Instance.SetupTestOnly();
             // Instance.DynamicallyUpdateMethodsInWatchedFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Scripts\Runtime\ClassDoDynamicallyUpdate.cs");
         }
+    }
+
+    private static void OnEditorApplicationOnplayModeStateChanged(PlayModeStateChange obj)
+    {
+        LastPlayModeStateChange = obj;
     }
 
     private void SetupTestOnly()

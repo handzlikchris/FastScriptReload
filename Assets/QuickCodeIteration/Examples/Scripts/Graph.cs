@@ -1,4 +1,6 @@
 //Example comes from https://bitbucket.org/catlikecodingunitytutorials/basics-02-building-a-graph/src/master/
+
+using System;
 using UnityEngine;
 
 public class Graph : MonoBehaviour {
@@ -51,6 +53,31 @@ public class Graph : MonoBehaviour {
 
 	void OnScriptHotReload()
 	{
-		Debug.Log("Script hot reloaded");
+		Debug.Log("Script hot reloaded"); 
+	}
+}
+
+//Dynamically adding new types, OnScriptHotReloadNewTypeAdded will trigger and allow setup, re-add for test
+public class NewMonoBehaviourTest : MonoBehaviour
+{
+	static void OnScriptHotReloadNewTypeAdded()
+	{
+		var go = new GameObject("TestDynamic");
+		go.AddComponent<NewMonoBehaviourTest>();
+	}
+
+	void Start()
+	{
+		Debug.Log("Start - NewMonoBehaviourTest");
+	}
+
+	private void Update()
+	{
+		Debug.Log("test 123");
+	}
+
+	void OnScriptHotReload()
+	{
+		Debug.Log("Script hot reloaded"); 
 	}
 }

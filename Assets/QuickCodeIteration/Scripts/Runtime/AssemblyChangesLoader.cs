@@ -11,6 +11,7 @@ namespace QuickCodeIteration.Scripts.Runtime
     public class AssemblyChangesLoader
     {
         public const string ON_HOT_RELOAD_METHOD_NAME = "OnScriptHotReload";
+        public const string ON_HOT_RELOAD_NEW_TYPE_ADDED_STATIC_METHOD_NAME = "OnScriptHotReloadNewTypeAdded";
         public delegate void OnScriptHotReloadFn();
 
 
@@ -73,7 +74,12 @@ namespace QuickCodeIteration.Scripts.Runtime
                 }
                 else
                 {
-                    Debug.LogWarning($"Unable to find existing type for: {createdType.FullName} from file: '{fullFilePath}'");
+                    Debug.LogWarning($"Unable to find existing type for: {createdType.FullName} from file: '{fullFilePath}', this is not an issue if you added new type");                    
+                    var onScriptHotReloadStaticFnForType = createdType.GetMethod(ON_HOT_RELOAD_NEW_TYPE_ADDED_STATIC_METHOD_NAME, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                    if (onScriptHotReloadStaticFnForType != null)
+                    {
+                        onScriptHotReloadStaticFnForType.Invoke(null, null);
+                    }
                 }
             }
         }
