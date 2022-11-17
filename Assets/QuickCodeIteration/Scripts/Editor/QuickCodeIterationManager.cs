@@ -106,11 +106,39 @@ public class QuickCodeIterationManager
             "mscorlib"
         };
         
-        // Add ALL of the assembly references
+        var referencesToAdd = new List<string>();
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()
                      .Where(a => excludeAssyNames.All(assyName => !a.FullName.StartsWith(assyName) 
-                                                                  && a.GetCustomAttribute<DynamicallyCreatedAssemblyAttribute>() == null))) {
-            param.ReferencedAssemblies.Add(assembly.Location);
+                                                                  && a.GetCustomAttribute<DynamicallyCreatedAssemblyAttribute>() == null))) 
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(assembly.Location))
+                {
+                    throw new Exception("Assembly location is null");
+                }
+                referencesToAdd.Add(assembly.Location);;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Unable to add a reference to assembly as unable to get location or null: {assembly.FullName} when hot-reloading, this is likely dynamic assembly and won't cause issues");
+            }
+        }
+
+        //TODO: work out why 120? is it for every project, or also dependant on other factors like actual project location?
+        //TODO: it's not 120 - for main project it seemed to be but for this one is not, something else is at play - need to work out
+        const int MaxPathCharsInReferenceLocationBeforeExceptionThrown = 120; 
+        foreach (var referenceToAdd in referencesToAdd.Where(r => r.Length < MaxPathCharsInReferenceLocationBeforeExceptionThrown))
+        {
+            param.ReferencedAssemblies.Add(referenceToAdd);
+        }
+        
+        var referencesOverPathLenghtLimit = referencesToAdd.Where(r => r.Length >= MaxPathCharsInReferenceLocationBeforeExceptionThrown).ToList();
+        if (referencesOverPathLenghtLimit.Count > 0)
+        {
+            Debug.LogWarning($"Assembly references locations are over allowed {MaxPathCharsInReferenceLocationBeforeExceptionThrown} this seems to be existing limitation which will prevent assembly from being compiled," +
+                             $"currently there's no known fix - if possible moving those assembles (probably whole project) to root level of drive and shortening project folder name could help." +
+                             $"\r\nReferences:{string.Join(Environment.NewLine, referencesOverPathLenghtLimit)}");
         }
         
         param.GenerateExecutable = false;
