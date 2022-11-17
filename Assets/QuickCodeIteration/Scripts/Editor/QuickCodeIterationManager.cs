@@ -127,7 +127,7 @@ public class QuickCodeIterationManager
 
         //TODO: work out why 120? is it for every project, or also dependant on other factors like actual project location?
         //TODO: it's not 120 - for main project it seemed to be but for this one is not, something else is at play - need to work out
-        const int MaxPathCharsInReferenceLocationBeforeExceptionThrown = 120; 
+        const int MaxPathCharsInReferenceLocationBeforeExceptionThrown = 250; 
         foreach (var referenceToAdd in referencesToAdd.Where(r => r.Length < MaxPathCharsInReferenceLocationBeforeExceptionThrown))
         {
             param.ReferencedAssemblies.Add(referenceToAdd);

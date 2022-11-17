@@ -58,26 +58,27 @@ public class Graph : MonoBehaviour {
 }
 
 //Dynamically adding new types, OnScriptHotReloadNewTypeAdded will trigger and allow setup, re-add for test
-public class NewMonoBehaviourTest : MonoBehaviour
-{
-	static void OnScriptHotReloadNewTypeAdded()
-	{
-		var go = new GameObject("TestDynamic");
-		go.AddComponent<NewMonoBehaviourTest>();
-	}
-
-	void Start()
-	{
-		Debug.Log("Start - NewMonoBehaviourTest");
-	}
-
-	private void Update()
-	{
-		Debug.Log("test 123");
-	}
-
-	void OnScriptHotReload()
-	{
-		Debug.Log("Script hot reloaded"); 
-	}
-}
+// public class NewMonoBehaviourTest : MonoBehaviour
+// {
+// 	static void OnScriptHotReloadNewTypeAdded()
+// 	{
+// 		var go = new GameObject("TestDynamic");
+// 		go.AddComponent<NewMonoBehaviourTest>();
+// 	}
+//
+// 	void Start()
+// 	{
+// 		Debug.Log("Start - NewMonoBehaviourTest");
+// 		GameObject.CreatePrimitive(PrimitiveType.Cube);
+// 	}
+//
+// 	private void Update()
+// 	{
+// 		Debug.Log("test 123");
+// 	}
+//
+// 	void OnScriptHotReload()
+// 	{
+// 		Debug.Log("Script hot reloaded"); 
+// 	}
+// }
