@@ -85,6 +85,8 @@ public class QuickCodeIterationManager
         StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Scripts\Runtime\OtherClassToDynamicallyUpdate.cs");
         StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Examples\Scripts\FunctionLibrary.cs");
         StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Examples\Scripts\Graph.cs");
+        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Examples\Scripts\ExistingSingletonTest.cs");
+        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Examples\Scripts\SingletonAccessorTest.cs");
     }
     
     public void DynamicallyUpdateMethodsInWatchedFile(string fullFilePath)
@@ -146,7 +148,9 @@ public class QuickCodeIterationManager
 
         var dynamicallyCreatedAssemblyAttributeSourceCore = GenerateSourceCodeForAddCustomAttributeToGeneratedAssembly(param, provider, typeof(DynamicallyCreatedAssemblyAttribute), Guid.NewGuid().ToString());
         
-        var result = provider.CompileAssemblyFromSource(param, source, dynamicallyCreatedAssemblyAttributeSourceCore);
+        //prevent namespace clash, and add new lines to ensure code doesn't end / start with a comment which would cause compilation issues, nested namespaces are fine
+        var sourceCodeNestedInNamespaceToPreventSameTypeClash = $"namespace {AssemblyChangesLoader.NAMESPACE_ADDED_FOR_CREATED_CLASS}{Environment.NewLine}{{{source} {Environment.NewLine}}}";
+        var result = provider.CompileAssemblyFromSource(param, sourceCodeNestedInNamespaceToPreventSameTypeClash, dynamicallyCreatedAssemblyAttributeSourceCore);
     
         if (result.Errors.Count > 0) {
             var msg = new StringBuilder();

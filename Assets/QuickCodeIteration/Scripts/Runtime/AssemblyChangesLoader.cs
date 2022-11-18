@@ -10,6 +10,7 @@ namespace QuickCodeIteration.Scripts.Runtime
 {
     public class AssemblyChangesLoader
     {
+        public const string NAMESPACE_ADDED_FOR_CREATED_CLASS = "REQUIRED_TO_PREVENT_FULLNAME_CLASH";
         public const string ON_HOT_RELOAD_METHOD_NAME = "OnScriptHotReload";
         public const string ON_HOT_RELOAD_NEW_TYPE_ADDED_STATIC_METHOD_NAME = "OnScriptHotReloadNewTypeAdded";
         public delegate void OnScriptHotReloadFn();
@@ -42,16 +43,19 @@ namespace QuickCodeIteration.Scripts.Runtime
                          )
                     )
             {
-                var matchingTypeInExistingAssemblies = allTypesInNonDynamicGeneratedAssemblies.SingleOrDefault(t => t.FullName == createdType.FullName);
+                var createdTypeWithoutNamespaceFix = RemoveNamespaceFix(createdType.FullName);
+                var matchingTypeInExistingAssemblies = allTypesInNonDynamicGeneratedAssemblies.SingleOrDefault(t => t.FullName == createdTypeWithoutNamespaceFix);
                 if (matchingTypeInExistingAssemblies != null)
                 {
+
                     var allMethodsInExistingType = matchingTypeInExistingAssemblies.GetMethods(ALL_METHODS_BINDING_FLAGS)
                         .Where(m => !excludeMethodsDefinedOnTypes.Contains(m.DeclaringType))
                         .ToList();
                     foreach (var createdTypeMethodToUpdate in createdType.GetMethods(ALL_METHODS_BINDING_FLAGS)
                                  .Where(m => !excludeMethodsDefinedOnTypes.Contains(m.DeclaringType)))
                     {
-                        var matchingMethodInExistingType = allMethodsInExistingType.SingleOrDefault(m => m.FullDescription() == createdTypeMethodToUpdate.FullDescription());
+                        var createdTypeMethodToUpdateFullDescriptionWithoutNamespaceFix = RemoveNamespaceFix(createdTypeMethodToUpdate.FullDescription());
+                        var matchingMethodInExistingType = allMethodsInExistingType.SingleOrDefault(m => m.FullDescription() == createdTypeMethodToUpdateFullDescriptionWithoutNamespaceFix);
                         if (matchingMethodInExistingType != null)
                         {
                             Memory.DetourMethod(matchingMethodInExistingType, createdTypeMethodToUpdate);
@@ -82,6 +86,11 @@ namespace QuickCodeIteration.Scripts.Runtime
                     }
                 }
             }
+        }
+
+        private static string RemoveNamespaceFix(string fqdn)
+        {
+            return fqdn.Replace($"{NAMESPACE_ADDED_FOR_CREATED_CLASS}.", string.Empty);
         }
     }
     
