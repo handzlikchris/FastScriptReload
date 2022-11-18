@@ -13,7 +13,7 @@ public class Graph : MonoBehaviour {
 
 	[SerializeField]
 	FunctionLibrary.FunctionName function;
-
+	
 	[SerializeField] private int _testIterationCounter = 1;
 	[SerializeField] [Range(-3, 3)] private float _testUMove = 0f;
 
@@ -40,11 +40,11 @@ public class Graph : MonoBehaviour {
 	}
 
 	void Update()
-	{ 
-		FunctionLibrary.Function f = FunctionLibrary.GetFunction(function);
-		float time = Time.time;
-		float step = 2f / resolution;
-		float v = 0.5f * step - 1f;
+	{
+		var f = FunctionLibrary.GetFunction(function);
+		var time = Time.time;
+		var step = 2f / resolution;
+		var v = 0.5f * step - 1f;
 		for (int i = 0, x = 0, z = 0; i < points.Length; i++, x++)
 		{
 			if (x == resolution)
@@ -54,7 +54,7 @@ public class Graph : MonoBehaviour {
 				v = (z + 0.5f) * step - 1f;
 			}
 
-			float u = (x + 0.5f) * step - 1f;
+			var u = (x + 0.5f) * step - 1f;
 			points[i].localPosition = f(u + _testUMove, v, time);
 		}
 
