@@ -10,7 +10,7 @@ namespace QuickCodeIteration.Scripts.Runtime
 {
     public class AssemblyChangesLoader
     {
-        public const string NAMESPACE_ADDED_FOR_CREATED_CLASS = "REQUIRED_TO_PREVENT_FULLNAME_CLASH";
+        public const string NAMESPACE_ADDED_FOR_CREATED_CLASS = "QuickCodeIterationGenerated_";
         public const string ON_HOT_RELOAD_METHOD_NAME = "OnScriptHotReload";
         public const string ON_HOT_RELOAD_NEW_TYPE_ADDED_STATIC_METHOD_NAME = "OnScriptHotReloadNewTypeAdded";
         public delegate void OnScriptHotReloadFn();
@@ -67,14 +67,7 @@ namespace QuickCodeIteration.Scripts.Runtime
                         }
                     }
                     
-                    var onScriptHotReloadFnForType = matchingTypeInExistingAssemblies.GetMethod(ON_HOT_RELOAD_METHOD_NAME, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                    if (onScriptHotReloadFnForType != null)
-                    {
-                        foreach (var instanceOfType in GameObject.FindObjectsOfType(matchingTypeInExistingAssemblies)) //TODO: perf - could find them in different way?
-                        {
-                            onScriptHotReloadFnForType.Invoke(instanceOfType, null);
-                        } 
-                    }
+                    FindAndExecuteOnScriptHotReload(matchingTypeInExistingAssemblies);
                 }
                 else
                 {
@@ -84,6 +77,20 @@ namespace QuickCodeIteration.Scripts.Runtime
                     {
                         onScriptHotReloadStaticFnForType.Invoke(null, null);
                     }
+                    
+                    FindAndExecuteOnScriptHotReload(createdType);
+                }
+            }
+        }
+
+        private static void FindAndExecuteOnScriptHotReload(Type type)
+        {
+            var onScriptHotReloadFnForType = type.GetMethod(ON_HOT_RELOAD_METHOD_NAME, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (onScriptHotReloadFnForType != null)
+            {
+                foreach (var instanceOfType in GameObject.FindObjectsOfType(type)) //TODO: perf - could find them in different way?
+                {
+                    onScriptHotReloadFnForType.Invoke(instanceOfType, null);
                 }
             }
         }
