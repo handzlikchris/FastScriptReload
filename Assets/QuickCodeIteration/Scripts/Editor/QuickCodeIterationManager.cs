@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.CSharp;
 using QuickCodeIteration.Scripts.Runtime;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -87,6 +88,8 @@ public class QuickCodeIterationManager
         StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Examples\Scripts\Graph.cs");
         StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Examples\Scripts\ExistingSingletonTest.cs");
         StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Examples\Scripts\SingletonAccessorTest.cs");
+        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\Scripts\ExistingSingletonTest.cs");
+        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\Scripts\OtherSingletonTest.cs");
     }
     
     public void DynamicallyUpdateMethodsInWatchedFile(string fullFilePath)
