@@ -17,6 +17,8 @@ public class Graph : MonoBehaviour {
 	[SerializeField] private int _testIterationCounter = 1;
 	[SerializeField] [Range(-3, 3)] private float _testUMove = 0f;
 
+	private int _dynAdded = 1;
+
 	Transform[] points;
 
 	void Awake ()
@@ -41,6 +43,8 @@ public class Graph : MonoBehaviour {
 
 	void Update()
 	{
+		Debug.Log(_dynAdded);
+		
 		var f = FunctionLibrary.GetFunction(function);
 		var time = Time.time;
 		var step = 2f / resolution;

@@ -28,3 +28,7 @@ eg
 
 - dynamically added fields will not run inline initializer, eg `private int _dynamicallyAddedField; = 1` will not initialize to 1, you have to do that in `OnScriptHotReload()` method
 - dynamically added fields will only show in editor after full reload
+
+## Networked Version
+- add info about broadcast and option to directly specify IP,
+- add basic info about fw

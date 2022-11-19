@@ -18,10 +18,10 @@ using Debug = UnityEngine.Debug;
 [InitializeOnLoad]
 public class QuickCodeIterationManager
 {
-    private static List<FileSystemWatcher> _fileWatchers = new List<FileSystemWatcher>();
     private static PlayModeStateChange LastPlayModeStateChange;
 
     private static QuickCodeIterationManager _instance;
+    private List<FileSystemWatcher> _fileWatchers = new List<FileSystemWatcher>();
     public static QuickCodeIterationManager Instance => _instance ??= new QuickCodeIterationManager();
 
     private void OnWatchedFileChange(object source, FileSystemEventArgs e)
@@ -48,10 +48,22 @@ public class QuickCodeIterationManager
         }
     }
 
-    public void StartWatchingFile(string fullFilePath) 
+    public void StartWatchingDirectoryAndSubdirectories(string directoryPath) 
     {
-        //TODO: make sure file is not already watched
+        var fileWatcher = new FileSystemWatcher();
+        fileWatcher.Path = new FileInfo(directoryPath).Directory.FullName;
+        fileWatcher.IncludeSubdirectories = true;
+        fileWatcher.Filter =  "*.cs";
+        fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
+        fileWatcher.Changed += OnWatchedFileChange;
         
+        fileWatcher.EnableRaisingEvents = true;
+        
+        _fileWatchers.Add(fileWatcher);
+    }
+    
+    public void StartWatchingSingleFile(string fullFilePath) 
+    {
         var fileWatcher = new FileSystemWatcher();
         var fileToWatch = new FileInfo(fullFilePath);
         fileWatcher.Path = fileToWatch.Directory.FullName;
@@ -70,28 +82,24 @@ public class QuickCodeIterationManager
         
         if (EditorApplication.isPlayingOrWillChangePlaymode)
         {
-            Instance.SetupTestOnly();
-            // Instance.DynamicallyUpdateMethodsInWatchedFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Scripts\Runtime\ClassDoDynamicallyUpdate.cs");
+            Instance.StartWatchingDirectoryAndSubdirectories(Application.dataPath);
         }
     }
 
     private static void OnEditorApplicationOnplayModeStateChanged(PlayModeStateChange obj)
     {
         LastPlayModeStateChange = obj;
+
+        if (obj == PlayModeStateChange.ExitingPlayMode && Instance._fileWatchers.Any())
+        {
+            foreach (var fileWatcher in Instance._fileWatchers)
+            {
+                fileWatcher.Dispose();
+            }
+            Instance._fileWatchers.Clear();
+        }
     }
 
-    private void SetupTestOnly()
-    {
-        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Scripts\Runtime\ClassDoDynamicallyUpdate.cs");
-        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Scripts\Runtime\OtherClassToDynamicallyUpdate.cs");
-        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Examples\Scripts\FunctionLibrary.cs");
-        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Examples\Scripts\Graph.cs");
-        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Examples\Scripts\ExistingSingletonTest.cs");
-        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Examples\Scripts\SingletonAccessorTest.cs");
-        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\Scripts\ExistingSingletonTest.cs");
-        StartWatchingFile(@"E:\_src-unity\QuickCodeIteration\Assets\Scripts\OtherSingletonTest.cs");
-    }
-    
     public void DynamicallyUpdateMethodsInWatchedFile(string fullFilePath)
     {
         var fileCode = File.ReadAllText(fullFilePath);
