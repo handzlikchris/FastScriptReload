@@ -14,17 +14,24 @@ using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 [InitializeOnLoad]
+[PreventHotReload]
 public class QuickCodeIterationManager
 {
-    private static PlayModeStateChange LastPlayModeStateChange;
-
     private static QuickCodeIterationManager _instance;
-    private List<FileSystemWatcher> _fileWatchers = new List<FileSystemWatcher>();
-    public static QuickCodeIterationManager Instance => _instance ??= new QuickCodeIterationManager();
+    public static QuickCodeIterationManager Instance => _instance ?? (_instance = new QuickCodeIterationManager());
 
+    private PlayModeStateChange _lastPlayModeStateChange;
+    private List<FileSystemWatcher> _fileWatchers = new List<FileSystemWatcher>();
+
+    private List<DynamicFileHotReloadState> _dynamicFileHotReloadStateEntries = new List<DynamicFileHotReloadState>();
+
+    private float _batchChangesEveryNSeconds = 5f; //TODO: expose, and make larger by default
+    private DateTime _lastTimeChangeBatchRun = default(DateTime);
+    private bool _executeOnlyInPlaymode = true; //TODO: potentially later add editor support - needed?
+    
     private void OnWatchedFileChange(object source, FileSystemEventArgs e)
     {
-        if (LastPlayModeStateChange != PlayModeStateChange.EnteredPlayMode)
+        if (_lastPlayModeStateChange != PlayModeStateChange.EnteredPlayMode)
         {
 #if QuickCodeIterationManager_DebugEnabled
             Debug.Log($"Application not playing, change to: {e.Name} won't be compiled and hot reloaded"); //TODO: remove when not in testing?
@@ -32,18 +39,7 @@ public class QuickCodeIterationManager
             return;
         }
         
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
-
-        try
-        {
-            DynamicallyUpdateMethodsInWatchedFile(e.FullPath);
-            Debug.Log($"File: {e.Name} changed - recompiled (took {stopwatch.ElapsedMilliseconds}ms)");
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError($"Error when updating '{e.FullPath}', {ex}");
-        }
+        _dynamicFileHotReloadStateEntries.Add(new DynamicFileHotReloadState(e.FullPath, DateTime.UtcNow));
     }
 
     public void StartWatchingDirectoryAndSubdirectories(string directoryPath) 
@@ -76,7 +72,8 @@ public class QuickCodeIterationManager
 
     static QuickCodeIterationManager()
     {
-        EditorApplication.playModeStateChanged += OnEditorApplicationOnplayModeStateChanged;
+        EditorApplication.update += Instance.Update;
+        EditorApplication.playModeStateChanged += Instance.OnEditorApplicationOnplayModeStateChanged;
         
         if (EditorApplication.isPlayingOrWillChangePlaymode)
         {
@@ -84,9 +81,83 @@ public class QuickCodeIterationManager
         }
     }
 
-    private static void OnEditorApplicationOnplayModeStateChanged(PlayModeStateChange obj)
+    private void Update()
     {
-        LastPlayModeStateChange = obj;
+        if (_executeOnlyInPlaymode && !EditorApplication.isPlayingOrWillChangePlaymode)
+        {
+            return;
+        }
+        
+        if ((DateTime.UtcNow - _lastTimeChangeBatchRun).TotalSeconds > _batchChangesEveryNSeconds)
+        {
+            Debug.Log("Batch run");
+            
+             var changesAwaitingHotReload = _dynamicFileHotReloadStateEntries
+                .Where(e => e.IsAwaitingCompilation)
+                .ToList();
+
+            if (changesAwaitingHotReload.Any())
+            {
+                List<string> sourceCodeFilesWithUniqueChangesAwaitingHotReload = null;
+                try
+                {
+                    var stopwatch = new Stopwatch();
+                    stopwatch.Start();
+                    
+                    sourceCodeFilesWithUniqueChangesAwaitingHotReload = changesAwaitingHotReload.GroupBy(e => e.FullFileName)
+                        .Select(e => e.First().FullFileName).ToList();
+
+                    var dynamicallyLoadedAssemblyCompilerResult = Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload.Select(File.ReadAllText).ToList(), false);
+                    if (!dynamicallyLoadedAssemblyCompilerResult.Errors.HasErrors)
+                    {
+                        changesAwaitingHotReload.ForEach(c =>
+                        {
+                            c.FileCompiledOn = DateTime.UtcNow;
+                            c.AssemblyNameCompiledIn = dynamicallyLoadedAssemblyCompilerResult.CompiledAssembly.FullName;
+                        });
+                        
+                        //TODO: return some proper results to make sure entries are correctly updated
+                        AssemblyChangesLoader.DynamicallyUpdateMethodsForCreatedAssembly(dynamicallyLoadedAssemblyCompilerResult.CompiledAssembly); //TODO: reenable, refactor to support networked version only with compilation symbol
+                        changesAwaitingHotReload.ForEach(c => c.HotSwappedOn = DateTime.UtcNow); //TODO: technically not all were hot swapped at same time
+                        
+                        Debug.Log($"Files: {string.Join(",", sourceCodeFilesWithUniqueChangesAwaitingHotReload.Select(fn => new FileInfo(fn).Name))} changed - hot-reloaded (took {stopwatch.ElapsedMilliseconds}ms)");
+                        
+                        //TODO: reenable network, track perf differently
+                        // CompiledDllSender.Instance.SendDll(File.ReadAllBytes(dynamicallyLoadedAssemblyCompilerResult.CompiledAssembly.Location));
+                    }
+                    else
+                    {
+                        if (dynamicallyLoadedAssemblyCompilerResult.Errors.Count > 0) {
+                            var msg = new StringBuilder();
+                            foreach (CompilerError error in dynamicallyLoadedAssemblyCompilerResult.Errors) {
+                                msg.Append($"Error  when compiling, it's best to check code and make sure it's compilable (and also not using C# language feature set that is not supported, eg ??=\r\n line:{error.Line} ({error.ErrorNumber}): {error.ErrorText}\n");
+                            }
+                            var errorMessage = msg.ToString();
+                            
+                            changesAwaitingHotReload.ForEach(c =>
+                            {
+                                c.ErrorOn = DateTime.UtcNow;
+                                c.ErrorText = errorMessage;
+                            });
+
+                            throw new Exception();
+                        } 
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"Error when updating files: '{(sourceCodeFilesWithUniqueChangesAwaitingHotReload != null ? string.Join(",",sourceCodeFilesWithUniqueChangesAwaitingHotReload.Select(fn => new FileInfo(fn).Name)): "unknown")}', {ex}");
+                }
+                
+            }
+            
+            _lastTimeChangeBatchRun = DateTime.UtcNow;
+        }
+    }
+
+    private void OnEditorApplicationOnplayModeStateChanged(PlayModeStateChange obj)
+    {
+        Instance._lastPlayModeStateChange = obj;
 
         if (obj == PlayModeStateChange.ExitingPlayMode && Instance._fileWatchers.Any())
         {
@@ -97,16 +168,13 @@ public class QuickCodeIterationManager
             Instance._fileWatchers.Clear();
         }
     }
-
+    
     public void DynamicallyUpdateMethodsInWatchedFile(string fullFilePath)
     {
-        var fileCode = File.ReadAllText(fullFilePath);
-        var dynamicallyLoadedAssemblyWithUpdates = Compile(fileCode); //TODO: make sure to unload old assy and destory
-
-        // AssemblyChangesLoader.DynamicallyUpdateMethodsForCreatedAssembly(fullFilePath, dynamicallyLoadedAssemblyWithUpdates); //TODO: reenable
+        throw  new NotImplementedException("//TODO: expose API methods that people can easily use, eg force update for file"); //TODO <
     }
 
-    public static Assembly Compile(string source)
+    public static CompilerResults Compile(List<string> fileSourceCode, bool compileOnlyInMemory)
     {
         var providerOptions = new Dictionary<string, string>();
         var provider = new CSharpCodeProvider(providerOptions);
@@ -132,7 +200,7 @@ public class QuickCodeIterationManager
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Unable to add a reference to assembly as unable to get location or null: {assembly.FullName} when hot-reloading, this is likely dynamic assembly and won't cause issues");
+                Debug.LogWarning($"Unable to add a reference to assembly as unable to get location or null: {assembly.FullName} when hot-reloading, this is likely dynamic assembly and won't cause issues");
             }
         }
 
@@ -153,27 +221,14 @@ public class QuickCodeIterationManager
         }
         
         param.GenerateExecutable = false;
-        param.GenerateInMemory = false; //TODO: move back to memory once it can be properly serialized into byte array without file?
+        param.GenerateInMemory = compileOnlyInMemory;
 
         var dynamicallyCreatedAssemblyAttributeSourceCore = GenerateSourceCodeForAddCustomAttributeToGeneratedAssembly(param, provider, typeof(DynamicallyCreatedAssemblyAttribute), Guid.NewGuid().ToString());
         
         //prevent namespace clash, and add new lines to ensure code doesn't end / start with a comment which would cause compilation issues, nested namespaces are fine
-        var sourceCodeNestedInNamespaceToPreventSameTypeClash = $"namespace {AssemblyChangesLoader.NAMESPACE_ADDED_FOR_CREATED_CLASS}{Environment.NewLine}{{{source} {Environment.NewLine}}}";
-        var result = provider.CompileAssemblyFromSource(param, sourceCodeNestedInNamespaceToPreventSameTypeClash, dynamicallyCreatedAssemblyAttributeSourceCore);
-    
-        if (result.Errors.Count > 0) {
-            var msg = new StringBuilder();
-            foreach (CompilerError error in result.Errors) {
-                msg.AppendFormat("Error ({0}): {1}\n",
-                    error.ErrorNumber, error.ErrorText);
-            }
-            throw new Exception(msg.ToString());
-        }
-        
-        //TODO: get that refactored so it's not always executing
-        CompiledDllSender.Instance.SendDll(File.ReadAllBytes(result.CompiledAssembly.Location));
-        
-        return result.CompiledAssembly;
+        var sourceCodeNestedInNamespaceToPreventSameTypeClash = fileSourceCode.Select(fSc => $"namespace {AssemblyChangesLoader.NAMESPACE_ADDED_FOR_CREATED_CLASS}{Environment.NewLine}{{{fSc} {Environment.NewLine}}}");
+        var sourceCodeCombined = string.Join(Environment.NewLine, sourceCodeNestedInNamespaceToPreventSameTypeClash);
+        return provider.CompileAssemblyFromSource(param, sourceCodeCombined, dynamicallyCreatedAssemblyAttributeSourceCore);
     }
 
     private static string GenerateSourceCodeForAddCustomAttributeToGeneratedAssembly(CompilerParameters param, CSharpCodeProvider provider, Type customAttributeType, 
@@ -192,5 +247,29 @@ public class QuickCodeIterationManager
         var assemblyInfo = new StringWriter();
         provider.GenerateCodeFromCompileUnit(unit, assemblyInfo, new CodeGeneratorOptions());
         return assemblyInfo.ToString();
+    }
+}
+
+public class DynamicFileHotReloadState
+{
+    public string FullFileName { get; set; }
+    public DateTime FileChangedOn { get; set; }
+    public bool IsAwaitingCompilation => !IsFileCompiled && !ErrorOn.HasValue;
+    public bool IsFileCompiled => FileCompiledOn.HasValue;
+    public DateTime? FileCompiledOn { get; set; }
+    
+    public string AssemblyNameCompiledIn { get; set; }
+
+    public bool IsAwaitingHotSwap => IsFileCompiled && !HotSwappedOn.HasValue;
+    public DateTime? HotSwappedOn { get; set; }
+    public bool IsChangeHotSwapped {get; set; }
+    
+    public string ErrorText { get; set; }
+    public DateTime? ErrorOn { get; set; }
+
+    public DynamicFileHotReloadState(string fullFileName, DateTime fileChangedOn)
+    {
+        FullFileName = fullFileName;
+        FileChangedOn = fileChangedOn;
     }
 }

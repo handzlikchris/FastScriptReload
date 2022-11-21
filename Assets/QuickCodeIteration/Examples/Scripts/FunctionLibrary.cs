@@ -1,7 +1,9 @@
 using UnityEngine;
-
-using static UnityEngine.Mathf;
-
+namespace OddNamespace
+{
+    using static UnityEngine.Mathf;
+    
+    
 public static class FunctionLibrary {
 
     public delegate Vector3 Function (float u, float v, float t);
@@ -63,4 +65,5 @@ public static class FunctionLibrary {
         p.z = s * Cos(PI * u);
         return p;
     }
+}
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
-using MonoMod.Utils;
 using UnityEngine;
 
 namespace QuickCodeIteration.Scripts.Runtime
@@ -16,7 +15,7 @@ namespace QuickCodeIteration.Scripts.Runtime
         public delegate void OnScriptHotReloadFn();
 
 
-        public static void DynamicallyUpdateMethodsForCreatedAssembly(string fullFilePath, Assembly dynamicallyLoadedAssemblyWithUpdates)
+        public static void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates)
         {
             //TODO: how to unload previously generated assembly?
             var allTypesInNonDynamicGeneratedAssemblies = AppDomain.CurrentDomain.GetAssemblies()
@@ -43,11 +42,17 @@ namespace QuickCodeIteration.Scripts.Runtime
                          )
                     )
             {
+                if (createdType.GetCustomAttribute<PreventHotReload>() != null)
+                {
+                    //TODO: ideally type would be excluded from compilation not just from detour
+                    Debug.Log($"Type: {createdType.Name} marked as {nameof(PreventHotReload)} - ignoring change.");
+                    continue;
+                }
+                
                 var createdTypeWithoutNamespaceFix = RemoveNamespaceFix(createdType.FullName);
                 var matchingTypeInExistingAssemblies = allTypesInNonDynamicGeneratedAssemblies.SingleOrDefault(t => t.FullName == createdTypeWithoutNamespaceFix);
                 if (matchingTypeInExistingAssemblies != null)
                 {
-
                     var allMethodsInExistingType = matchingTypeInExistingAssemblies.GetMethods(ALL_METHODS_BINDING_FLAGS)
                         .Where(m => !excludeMethodsDefinedOnTypes.Contains(m.DeclaringType))
                         .ToList();
@@ -71,7 +76,7 @@ namespace QuickCodeIteration.Scripts.Runtime
                 }
                 else
                 {
-                    Debug.LogWarning($"Unable to find existing type for: {createdType.FullName} from file: '{fullFilePath}', this is not an issue if you added new type");                    
+                    Debug.LogWarning($"Unable to find existing type for: '{createdType.FullName}', this is not an issue if you added new type");                    
                     var onScriptHotReloadStaticFnForType = createdType.GetMethod(ON_HOT_RELOAD_NEW_TYPE_ADDED_STATIC_METHOD_NAME, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
                     if (onScriptHotReloadStaticFnForType != null)
                     {
@@ -111,5 +116,11 @@ namespace QuickCodeIteration.Scripts.Runtime
         {
             GenerationIdentifier = generationIdentifier;
         }
+    }
+
+    [AttributeUsage(AttributeTargets.Class)]
+    public class PreventHotReload : Attribute
+    {
+        
     }
 }
