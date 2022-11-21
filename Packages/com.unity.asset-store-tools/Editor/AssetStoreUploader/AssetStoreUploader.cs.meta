@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+<<<<<<< HEAD:Tests/Editor/ScreenshotTest.cs.meta
+guid: 7b5319699cc84194a9a768ad33b86c21
+=======
+guid: b3da785da3e541c4181e955bbf25187c
+>>>>>>> development:Editor/AssetStoreUploader/AssetStoreUploader.cs.meta
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

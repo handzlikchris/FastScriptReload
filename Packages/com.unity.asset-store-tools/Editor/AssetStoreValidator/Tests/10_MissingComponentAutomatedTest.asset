@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d813ff809ae82f643bf975031305d541, type: 3}
+  m_Name: 10_MissingComponentAutomatedTest
+  m_EditorClassIdentifier: 
+  HasBeenInitialized: 1
+  Id: 10
+  Title: Missing components in scenes
+  Description: GameObjects in your scene have been found to have missing components.
+    We do not allow GameObjects to have broken connections.
+  TestMethodName: _10_MissingComponentTest
+  ErrorCategory:
+    Filter: []
+    FilterIsInclusive: 1
+    AppliesToSubCategories: 1
+  WarningCategory:
+    Filter: []
+    FilterIsInclusive: 0
+    AppliesToSubCategories: 1
