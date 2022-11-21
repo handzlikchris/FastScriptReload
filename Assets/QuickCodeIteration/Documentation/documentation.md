@@ -1,4 +1,18 @@
-﻿## Limitations
+﻿# Fast Script Reload
+
+Tool will allow you to iterate quicker on your code. You simply go into play mode, make a change to any file and it'll be 
+compiled on the fly and hot-reloaded in your running play-mode session.
+
+## Getting started
+1) Press play
+2) Make code change
+3) See results
+
+## Limitations
+There are some limitation due to the method taken
+
+### No IL2CPP support
+Asset runs based on specific .NET functionality, IL2CPP builds will not be supported. Although as this is development workflow aid you can build your APK with Mono backend (android) and change later.
 
 ### Adding new fields
 - sometimes when adding new fields you'll get some odd behaviour, this is generally happening when adding values before existing ones (in code)
@@ -32,3 +46,10 @@ eg
 ## Networked Version
 - add info about broadcast and option to directly specify IP,
 - add basic info about fw
+
+### Auto-save
+- make sure to turn off auto save for files in editor (otherwise changes will be picked up)
+- tool will also batch changes and execute new compile every 3 seconds (which can be configured in settings)
+
+### Performance
+Performance should be on par with your standard code. The only hit comes at change time when compilation happens.
