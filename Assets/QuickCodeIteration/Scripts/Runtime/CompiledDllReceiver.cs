@@ -39,7 +39,7 @@ public class CompiledDllReceiver : MonoBehaviour, INetEventListener
         // var instance = Activator.CreateInstance(t);
         // t.GetMethod("ChangeScale", BindingFlags.Instance | BindingFlags.Public)
         //     .Invoke(instance, null);
-        AssemblyChangesLoader.DynamicallyUpdateMethodsForCreatedAssembly("loaded-via-network-add-path", loadedAssembly);
+        AssemblyChangesLoader.DynamicallyUpdateMethodsForCreatedAssembly(loadedAssembly);
     }
 
     void Update()

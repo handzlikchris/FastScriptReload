@@ -465,7 +465,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9add35731b9d90a4a85d4e0aef3f5a7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Instance: {fileID: 0}
+  _stringValue: test 1 other singleton
 --- !u!4 &1246545723
 Transform:
   m_ObjectHideFlags: 0
