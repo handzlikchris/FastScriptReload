@@ -7,8 +7,10 @@ using System.Reflection;
 using UnityEngine;
 using LiteNetLib;
 using LiteNetLib.Utils;
+using QuickCodeIteration.Scripts.Runtime;
 
-public class CompiledDllSender : MonoBehaviour
+[PreventHotReload]
+public class NetworkedAssemblyChangesSender : SingletonBase<NetworkedAssemblyChangesSender>, IAssemblyChangesLoader
 #if UNITY_EDITOR
     , INetEventListener, INetLogger
 #endif
@@ -18,12 +20,8 @@ public class CompiledDllSender : MonoBehaviour
     private NetPeer _ourPeer;
     private NetDataWriter _dataWriter;
     
-    public static CompiledDllSender Instance { get; private set; } 
-
     void Start()
     {
-        Instance = this; //TODO: make sure just one
-        
         NetDebug.Logger = this;
         _dataWriter = new NetDataWriter();
         _netServer = new NetManager(this);
@@ -36,38 +34,16 @@ public class CompiledDllSender : MonoBehaviour
     {
         _netServer.PollEvents();
     }
-
-    [ContextMenu(nameof(SendDllTest))]
-    void SendDllTest()
+    
+    public void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates)
     {
         if (_ourPeer != null)
         {
             _dataWriter.Reset();
-            _dataWriter.Put(new DllData(File.ReadAllBytes(@"F:\_src\!Temp\TestDynamicCompile.dll")));
+            _dataWriter.Put(new DllData(File.ReadAllBytes(dynamicallyLoadedAssemblyWithUpdates.Location)));
             _ourPeer.Send(_dataWriter, DeliveryMethod.ReliableOrdered);
         }
     }
-
-    public void SendDll(byte[] assemblyBytes)
-    {
-        if (_ourPeer != null)
-        {
-            _dataWriter.Reset();
-            _dataWriter.Put(new DllData(assemblyBytes));
-            _ourPeer.Send(_dataWriter, DeliveryMethod.ReliableOrdered);
-        }
-    }
-
-    // void FixedUpdate()
-    // {
-    //     if (_ourPeer != null)
-    //     {
-    //         _dataWriter.Reset();
-    //         _dataWriter.Put(new DllData(File.ReadAllBytes(@"F:\_src\!Temp\TestDynamicCompile.dll"));
-    //         _ourPeer.Send(_dataWriter, DeliveryMethod.ReliableOrdered);
-    //     }
-    // }
-
     void OnDestroy()
     {
         NetDebug.Logger = null;
@@ -86,13 +62,12 @@ public class CompiledDllSender : MonoBehaviour
         Debug.Log("[SERVER] error " + socketErrorCode);
     }
 
-    public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader,
-        UnconnectedMessageType messageType)
+    public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
     {
         if (messageType == UnconnectedMessageType.Broadcast)
         {
             Debug.Log("[SERVER] Received discovery request. Send discovery response");
-            NetDataWriter resp = new NetDataWriter();
+            var resp = new NetDataWriter();
             resp.Put(1);
             _netServer.SendUnconnectedMessage(resp, remoteEndPoint);
         }
@@ -104,7 +79,7 @@ public class CompiledDllSender : MonoBehaviour
 
     public void OnConnectionRequest(ConnectionRequest request)
     {
-        request.AcceptIfKey("sample_app");
+        request.AcceptIfKey(nameof(NetworkedAssemblyChangesLoader));
     }
 
     public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
@@ -122,6 +97,11 @@ public class CompiledDllSender : MonoBehaviour
     {
         Debug.LogFormat(str, args);
     }
+#else
+    public void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates) {
+        throw new Exception("Shouldn't be called in non-editor workflow");
+    }
+
 #endif
 }
 
