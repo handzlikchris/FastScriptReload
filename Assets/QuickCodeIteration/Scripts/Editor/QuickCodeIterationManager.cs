@@ -87,7 +87,6 @@ public class QuickCodeIterationManager
         }
         
         var assemblyChangesLoader = AssemblyChangesLoaderResolver.Instance.Resolve(); //WARN: need to resolve initially in case monobehaviour singleton is not created
-        UnityMainThreadDispatcher.Instance.EnsureInitialized();
         if ((DateTime.UtcNow - _lastTimeChangeBatchRun).TotalSeconds > _batchChangesEveryNSeconds)
         {
             var changesAwaitingHotReload = _dynamicFileHotReloadStateEntries
@@ -96,6 +95,7 @@ public class QuickCodeIterationManager
 
             if (changesAwaitingHotReload.Any())
             {
+                UnityMainThreadDispatcher.Instance.EnsureInitialized();
                 Task.Run(() =>
                 {
                     List<string> sourceCodeFilesWithUniqueChangesAwaitingHotReload = null;
