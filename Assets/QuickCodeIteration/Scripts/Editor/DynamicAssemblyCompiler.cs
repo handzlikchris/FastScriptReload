@@ -12,6 +12,8 @@ using Debug = UnityEngine.Debug;
 
 public class DynamicAssemblyCompiler
 {
+    private const int ReferenceLenghtCountWarningThreshold = 32767 - 2000; //windows can accept up to 32767 chars as args, then it starts thorowing exceptions. MCS.exe is adding references via command /r:<full path>
+
     public static CompilerResults Compile(List<string> filePathsWithSourceCode, bool compileOnlyInMemory)
     {
         var sw = new Stopwatch();
@@ -39,7 +41,7 @@ public class DynamicAssemblyCompiler
                 {
                     throw new Exception("Assembly location is null");
                 }
-                referencesToAdd.Add(assembly.Location);;
+                referencesToAdd.Add(assembly.Location);
             }
             catch (Exception ex)
             {
@@ -47,20 +49,19 @@ public class DynamicAssemblyCompiler
             }
         }
 
-        //TODO: work out why 120? is it for every project, or also dependant on other factors like actual project location?
-        //TODO: it's not 120 - for main project it seemed to be but for this one is not, something else is at play - need to work out
-        const int MaxPathCharsInReferenceLocationBeforeExceptionThrown = 250; 
-        foreach (var referenceToAdd in referencesToAdd.Where(r => r.Length < MaxPathCharsInReferenceLocationBeforeExceptionThrown))
+        var referencePathCharLenght = referencesToAdd.Sum(r => r.Length);
+        if (referencePathCharLenght > ReferenceLenghtCountWarningThreshold)
         {
-            param.ReferencedAssemblies.Add(referenceToAdd);
-        }
-        
-        var referencesOverPathLenghtLimit = referencesToAdd.Where(r => r.Length >= MaxPathCharsInReferenceLocationBeforeExceptionThrown).ToList();
-        if (referencesOverPathLenghtLimit.Count > 0)
-        {
-            Debug.LogWarning($"Assembly references locations are over allowed {MaxPathCharsInReferenceLocationBeforeExceptionThrown} this seems to be existing limitation which will prevent assembly from being compiled," +
-                             $"currently there's no known fix - if possible moving those assembles (probably whole project) to root level of drive and shortening project folder name could help." +
-                             $"\r\nReferences:{string.Join(Environment.NewLine, referencesOverPathLenghtLimit)}");
+            Debug.LogWarning("Windows can accept up to 32767 chars as args, then it starts throwing exceptions. Dynamic compilation will use MCS.exe and will add references via command /r:<full path>, " +
+                             $"currently your assembly have {referencesToAdd.Count} references which full paths amount to: {referencePathCharLenght} chars." +
+                             $"\r\nIf you see this warning likely compilation will fail, you can:" +
+                             $"\r\n1) Move your project to be more top-level, as references take full paths, eg 'c:\\my-source\\stuff\\unity\\my-project\\' - this then gets repeated for many references, moving it close to top level will help" +
+                             $"\r\n2) Remove some of the assemblies if you don't need them" +
+                             "\r\n Please let me know via support email if that's causing you issues, there may be a fix if it's affecting many users, sorry about that!");
+            
+            //TODO: the process is started from Microsoft.CSharp.CSharpCodeGenerator.GenerateCodeFromExpression, potentially all it'd be possible to patch that class to maybe copy all
+            //assemblies to some top-level location and change parameters to run from this folder, with a working directory set, this would drastically reduce char count used by full refs
+            //also mcs.exe allows to compile with -pkg:package1[,packageN], which somewhat bundles multiple references, maybe all unity engine refs could go in there, or all refs in general
         }
         
         param.GenerateExecutable = false;
