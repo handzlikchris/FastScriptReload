@@ -41,7 +41,7 @@ public static class FunctionLibrary {
         p.x = u;
         p.y = Sin(PI * (4f * d - t));
         p.y /= 1f + 10f * d;
-        p.z = v *3f;
+        p.z = v;
         return p;
     }
 

@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
+using ImmersiveVRTools.Runtime.Common;
 using QuickCodeIteration.Scripts.Runtime;
 using UnityEditor;
 using UnityEngine;
@@ -85,6 +87,7 @@ public class QuickCodeIterationManager
         }
         
         var assemblyChangesLoader = AssemblyChangesLoaderResolver.Instance.Resolve(); //WARN: need to resolve initially in case monobehaviour singleton is not created
+        UnityMainThreadDispatcher.Instance.EnsureInitialized();
         if ((DateTime.UtcNow - _lastTimeChangeBatchRun).TotalSeconds > _batchChangesEveryNSeconds)
         {
             var changesAwaitingHotReload = _dynamicFileHotReloadStateEntries
@@ -93,48 +96,51 @@ public class QuickCodeIterationManager
 
             if (changesAwaitingHotReload.Any())
             {
-                List<string> sourceCodeFilesWithUniqueChangesAwaitingHotReload = null;
-                try
+                Task.Run(() =>
                 {
-                    sourceCodeFilesWithUniqueChangesAwaitingHotReload = changesAwaitingHotReload.GroupBy(e => e.FullFileName)
-                        .Select(e => e.First().FullFileName).ToList();
+                    List<string> sourceCodeFilesWithUniqueChangesAwaitingHotReload = null;
+                    try
+                    {
+                        sourceCodeFilesWithUniqueChangesAwaitingHotReload = changesAwaitingHotReload.GroupBy(e => e.FullFileName)
+                            .Select(e => e.First().FullFileName).ToList();
 
-                    var dynamicallyLoadedAssemblyCompilerResult = DynamicAssemblyCompiler.Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload, false);
-                    if (!dynamicallyLoadedAssemblyCompilerResult.Errors.HasErrors)
-                    {
-                        changesAwaitingHotReload.ForEach(c =>
+                        var dynamicallyLoadedAssemblyCompilerResult = DynamicAssemblyCompiler.Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload, false);
+                        if (!dynamicallyLoadedAssemblyCompilerResult.Errors.HasErrors)
                         {
-                            c.FileCompiledOn = DateTime.UtcNow;
-                            c.AssemblyNameCompiledIn = dynamicallyLoadedAssemblyCompilerResult.CompiledAssembly.FullName;
-                        });
-                        
-                        //TODO: return some proper results to make sure entries are correctly updated
-                        assemblyChangesLoader.DynamicallyUpdateMethodsForCreatedAssembly(dynamicallyLoadedAssemblyCompilerResult.CompiledAssembly);
-                        changesAwaitingHotReload.ForEach(c => c.HotSwappedOn = DateTime.UtcNow); //TODO: technically not all were hot swapped at same time
-                    }
-                    else
-                    {
-                        if (dynamicallyLoadedAssemblyCompilerResult.Errors.Count > 0) {
-                            var msg = new StringBuilder();
-                            foreach (CompilerError error in dynamicallyLoadedAssemblyCompilerResult.Errors) {
-                                msg.Append($"Error  when compiling, it's best to check code and make sure it's compilable (and also not using C# language feature set that is not supported, eg ??=\r\n line:{error.Line} ({error.ErrorNumber}): {error.ErrorText}\n");
-                            }
-                            var errorMessage = msg.ToString();
-                            
                             changesAwaitingHotReload.ForEach(c =>
                             {
-                                c.ErrorOn = DateTime.UtcNow;
-                                c.ErrorText = errorMessage;
+                                c.FileCompiledOn = DateTime.UtcNow;
+                                c.AssemblyNameCompiledIn = dynamicallyLoadedAssemblyCompilerResult.CompiledAssembly.FullName;
                             });
+                            
+                            //TODO: return some proper results to make sure entries are correctly updated
+                            assemblyChangesLoader.DynamicallyUpdateMethodsForCreatedAssembly(dynamicallyLoadedAssemblyCompilerResult.CompiledAssembly);
+                            changesAwaitingHotReload.ForEach(c => c.HotSwappedOn = DateTime.UtcNow); //TODO: technically not all were hot swapped at same time
+                        }
+                        else
+                        {
+                            if (dynamicallyLoadedAssemblyCompilerResult.Errors.Count > 0) {
+                                var msg = new StringBuilder();
+                                foreach (CompilerError error in dynamicallyLoadedAssemblyCompilerResult.Errors) {
+                                    msg.Append($"Error  when compiling, it's best to check code and make sure it's compilable (and also not using C# language feature set that is not supported, eg ??=\r\n line:{error.Line} ({error.ErrorNumber}): {error.ErrorText}\n");
+                                }
+                                var errorMessage = msg.ToString();
+                                
+                                changesAwaitingHotReload.ForEach(c =>
+                                {
+                                    c.ErrorOn = DateTime.UtcNow;
+                                    c.ErrorText = errorMessage;
+                                });
 
-                            throw new Exception();
-                        } 
+                                throw new Exception();
+                            } 
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"Error when updating files: '{(sourceCodeFilesWithUniqueChangesAwaitingHotReload != null ? string.Join(",",sourceCodeFilesWithUniqueChangesAwaitingHotReload.Select(fn => new FileInfo(fn).Name)): "unknown")}', {ex}");
-                }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"Error when updating files: '{(sourceCodeFilesWithUniqueChangesAwaitingHotReload != null ? string.Join(",",sourceCodeFilesWithUniqueChangesAwaitingHotReload.Select(fn => new FileInfo(fn).Name)): "unknown")}', {ex}");
+                    }
+                });
             }
             
             _lastTimeChangeBatchRun = DateTime.UtcNow;

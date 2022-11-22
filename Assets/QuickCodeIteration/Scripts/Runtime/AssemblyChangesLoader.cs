@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
+using ImmersiveVRTools.Runtime.Common;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -102,10 +103,13 @@ namespace QuickCodeIteration.Scripts.Runtime
             var onScriptHotReloadFnForType = type.GetMethod(ON_HOT_RELOAD_METHOD_NAME, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (onScriptHotReloadFnForType != null)
             {
-                foreach (var instanceOfType in GameObject.FindObjectsOfType(type)) //TODO: perf - could find them in different way?
+                UnityMainThreadDispatcher.Instance.Enqueue(() =>
                 {
-                    onScriptHotReloadFnForType.Invoke(instanceOfType, null);
-                }
+                    foreach (var instanceOfType in GameObject.FindObjectsOfType(type)) //TODO: perf - could find them in different way?
+                    {
+                        onScriptHotReloadFnForType.Invoke(instanceOfType, null);
+                    }
+                });
             }
         }
 
