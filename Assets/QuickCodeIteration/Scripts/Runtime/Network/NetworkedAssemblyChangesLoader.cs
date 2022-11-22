@@ -1,14 +1,17 @@
-using System;
-using System.IO;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using UnityEngine;
 using LiteNetLib;
 using QuickCodeIteration.Scripts.Runtime;
+using Debug = UnityEngine.Debug;
 
-public class CompiledDllReceiver : MonoBehaviour, INetEventListener
+[PreventHotReload]
+public class NetworkedAssemblyChangesLoader : MonoBehaviour, INetEventListener
 {
+    private static readonly string LOG_PREFIX = $"{nameof(NetworkedAssemblyChangesLoader)}: ";
+
     private NetManager _netClient;
 
     [SerializeField] private bool _runInEditor;
@@ -29,42 +32,16 @@ public class CompiledDllReceiver : MonoBehaviour, INetEventListener
         _netClient.UpdateTime = 15;
         _netClient.Start();
     }
-
-    [ContextMenu(nameof(LoadDll))] //TODO: move away to separate class
-    private void LoadDll(byte[] dllBytes)
-    {
-        var loadedAssembly = Assembly.Load(dllBytes);
-        // var t = asm.GetType("TestDynamicCompileChangeScale");
-        //     
-        // var instance = Activator.CreateInstance(t);
-        // t.GetMethod("ChangeScale", BindingFlags.Instance | BindingFlags.Public)
-        //     .Invoke(instance, null);
-        AssemblyChangesLoader.DynamicallyUpdateMethodsForCreatedAssembly(loadedAssembly);
-    }
-
+    
     void Update()
     {
         _netClient.PollEvents();
 
         var peer = _netClient.FirstPeer;
-        // if (peer != null && peer.ConnectionState == ConnectionState.Connected)
-        // {
-        //     //Fixed delta set to 0.05
-        //     var pos = _clientBallInterpolated.transform.position;
-        //     pos.x = Mathf.Lerp(_oldBallPosX, _newBallPosX, _lerpTime);
-        //     _clientBallInterpolated.transform.position = pos;
-        //
-        //     //Basic lerp
-        //     _lerpTime += Time.deltaTime / Time.fixedDeltaTime;
-        // }
-        // else
-        // {
         if (peer == null)
         {
             _netClient.SendBroadcast(new byte[] {1}, 5000);
         }
-
-        // }
     }
 
     void OnDestroy()
@@ -75,26 +52,35 @@ public class CompiledDllReceiver : MonoBehaviour, INetEventListener
 
     public void OnPeerConnected(NetPeer peer)
     {
-        Debug.Log("[CLIENT] We connected to " + peer.EndPoint);
+        Debug.Log($"{LOG_PREFIX}[CLIENT] connected to " + peer.EndPoint);
     }
 
     public void OnNetworkError(IPEndPoint endPoint, SocketError socketErrorCode)
     {
-        Debug.Log("[CLIENT] We received error " + socketErrorCode);
+        Debug.Log($"{LOG_PREFIX}[CLIENT] received error " + socketErrorCode);
     }
 
     public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, DeliveryMethod deliveryMethod)
     {
-        var dll = reader.Get<DllData>();
-        LoadDll(dll.RawData);
+        //TODO: check how big assembly can be sent?
+        var dllData = reader.Get<DllData>();
+        if (dllData.RawData.Length > 0) //TODO: handle different data types?
+        {
+            var loadedAssembly = Assembly.Load(dllData.RawData);
+            AssemblyChangesLoader.Instance.DynamicallyUpdateMethodsForCreatedAssembly(loadedAssembly);
+        }
+        else
+        {
+            Debug.LogWarning($"{LOG_PREFIX}Received data is not of {nameof(DllData)} type");
+        }
     }
 
     public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
     {
         if (messageType == UnconnectedMessageType.BasicMessage && _netClient.ConnectedPeersCount == 0 && reader.GetInt() == 1)
         {
-            Debug.Log("[CLIENT] Received discovery response. Connecting to: " + remoteEndPoint);
-            _netClient.Connect(remoteEndPoint, "sample_app");
+            Debug.Log($"{LOG_PREFIX}[CLIENT] Received discovery response. Connecting to: " + remoteEndPoint);
+            _netClient.Connect(remoteEndPoint, nameof(NetworkedAssemblyChangesLoader));
         }
     }
 
@@ -110,6 +96,6 @@ public class CompiledDllReceiver : MonoBehaviour, INetEventListener
 
     public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
     {
-        Debug.Log("[CLIENT] We disconnected because " + disconnectInfo.Reason);
+        Debug.Log($"{LOG_PREFIX}[CLIENT] We disconnected because " + disconnectInfo.Reason);
     }
 }

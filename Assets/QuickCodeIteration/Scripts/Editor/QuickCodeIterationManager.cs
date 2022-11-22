@@ -88,6 +88,7 @@ public class QuickCodeIterationManager
             return;
         }
         
+        var assemblyChangesLoader = AssemblyChangesLoaderResolver.Instance.Resolve(); //WARN: need to resolve initially in case monobehaviour singleton is not created
         if ((DateTime.UtcNow - _lastTimeChangeBatchRun).TotalSeconds > _batchChangesEveryNSeconds)
         {
             Debug.Log("Batch run");
@@ -101,13 +102,14 @@ public class QuickCodeIterationManager
                 List<string> sourceCodeFilesWithUniqueChangesAwaitingHotReload = null;
                 try
                 {
-                    var stopwatch = new Stopwatch();
-                    stopwatch.Start();
+                    var sw = new Stopwatch();
+                    sw.Start();
                     
                     sourceCodeFilesWithUniqueChangesAwaitingHotReload = changesAwaitingHotReload.GroupBy(e => e.FullFileName)
                         .Select(e => e.First().FullFileName).ToList();
 
                     var dynamicallyLoadedAssemblyCompilerResult = Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload.Select(File.ReadAllText).ToList(), false);
+                    Debug.Log($"Files: {string.Join(",", sourceCodeFilesWithUniqueChangesAwaitingHotReload.Select(fn => new FileInfo(fn).Name))} changed - compilation (took {sw.ElapsedMilliseconds}ms)");
                     if (!dynamicallyLoadedAssemblyCompilerResult.Errors.HasErrors)
                     {
                         changesAwaitingHotReload.ForEach(c =>
@@ -117,13 +119,8 @@ public class QuickCodeIterationManager
                         });
                         
                         //TODO: return some proper results to make sure entries are correctly updated
-                        AssemblyChangesLoader.DynamicallyUpdateMethodsForCreatedAssembly(dynamicallyLoadedAssemblyCompilerResult.CompiledAssembly); //TODO: reenable, refactor to support networked version only with compilation symbol
+                        assemblyChangesLoader.DynamicallyUpdateMethodsForCreatedAssembly(dynamicallyLoadedAssemblyCompilerResult.CompiledAssembly);
                         changesAwaitingHotReload.ForEach(c => c.HotSwappedOn = DateTime.UtcNow); //TODO: technically not all were hot swapped at same time
-                        
-                        Debug.Log($"Files: {string.Join(",", sourceCodeFilesWithUniqueChangesAwaitingHotReload.Select(fn => new FileInfo(fn).Name))} changed - hot-reloaded (took {stopwatch.ElapsedMilliseconds}ms)");
-                        
-                        //TODO: reenable network, track perf differently
-                        // CompiledDllSender.Instance.SendDll(File.ReadAllBytes(dynamicallyLoadedAssemblyCompilerResult.CompiledAssembly.Location));
                     }
                     else
                     {

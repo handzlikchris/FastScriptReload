@@ -1,22 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace QuickCodeIteration.Scripts.Runtime
 {
-    public class AssemblyChangesLoader
+    [PreventHotReload]
+    public class AssemblyChangesLoader: IAssemblyChangesLoader
     {
         public const string NAMESPACE_ADDED_FOR_CREATED_CLASS = "QuickCodeIterationGenerated_";
         public const string ON_HOT_RELOAD_METHOD_NAME = "OnScriptHotReload";
         public const string ON_HOT_RELOAD_NEW_TYPE_ADDED_STATIC_METHOD_NAME = "OnScriptHotReloadNewTypeAdded";
-        public delegate void OnScriptHotReloadFn();
+        
+        private static AssemblyChangesLoader _instance;
+        public static AssemblyChangesLoader Instance => _instance ?? (_instance = new AssemblyChangesLoader());
 
-
-        public static void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates)
+        public void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates)
         {
+            var sw = new Stopwatch();
+            sw.Start();
+            
             //TODO: how to unload previously generated assembly?
             var allTypesInNonDynamicGeneratedAssemblies = AppDomain.CurrentDomain.GetAssemblies()
                 .Where(a => !a.GetCustomAttributes<DynamicallyCreatedAssemblyAttribute>().Any())
@@ -86,6 +93,8 @@ namespace QuickCodeIteration.Scripts.Runtime
                     FindAndExecuteOnScriptHotReload(createdType);
                 }
             }
+            
+            Debug.Log($"Hot-reload completed (took {sw.ElapsedMilliseconds}ms)");
         }
 
         private static void FindAndExecuteOnScriptHotReload(Type type)
@@ -123,4 +132,9 @@ namespace QuickCodeIteration.Scripts.Runtime
     {
         
     }
+}
+
+public interface IAssemblyChangesLoader
+{
+    void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates);
 }
