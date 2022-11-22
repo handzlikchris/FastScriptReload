@@ -708,7 +708,7 @@ PlayerSettings:
   webGLThreadsSupport: 0
   webGLDecompressionFallback: 0
   scriptingDefineSymbols:
-    Android: QuickCodeIteration_LoadAssemblyOverNetwork
+    Android: QuickCodeIteration_LoadAssemblyOverNetwork_Enabled1
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend: {}

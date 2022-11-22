@@ -132,9 +132,10 @@ namespace QuickCodeIteration.Scripts.Runtime
     {
         
     }
+    
+    public interface IAssemblyChangesLoader
+    {
+        void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates);
+    }
 }
 
-public interface IAssemblyChangesLoader
-{
-    void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates);
-}
