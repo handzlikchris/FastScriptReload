@@ -63,7 +63,8 @@ public class DynamicAssemblyCompiler
             //assemblies to some top-level location and change parameters to run from this folder, with a working directory set, this would drastically reduce char count used by full refs
             //also mcs.exe allows to compile with -pkg:package1[,packageN], which somewhat bundles multiple references, maybe all unity engine refs could go in there, or all refs in general
         }
-        
+
+        param.ReferencedAssemblies.AddRange(referencesToAdd.ToArray());
         param.GenerateExecutable = false;
         param.GenerateInMemory = compileOnlyInMemory;
 
