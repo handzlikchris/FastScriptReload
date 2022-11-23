@@ -95,6 +95,11 @@ public class QuickCodeIterationManager
 
             if (changesAwaitingHotReload.Any())
             {
+                changesAwaitingHotReload.ForEach(c =>
+                {
+                    c.IsBeingProcessed = true;
+                });
+                
                 UnityMainThreadDispatcher.Instance.EnsureInitialized();
                 Task.Run(() =>
                 {
@@ -115,14 +120,18 @@ public class QuickCodeIterationManager
                             
                             //TODO: return some proper results to make sure entries are correctly updated
                             assemblyChangesLoader.DynamicallyUpdateMethodsForCreatedAssembly(dynamicallyLoadedAssemblyCompilerResult.CompiledAssembly);
-                            changesAwaitingHotReload.ForEach(c => c.HotSwappedOn = DateTime.UtcNow); //TODO: technically not all were hot swapped at same time
+                            changesAwaitingHotReload.ForEach(c =>
+                            {
+                                c.HotSwappedOn = DateTime.UtcNow;
+                                c.IsBeingProcessed = false;
+                            }); //TODO: technically not all were hot swapped at same time
                         }
                         else
                         {
                             if (dynamicallyLoadedAssemblyCompilerResult.Errors.Count > 0) {
                                 var msg = new StringBuilder();
                                 foreach (CompilerError error in dynamicallyLoadedAssemblyCompilerResult.Errors) {
-                                    msg.Append($"Error  when compiling, it's best to check code and make sure it's compilable (and also not using C# language feature set that is not supported, eg ??=\r\n line:{error.Line} ({error.ErrorNumber}): {error.ErrorText}\n");
+                                    msg.AppendLine($"Error  when compiling, it's best to check code and make sure it's compilable (and also not using C# language feature set that is not supported, eg ??=\r\n line:{error.Line} ({error.ErrorNumber}): {error.ErrorText}\n");
                                 }
                                 var errorMessage = msg.ToString();
                                 
@@ -132,7 +141,7 @@ public class QuickCodeIterationManager
                                     c.ErrorText = errorMessage;
                                 });
 
-                                throw new Exception();
+                                throw new Exception(errorMessage);
                             } 
                         }
                     }
@@ -166,7 +175,7 @@ public class DynamicFileHotReloadState
 {
     public string FullFileName { get; set; }
     public DateTime FileChangedOn { get; set; }
-    public bool IsAwaitingCompilation => !IsFileCompiled && !ErrorOn.HasValue;
+    public bool IsAwaitingCompilation => !IsFileCompiled && !ErrorOn.HasValue && !IsBeingProcessed;
     public bool IsFileCompiled => FileCompiledOn.HasValue;
     public DateTime? FileCompiledOn { get; set; }
     
@@ -178,6 +187,7 @@ public class DynamicFileHotReloadState
     
     public string ErrorText { get; set; }
     public DateTime? ErrorOn { get; set; }
+    public bool IsBeingProcessed { get; set; }
 
     public DynamicFileHotReloadState(string fullFileName, DateTime fileChangedOn)
     {
