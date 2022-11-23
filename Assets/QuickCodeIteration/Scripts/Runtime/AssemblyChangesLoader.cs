@@ -13,7 +13,7 @@ namespace QuickCodeIteration.Scripts.Runtime
     [PreventHotReload]
     public class AssemblyChangesLoader: IAssemblyChangesLoader
     {
-        public const string NAMESPACE_ADDED_FOR_CREATED_CLASS = "QuickCodeIterationGenerated_";
+        public const string ClassnamePatchedPostfix = "__Patched_";
         public const string ON_HOT_RELOAD_METHOD_NAME = "OnScriptHotReload";
         public const string ON_HOT_RELOAD_NEW_TYPE_ADDED_STATIC_METHOD_NAME = "OnScriptHotReloadNewTypeAdded";
         
@@ -57,8 +57,8 @@ namespace QuickCodeIteration.Scripts.Runtime
                     continue;
                 }
                 
-                var createdTypeWithoutNamespaceFix = RemoveNamespaceFix(createdType.FullName);
-                var matchingTypeInExistingAssemblies = allTypesInNonDynamicGeneratedAssemblies.SingleOrDefault(t => t.FullName == createdTypeWithoutNamespaceFix);
+                var createdTypeNameWithoutPatchedPostfix = RemoveClassPostfix(createdType.FullName);
+                var matchingTypeInExistingAssemblies = allTypesInNonDynamicGeneratedAssemblies.SingleOrDefault(t => t.FullName == createdTypeNameWithoutPatchedPostfix);
                 if (matchingTypeInExistingAssemblies != null)
                 {
                     var allMethodsInExistingType = matchingTypeInExistingAssemblies.GetMethods(ALL_METHODS_BINDING_FLAGS)
@@ -67,8 +67,8 @@ namespace QuickCodeIteration.Scripts.Runtime
                     foreach (var createdTypeMethodToUpdate in createdType.GetMethods(ALL_METHODS_BINDING_FLAGS)
                                  .Where(m => !excludeMethodsDefinedOnTypes.Contains(m.DeclaringType)))
                     {
-                        var createdTypeMethodToUpdateFullDescriptionWithoutNamespaceFix = RemoveNamespaceFix(createdTypeMethodToUpdate.FullDescription());
-                        var matchingMethodInExistingType = allMethodsInExistingType.SingleOrDefault(m => m.FullDescription() == createdTypeMethodToUpdateFullDescriptionWithoutNamespaceFix);
+                        var createdTypeMethodToUpdateFullDescriptionWithoutPatchedClassPostfix = RemoveClassPostfix(createdTypeMethodToUpdate.FullDescription());
+                        var matchingMethodInExistingType = allMethodsInExistingType.SingleOrDefault(m => m.FullDescription() == createdTypeMethodToUpdateFullDescriptionWithoutPatchedClassPostfix);
                         if (matchingMethodInExistingType != null)
                         {
                             Memory.DetourMethod(matchingMethodInExistingType, createdTypeMethodToUpdate);
@@ -113,9 +113,9 @@ namespace QuickCodeIteration.Scripts.Runtime
             }
         }
 
-        private static string RemoveNamespaceFix(string fqdn)
+        private static string RemoveClassPostfix(string fqdn)
         {
-            return fqdn.Replace($"{NAMESPACE_ADDED_FOR_CREATED_CLASS}.", string.Empty);
+            return fqdn.Replace(ClassnamePatchedPostfix, string.Empty);
         }
     }
     

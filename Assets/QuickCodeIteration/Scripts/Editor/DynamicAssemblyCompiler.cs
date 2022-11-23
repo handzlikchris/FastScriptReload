@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Microsoft.CSharp;
 using QuickCodeIteration.Scripts.Runtime;
 using Debug = UnityEngine.Debug;
@@ -13,6 +14,7 @@ using Debug = UnityEngine.Debug;
 public class DynamicAssemblyCompiler
 {
     private const int ReferenceLenghtCountWarningThreshold = 32767 - 2000; //windows can accept up to 32767 chars as args, then it starts thorowing exceptions. MCS.exe is adding references via command /r:<full path>
+    private const string ClassNameRegexPattern = @"(class)(\W+)(?<className>\w+)(:| |\r\n|\n|{)"; //TODO: what about struct hot-reloads?
 
     public static CompilerResults Compile(List<string> filePathsWithSourceCode, bool compileOnlyInMemory)
     {
@@ -70,9 +72,9 @@ public class DynamicAssemblyCompiler
 
         var dynamicallyCreatedAssemblyAttributeSourceCore = GenerateSourceCodeForAddCustomAttributeToGeneratedAssembly(param, provider, typeof(DynamicallyCreatedAssemblyAttribute), Guid.NewGuid().ToString());
         
-        //prevent namespace clash, and add new lines to ensure code doesn't end / start with a comment which would cause compilation issues, nested namespaces are fine
-        var sourceCodeNestedInNamespaceToPreventSameTypeClash = fileSourceCode.Select(fSc => $"namespace {AssemblyChangesLoader.NAMESPACE_ADDED_FOR_CREATED_CLASS}{Environment.NewLine}{{{fSc} {Environment.NewLine}}}");
-        var sourceCodeCombined = string.Join(Environment.NewLine, sourceCodeNestedInNamespaceToPreventSameTypeClash);
+        //TODO: regex is quite problematic, use Roslyn instead? lots of dlls to include, something more lightweight
+        var sourceCodeWithClassNamesAdjusted = fileSourceCode.Select(fileCode => Regex.Replace(fileCode, ClassNameRegexPattern, "$1$2${className}" + AssemblyChangesLoader.ClassnamePatchedPostfix + "$3" ));
+        var sourceCodeCombined = string.Join(Environment.NewLine, sourceCodeWithClassNamesAdjusted);
         Debug.Log($"Files: {string.Join(",", filePathsWithSourceCode.Select(fn => new FileInfo(fn).Name))} changed - compilation (took {sw.ElapsedMilliseconds}ms)");
         
         return provider.CompileAssemblyFromSource(param, sourceCodeCombined, dynamicallyCreatedAssemblyAttributeSourceCore);
