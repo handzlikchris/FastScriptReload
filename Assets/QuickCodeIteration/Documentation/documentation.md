@@ -11,6 +11,63 @@ compiled on the fly and hot-reloaded in your running play-mode session.
 ## Limitations
 There are some limitation due to the method taken
 
+### Passing `this` reference to method that expect concrete class implementation
+It'll throw compilation error `The best overloaded method match for xxx has some invalid arguments` - this is due to the fact that changed code is technically different type.
+The code will need to be adjusted to depend on some abstraction instead (before hot-reload)
+
+This code would cause the above error.
+```
+public class EnemyController: MonoBehaviour { 
+    EnemyManager m_EnemyManager;
+
+    void Start()
+    {
+        //calling this causes issues as after hot-reload the type of EnemyController will change
+        m_EnemyManager.RegisterEnemy(this);
+    }
+}
+
+public class EnemyManager : MonoBehaviour {
+    public void RegisterEnemy(EnemyController enemy) { //RegisterEnemy method expects parameter of concrete type (EnemyController) 
+        //impementation
+    }
+}
+```
+
+It could be changed to support hot-reload in following way.
+
+1) Don't depend on concrete implementations, instead use interfaces/abstraction
+```
+public class EnemyController: MonoBehaviour, IRegistrableEnemy { 
+    EnemyManager m_EnemyManager;
+
+    void Start()
+    {
+        //calling this causes issues as after hot-reload the type of EnemyController will change
+        m_EnemyManager.RegisterEnemy(this);
+    }
+}
+
+public class EnemyManager : MonoBehaviour {
+    public void RegisterEnemy(IRegistrableEnemy enemy) { //Using interface will go around error
+        //impementation
+    }
+}
+
+public interface IRegistrableEnemy
+{
+    //implementation
+}
+```
+
+2) Adjust method param to have common base class
+```
+public class EnemyManager : MonoBehaviour {
+    public void RegisterEnemy(MonoBehaviour enemy) { //Using common MonoBehaviour will go around error
+        //impementation
+    }
+}
+```
 ### No IL2CPP support
 Asset runs based on specific .NET functionality, IL2CPP builds will not be supported. Although as this is development workflow aid you can build your APK with Mono backend (android) and change later.
 
@@ -53,3 +110,6 @@ eg
 
 ### Performance
 Performance should be on par with your standard code. The only hit comes at change time when compilation happens.
+
+### Adding new references
+When you're trying to reference new code in play-mode session that'll fail if assembly is not yet referencing that (most often happens when using AsmDefs that are not yet referencing each other)
