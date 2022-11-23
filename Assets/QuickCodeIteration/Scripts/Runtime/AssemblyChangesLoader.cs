@@ -15,7 +15,7 @@ namespace QuickCodeIteration.Scripts.Runtime
     {
         public const string ClassnamePatchedPostfix = "__Patched_";
         public const string ON_HOT_RELOAD_METHOD_NAME = "OnScriptHotReload";
-        public const string ON_HOT_RELOAD_NEW_TYPE_ADDED_STATIC_METHOD_NAME = "OnScriptHotReloadNewTypeAdded";
+        public const string ON_HOT_RELOAD_NO_INSTANCE_STATIC_METHOD_NAME = "OnScriptHotReloadNoInstance";
         
         private static AssemblyChangesLoader _instance;
         public static AssemblyChangesLoader Instance => _instance ?? (_instance = new AssemblyChangesLoader());
@@ -80,22 +80,31 @@ namespace QuickCodeIteration.Scripts.Runtime
                         }
                     }
                     
+                    FindAndExecuteStaticOnScriptHotReloadNoInstance(createdType);
                     FindAndExecuteOnScriptHotReload(matchingTypeInExistingAssemblies);
                 }
                 else
                 {
-                    Debug.LogWarning($"Unable to find existing type for: '{createdType.FullName}', this is not an issue if you added new type");                    
-                    var onScriptHotReloadStaticFnForType = createdType.GetMethod(ON_HOT_RELOAD_NEW_TYPE_ADDED_STATIC_METHOD_NAME, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-                    if (onScriptHotReloadStaticFnForType != null)
-                    {
-                        onScriptHotReloadStaticFnForType.Invoke(null, null);
-                    }
-                    
+                    Debug.LogWarning($"Unable to find existing type for: '{createdType.FullName}', this is not an issue if you added new type");
+                    FindAndExecuteStaticOnScriptHotReloadNoInstance(createdType);
                     FindAndExecuteOnScriptHotReload(createdType);
                 }
             }
             
             Debug.Log($"Hot-reload completed (took {sw.ElapsedMilliseconds}ms)");
+        }
+
+        private static void FindAndExecuteStaticOnScriptHotReloadNoInstance(Type createdType)
+        {
+            var onScriptHotReloadStaticFnForType = createdType.GetMethod(ON_HOT_RELOAD_NO_INSTANCE_STATIC_METHOD_NAME,
+                BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            if (onScriptHotReloadStaticFnForType != null)
+            {
+                UnityMainThreadDispatcher.Instance.Enqueue(() =>
+                {
+                    onScriptHotReloadStaticFnForType.Invoke(null, null);
+                });
+            }
         }
 
         private static void FindAndExecuteOnScriptHotReload(Type type)

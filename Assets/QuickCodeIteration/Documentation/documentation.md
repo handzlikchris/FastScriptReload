@@ -11,6 +11,9 @@ compiled on the fly and hot-reloaded in your running play-mode session.
 ## Limitations
 There are some limitation due to the method taken
 
+### Debugger can't be attached to changed files
+Right now if you hot-reloaded a file your debug breakpoints will no longer be hit
+
 ### Passing `this` reference to method that expect concrete class implementation
 It'll throw compilation error `The best overloaded method match for xxx has some invalid arguments` - this is due to the fact that changed code is technically different type.
 The code will need to be adjusted to depend on some abstraction instead (before hot-reload)
