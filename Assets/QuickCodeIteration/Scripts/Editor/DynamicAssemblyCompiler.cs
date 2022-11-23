@@ -9,10 +9,19 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using Microsoft.CSharp;
 using QuickCodeIteration.Scripts.Runtime;
+using UnityEditor;
 using Debug = UnityEngine.Debug;
 
+[InitializeOnLoad]
 public class DynamicAssemblyCompiler
 {
+    private static readonly string[] ActiveScriptCompilationDefines;
+    static DynamicAssemblyCompiler()
+    {
+        //needs to be set from main thread
+        ActiveScriptCompilationDefines = EditorUserBuildSettings.activeScriptCompilationDefines;
+    }
+    
     private const int ReferenceLenghtCountWarningThreshold = 32767 - 2000; //windows can accept up to 32767 chars as args, then it starts thorowing exceptions. MCS.exe is adding references via command /r:<full path>
     private const string ClassNameRegexPattern = @"(class)(\W+)(?<className>\w+)(:| |\r\n|\n|{)"; //TODO: what about struct hot-reloads?
 
@@ -45,7 +54,7 @@ public class DynamicAssemblyCompiler
                 }
                 referencesToAdd.Add(assembly.Location);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 Debug.LogWarning($"Unable to add a reference to assembly as unable to get location or null: {assembly.FullName} when hot-reloading, this is likely dynamic assembly and won't cause issues");
             }
@@ -61,7 +70,7 @@ public class DynamicAssemblyCompiler
                              $"\r\n2) Remove some of the assemblies if you don't need them" +
                              "\r\n Please let me know via support email if that's causing you issues, there may be a fix if it's affecting many users, sorry about that!");
             
-            //TODO: the process is started from Microsoft.CSharp.CSharpCodeGenerator.GenerateCodeFromExpression, potentially all it'd be possible to patch that class to maybe copy all
+            //TODO: the process is started from Microsoft.CSharp.CSharpCodeGenerator.FromFileBatch, potentially all it'd be possible to patch that class to maybe copy all
             //assemblies to some top-level location and change parameters to run from this folder, with a working directory set, this would drastically reduce char count used by full refs
             //also mcs.exe allows to compile with -pkg:package1[,packageN], which somewhat bundles multiple references, maybe all unity engine refs could go in there, or all refs in general
         }
@@ -69,7 +78,8 @@ public class DynamicAssemblyCompiler
         param.ReferencedAssemblies.AddRange(referencesToAdd.ToArray());
         param.GenerateExecutable = false;
         param.GenerateInMemory = compileOnlyInMemory;
-
+        providerOptions.Add(PatchMcsArgsGeneration.PreprocessorDirectivesProviderOptionsKey, string.Join(";", ActiveScriptCompilationDefines));
+        
         var dynamicallyCreatedAssemblyAttributeSourceCore = GenerateSourceCodeForAddCustomAttributeToGeneratedAssembly(param, provider, typeof(DynamicallyCreatedAssemblyAttribute), Guid.NewGuid().ToString());
         
         //TODO: regex is quite problematic, use Roslyn instead? lots of dlls to include, something more lightweight
