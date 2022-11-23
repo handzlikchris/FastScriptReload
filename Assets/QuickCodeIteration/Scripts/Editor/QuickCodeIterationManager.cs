@@ -9,7 +9,7 @@ using ImmersiveVRTools.Runtime.Common;
 using QuickCodeIteration.Scripts.Runtime;
 using UnityEditor;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
+using Debug = global::UnityEngine.Debug;
 
 [InitializeOnLoad]
 [PreventHotReload]
