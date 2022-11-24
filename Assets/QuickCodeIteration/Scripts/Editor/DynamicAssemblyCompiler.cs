@@ -23,7 +23,7 @@ public class DynamicAssemblyCompiler
     }
     
     private const int ReferenceLenghtCountWarningThreshold = 32767 - 2000; //windows can accept up to 32767 chars as args, then it starts thorowing exceptions. MCS.exe is adding references via command /r:<full path>
-    private const string TypeNameRegexReplacementPattern = @"(class|struct|enum|delegate)(\W+)(?<className>\w+)(:| |\r\n|\n|{)";
+    private const string TypeNameRegexReplacementPattern = @"(class|struct|enum|delegate)(\W+)(?<typeName>\w+)(:| |\r\n|\n|{)";
 
     public static CompilerResults Compile(List<string> filePathsWithSourceCode, bool compileOnlyInMemory)
     {
@@ -83,13 +83,43 @@ public class DynamicAssemblyCompiler
         var dynamicallyCreatedAssemblyAttributeSourceCore = GenerateSourceCodeForAddCustomAttributeToGeneratedAssembly(param, provider, typeof(DynamicallyCreatedAssemblyAttribute), Guid.NewGuid().ToString());
         
         //TODO: regex is quite problematic, use Roslyn instead? lots of dlls to include, something more lightweight
-        var sourceCodeWithClassNamesAdjusted = fileSourceCode.Select(fileCode => Regex.Replace(fileCode, TypeNameRegexReplacementPattern, "$1$2${className}" + AssemblyChangesLoader.ClassnamePatchedPostfix + "$3" ));
+        var sourceCodeWithClassNamesAdjusted = fileSourceCode.Select(fileCode =>
+        {
+            var sourceCodeWithClassNamesAdjusted = Regex.Replace(fileCode, TypeNameRegexReplacementPattern,
+                    "$1$2${typeName}" + AssemblyChangesLoader.ClassnamePatchedPostfix + "$3");
+            
+            return Hack_EnsureNestedTypeNamesRemainUnchanged(fileCode, sourceCodeWithClassNamesAdjusted);
+        });
         var sourceCodeCombined = string.Join(Environment.NewLine, sourceCodeWithClassNamesAdjusted);
         Debug.Log($"Files: {string.Join(",", filePathsWithSourceCode.Select(fn => new FileInfo(fn).Name))} changed - compilation (took {sw.ElapsedMilliseconds}ms)");
         
         return provider.CompileAssemblyFromSource(param, sourceCodeCombined, dynamicallyCreatedAssemblyAttributeSourceCore);
     }
-    
+
+    private static string Hack_EnsureNestedTypeNamesRemainUnchanged(string fileCode,
+        string sourceCodeWithClassNamesAdjusted)
+    {
+        var matches = Regex.Matches(fileCode, TypeNameRegexReplacementPattern);
+        var originalNamesOfAdjustedTypes = matches.Select(m => m.Groups["typeName"].Value).Distinct().ToList();
+        foreach (var originalTypeName in originalNamesOfAdjustedTypes)
+        {
+            var matchingType = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes())
+                .FirstOrDefault(t =>
+                    t.Name ==
+                    originalTypeName); //TODO: that's very weak, it's entirely possible to have same class name across different namespace, without proper source code parsing it's difficult to tell
+
+            if (matchingType != null && matchingType.IsNested)
+            {
+                //TODO: with proper parsing there'd be no need to adjust like that
+                sourceCodeWithClassNamesAdjusted =
+                    sourceCodeWithClassNamesAdjusted.Replace(
+                        matchingType.Name + AssemblyChangesLoader.ClassnamePatchedPostfix, matchingType.Name);
+            }
+        }
+
+        return sourceCodeWithClassNamesAdjusted;
+    }
+
     private static string GenerateSourceCodeForAddCustomAttributeToGeneratedAssembly(CompilerParameters param, CSharpCodeProvider provider, Type customAttributeType, 
         string customAttributeStringCtorParam) //warn: not very reusable to force single string param like that
     {
