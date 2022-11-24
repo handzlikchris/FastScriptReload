@@ -76,7 +76,9 @@ namespace QuickCodeIteration.Scripts.Runtime
                         else
                         {
                             Debug.LogWarning($"Method: {createdTypeMethodToUpdate.FullDescription()} does not exist in initially compiled type: {matchingTypeInExistingAssemblies.FullName}. " +
-                                             $"Adding new methods at runtime is not supported. Make sure to add method before initial compilation.");
+                                             $"Adding new methods at runtime is not fully supported. \r\n" +
+                                             $"It'll only work new method is only used by declaring class (eg private method)\r\n" +
+                                             $"Make sure to add method before initial compilation.");
                         }
                     }
                     

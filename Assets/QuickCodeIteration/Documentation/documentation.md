@@ -71,18 +71,39 @@ public class EnemyManager : MonoBehaviour {
     }
 }
 ```
+
+### Creating new methods
+Hot swapped new methods will only work in case of private methods (eg only called by changed code)
+
+
 ### No IL2CPP support
 Asset runs based on specific .NET functionality, IL2CPP builds will not be supported. Although as this is development workflow aid you can build your APK with Mono backend (android) and change later.
 
 ### Adding new fields
-- sometimes when adding new fields you'll get some odd behaviour, this is generally happening when adding values before existing ones (in code)
-eg
-```
-	[SerializeField] FunctionLibrary.FunctionName function; //existing
-	
-	[SerializeField] private int _dynamicallyAddedField; //dynamically added
+- adding new fields is not supported due to the way asset redirects method calls - will likely lead to crashes.
 
-	[SerializeField] private int _testIterationCounter = 1; //existing
+Below code will have unexpected results 
+```
+	public class SomeClass : MonoBehaviour {
+        [SerializeField] private int _val = 1; //added after initial compilation
+	    
+	    void Update() {
+	        Debug.Log($"val: {_val}"); //added after initial compilation
+	    }
+	}
+```
+
+Instead when iterating in playmode, define those values as a method variables (and this can then be very easily moved out after session)
+```
+	public class SomeClass : MonoBehaviour {
+        //[SerializeField] private int _val = 1; //add this line after play session
+	    
+	    void Update() {
+	        int _val = 1; //added after initial compilation, remove once play-test iteration finished
+	    
+	        Debug.Log($"val: {_val}"); //added after initial compilation
+	    }
+	}
 ```
 
 This is likely down to the approach taken by asset in which it'll add [jmp] instruction to old class, seems like modifying structure (as in 
