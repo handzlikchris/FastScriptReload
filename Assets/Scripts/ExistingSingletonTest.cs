@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using SomeNamespace;
 using UnityEngine;
 
 // namespace TestNew {

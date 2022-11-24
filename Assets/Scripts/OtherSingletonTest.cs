@@ -1,21 +1,37 @@
 using UnityEngine;
 
-public class OtherSingletonTest : MonoBehaviour
+namespace SomeNamespace
 {
-    [SerializeField] public string _stringValue = "test 1 other singleton";
-
-    private static OtherSingletonTest _instance;
-    public static OtherSingletonTest Instance => _instance ?? (_instance = new OtherSingletonTest());
-    [SerializeField] public int _val = 1;
-
-    [ContextMenu(nameof(PrintExistingSingletonValue))]
-    void PrintExistingSingletonValue()
+    public class OtherSingletonTest : MonoBehaviour
     {
-        Debug.Log($"PrintExistingSingletonValue-c: {ExistingSingletonTest.Instance._intValue}"); 
+        public enum NestedSingleton
+        {
+            First,
+            Second
+        }
+
+        private class NestedClass
+        {
+            public static string Test = "123";
+        }
+    
+        [SerializeField] public string _stringValue = "test 1 other singleton";
+
+        private static OtherSingletonTest _instance;
+        public static OtherSingletonTest Instance => _instance ?? (_instance = new OtherSingletonTest());
+
+        [ContextMenu(nameof(PrintExistingSingletonValue))]
+        void PrintExistingSingletonValue()
+        {
+            Debug.Log($"PrintExistingSingletonValue-c: {ExistingSingletonTest.Instance._intValue}"); 
+        }
+
+        private void Update()
+        {
+            Debug.Log($"Test Nested Singleton: {NestedSingleton.First}"); 
+            Debug.Log(NestedClass.Test);
+            var t = new NestedClass();
+        }
     }
 
-    private void Update()
-    {
-        Debug.Log($"TEst dyn: {_val}");
-    }
 }
