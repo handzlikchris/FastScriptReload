@@ -11,6 +11,14 @@ compiled on the fly and hot-reloaded in your running play-mode session.
 ## Executing custom code on hot reload
 Custom code can be executed on hot reload by adding a method to changed script
 
+## Synchronizing changes over network
+TODO: move and extend
+1) add preprocessor directive: QuickCodeIteration_LoadAssemblyOverNetwork_Enabled
+2) add NetworkedAssemblyChangesLoader to the scene (if testing in editor tick `Run In Editor`)
+
+Networked component right now will try to use broadcast to find server and auto connect, there's no way to put custom IP (TODO).
+Make sure Firewall is set correctly to allow connection
+
 ```
 void OnScriptHotReload() {
     //your code
