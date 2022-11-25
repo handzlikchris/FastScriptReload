@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using UnityEngine;
 
 namespace SomeNamespace
@@ -26,11 +28,26 @@ namespace SomeNamespace
             Debug.Log($"PrintExistingSingletonValue-c: {ExistingSingletonTest.Instance._intValue}"); 
         }
 
+        private void Start()
+        {
+            StartCoroutine(TestCoroutine());
+        }
+
         private void Update()
         {
             Debug.Log($"Test Nested Singleton: {NestedSingleton.First}"); 
             Debug.Log(NestedClass.Test);
             var t = new NestedClass();
+        }
+
+        private IEnumerator TestCoroutine()
+        {
+            while (true)
+            {
+                Debug.Log("Test 111");
+                yield return null;
+            }
+
         }
     }
 
