@@ -8,11 +8,30 @@ compiled on the fly and hot-reloaded in your running play-mode session.
 2) Make code change
 3) See results
 
+## Executing custom code on hot reload
+Custom code can be executed on hot reload by adding a method to changed script
+
+```
+void OnScriptHotReload() {
+    //your code
+}
+```
+
+You can also execute custom code without access to class instance via
+```
+static OnScriptHotReloadNoInstance() {
+    //you code
+}
+```
+
 ## Limitations
 There are some limitation due to the method taken
 
 ### Debugger can't be attached to changed files
 Right now if you hot-reloaded a file your debug breakpoints will no longer be hit
+
+### Coroutines will not be adjusted
+TODO: this is likely going to be addressed
 
 ### Passing `this` reference to method that expect concrete class implementation
 It'll throw compilation error `The best overloaded method match for xxx has some invalid arguments` - this is due to the fact that changed code is technically different type.
@@ -128,12 +147,12 @@ eg
 - add info about broadcast and option to directly specify IP,
 - add basic info about fw
 
-### Auto-save
-- make sure to turn off auto save for files in editor (otherwise changes will be picked up)
-- tool will also batch changes and execute new compile every 3 seconds (which can be configured in settings)
-
 ### Performance
-Performance should be on par with your standard code. The only hit comes at change time when compilation happens.
+Performance should be on par with your standard code. The only hit comes at change time when compilation happens. TODO: profiling session
 
 ### Adding new references
 When you're trying to reference new code in play-mode session that'll fail if assembly is not yet referencing that (most often happens when using AsmDefs that are not yet referencing each other)
+
+### Auto-save
+- make sure to turn off auto save for files in editor (otherwise changes will be picked up)
+- tool will also batch changes and execute new compile every 5 seconds (which can be configured in settings [TODO])
