@@ -17,20 +17,29 @@ namespace QuickCodeIteration.Scripts.Editor
     public class DotnetExeDynamicCompilation: DynamicCompilationBase
     {
         private static string _dotnetExePath;
-        private static string _dotNetSdkRoslynPath;
         private static string _cscDll;
         private static string _tempFolder;
 
         static DotnetExeDynamicCompilation()
         {
-            _dotnetExePath = ReflectionHelper.GetType("UnityEditor.Scripting.NetCoreProgram") 
-                .GetField("DotNetMuxerPath", BindingFlags.Static | BindingFlags.Public)  
-                .GetValue(null).ToString();
-            _dotNetSdkRoslynPath = EditorApplication.applicationContentsPath + "/DotNetSdkRoslyn";
-            _cscDll = _dotNetSdkRoslynPath + "/csc.dll";
+            _dotnetExePath = FindFileOrThrow("dotnet.exe");
+            _cscDll = FindFileOrThrow("csc.dll");
             _tempFolder = Path.GetTempPath();
         }
-        
+
+        private static string FindFileOrThrow(string fileName)
+        {
+            var foundFile = Directory
+                .GetFiles(EditorApplication.applicationContentsPath, fileName, SearchOption.AllDirectories)
+                .FirstOrDefault();
+            if (foundFile == null)
+            {
+                throw new Exception($"Unable to find '{fileName}', make sure Editor version supports it. You can also add preprocessor directive 'QuickCodeIterationManager_CompileViaMCS' which will use Mono compiler instead")
+            }
+
+            return foundFile;
+        }
+
         public static CompileResult Compile(List<string> filePathsWithSourceCode)
         {
             var createdFilesToCleanUp = new List<string>();
