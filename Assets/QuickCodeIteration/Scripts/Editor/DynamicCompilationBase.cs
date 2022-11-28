@@ -28,14 +28,13 @@ namespace QuickCodeIteration.Scripts.Editor
         protected static string CreateSourceCodeCombinedContents(IEnumerable<string> fileSourceCode)
         {
             //TODO: regex is quite problematic, use Roslyn instead? lots of dlls to include, something more lightweight
-            var sourceCodeWithClassNamesAdjusted = fileSourceCode.Select(fileCode =>
+            var sourceCodeWithClassNamesAdjustedCombined = fileSourceCode.Select(fileCode =>
             {
-                var sourceCodeWithClassNamesAdjusted = Regex.Replace(fileCode, TypeNameRegexReplacementPattern,
-                    "$1$2${typeName}" + AssemblyChangesLoader.ClassnamePatchedPostfix + "$3");
+                var sourceCodeWithClassNamesAdjusted = Regex.Replace(fileCode, TypeNameRegexReplacementPattern, "$1$2${typeName}" + AssemblyChangesLoader.ClassnamePatchedPostfix + "$3");
 
                 return Hack_EnsureNestedTypeNamesRemainUnchanged(fileCode, sourceCodeWithClassNamesAdjusted);
             });
-            var sourceCodeCombined = string.Join(Environment.NewLine, sourceCodeWithClassNamesAdjusted);
+            var sourceCodeCombined = string.Join(Environment.NewLine, sourceCodeWithClassNamesAdjustedCombined);
             return sourceCodeCombined;
         }
 
@@ -68,7 +67,7 @@ namespace QuickCodeIteration.Scripts.Editor
         protected static string Hack_EnsureNestedTypeNamesRemainUnchanged(string fileCode, string sourceCodeWithClassNamesAdjusted)
         {
             var matches = Regex.Matches(fileCode, TypeNameRegexReplacementPattern);
-            var originalNamesOfAdjustedTypes = matches.Select(m => m.Groups["typeName"].Value).Distinct().ToList();
+            var originalNamesOfAdjustedTypes = matches.Cast<Match>().Select(m => m.Groups["typeName"].Value).Distinct().ToList();
             foreach (var originalTypeName in originalNamesOfAdjustedTypes)
             {
                 var matchingType = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes())
