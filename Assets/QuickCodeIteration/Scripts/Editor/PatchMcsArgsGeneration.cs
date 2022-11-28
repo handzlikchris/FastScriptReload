@@ -67,19 +67,23 @@ public class PatchMcsArgsGeneration
             stringBuilder.AppendFormat("/resource:\"{0}\" ", (object) embeddedResource);
         foreach (string linkedResource in options.LinkedResources)
             stringBuilder.AppendFormat("/linkresource:\"{0}\" ", (object) linkedResource);
-        if (providerOptions != null && providerOptions.Count > 0)
-        {
-            string str;
-            if (!providerOptions.TryGetValue("CompilerVersion", out str))
-                str = "3.5";
-            if (str.Length >= 1 && str[0] == 'v')
-                str = str.Substring(1);
-            if (str != "2.0")
-            {
-            }
-            else
-                stringBuilder.Append("/langversion:ISO-2 ");
-        }
+        
+        //WARN: that's how it's in source, quite odd, doesn't do much if compiler version specified?
+        // if (providerOptions != null && providerOptions.Count > 0)
+        // {
+        //     string str;
+        //     if (!providerOptions.TryGetValue("CompilerVersion", out str))
+        //         str = "3.5";
+        //     if (str.Length >= 1 && str[0] == 'v')
+        //         str = str.Substring(1);
+        //     if (str != "2.0")
+        //     {
+        //     }
+        //     else
+        //         stringBuilder.Append("/langversion:ISO-2 ");  
+        // }
+        
+        stringBuilder.Append("/langversion:experimental ");   
         
         CustomPatchAdditionAddPreprocessorDirectives(providerOptions, stringBuilder);
 

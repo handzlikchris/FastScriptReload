@@ -3,6 +3,7 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using ImmersiveVRTools.Runtime.Common;
@@ -109,13 +110,14 @@ public class QuickCodeIterationManager
                         sourceCodeFilesWithUniqueChangesAwaitingHotReload = changesAwaitingHotReload.GroupBy(e => e.FullFileName)
                             .Select(e => e.First().FullFileName).ToList();
 
-                        var dynamicallyLoadedAssemblyCompilerResult = DynamicAssemblyCompiler.Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload, false);
-                        if (!dynamicallyLoadedAssemblyCompilerResult.Errors.HasErrors)
+                        DynamicAssemblyCompiler.Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload);
+                        var dynamicallyLoadedAssemblyCompilerResult = DynamicAssemblyCompiler.Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload);
+                        if (!dynamicallyLoadedAssemblyCompilerResult.IsError)
                         {
                             changesAwaitingHotReload.ForEach(c =>
                             {
                                 c.FileCompiledOn = DateTime.UtcNow;
-                                c.AssemblyNameCompiledIn = dynamicallyLoadedAssemblyCompilerResult.CompiledAssembly.FullName;
+                                c.AssemblyNameCompiledIn = dynamicallyLoadedAssemblyCompilerResult.CompiledAssemblyPath;
                             });
                             
                             //TODO: return some proper results to make sure entries are correctly updated
@@ -128,10 +130,10 @@ public class QuickCodeIterationManager
                         }
                         else
                         {
-                            if (dynamicallyLoadedAssemblyCompilerResult.Errors.Count > 0) {
+                            if (dynamicallyLoadedAssemblyCompilerResult.MessagesFromCompilerProcess.Count > 0) {
                                 var msg = new StringBuilder();
-                                foreach (CompilerError error in dynamicallyLoadedAssemblyCompilerResult.Errors) {
-                                    msg.AppendLine($"Error  when compiling, it's best to check code and make sure it's compilable (and also not using C# language feature set that is not supported, eg ??=\r\n line:{error.Line} ({error.ErrorNumber}): {error.ErrorText}\n");
+                                foreach (string message in dynamicallyLoadedAssemblyCompilerResult.MessagesFromCompilerProcess) {
+                                    msg.AppendLine($"Error  when compiling, it's best to check code and make sure it's compilable \r\n {message}\n");
                                 }
                                 var errorMessage = msg.ToString();
                                 

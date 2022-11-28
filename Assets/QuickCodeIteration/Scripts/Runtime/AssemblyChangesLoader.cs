@@ -134,11 +134,8 @@ namespace QuickCodeIteration.Scripts.Runtime
     [AttributeUsage(AttributeTargets.Assembly)]
     public class DynamicallyCreatedAssemblyAttribute : Attribute
     {
-        public string GenerationIdentifier { get; }
-
-        public DynamicallyCreatedAssemblyAttribute(string generationIdentifier)
+        public DynamicallyCreatedAssemblyAttribute()
         {
-            GenerationIdentifier = generationIdentifier;
         }
     }
 
