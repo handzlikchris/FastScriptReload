@@ -73,11 +73,6 @@ public class QuickCodeIterationManager
     {
         EditorApplication.update += Instance.Update;
         EditorApplication.playModeStateChanged += Instance.OnEditorApplicationOnplayModeStateChanged;
-        
-        if (EditorApplication.isPlayingOrWillChangePlaymode)
-        {
-            Instance.StartWatchingDirectoryAndSubdirectories(Application.dataPath);
-        }
     }
 
     private void Update()
@@ -169,6 +164,11 @@ public class QuickCodeIterationManager
                 fileWatcher.Dispose();
             }
             Instance._fileWatchers.Clear();
+        }
+
+        if (obj == PlayModeStateChange.EnteredPlayMode && Instance._fileWatchers.Count == 0)
+        {
+            Instance.StartWatchingDirectoryAndSubdirectories(Application.dataPath);
         }
     }
 }
