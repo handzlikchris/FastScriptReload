@@ -8,8 +8,6 @@ using Debug = UnityEngine.Debug;
 
 public class DynamicAssemblyCompiler
 {
-    public static readonly string CSharpCompilerLangVersion = "9.0";
-
     public static CompileResult Compile(List<string> filePathsWithSourceCode)
     {
         var sw = new Stopwatch();
