@@ -1,0 +1,62 @@
+Some easy changes (iterate on existing functionality, adjustments)
+
+1) - stop following, bit odd
+1a) - re add orient towards
+                    // m_EnemyController.OrientTowards(m_EnemyController.KnownDetectedTarget.transform.position);
+2) - add random adjustment
+
+                        var randAdjustment = new Vector3(
+                            Random.Range(-1, 1),
+                            Random.Range(-0.5f, 0.5f),
+                            Random.Range(-1, 1)
+                        );
+                        m_EnemyController.TryAtack(m_EnemyController.KnownDetectedTarget.transform.position + randAdjustment);
+						
+						
+						
+3) - misses only some of the time
+                    var shouldMiss = Random.Range(-0.1f, 1) > 0;
+                    if (shouldMiss)
+                    {
+                        var randAdjustment = new Vector3(
+                            Random.Range(-1, 1),
+                            Random.Range(-0.5f, 0.5f),
+                            Random.Range(-1, 1)
+                        );
+                        m_EnemyController.TryAtack(m_EnemyController.KnownDetectedTarget.transform.position + randAdjustment);
+                    }
+                    else
+                    {
+                        m_EnemyController.TryAtack(m_EnemyController.KnownDetectedTarget.transform.position);
+                    }
+
+4) - re-add following
+					if (Vector3.Distance(m_EnemyController.KnownDetectedTarget.transform.position,
+                            m_EnemyController.DetectionModule.DetectionSourcePoint.position)
+                        >= (AttackStopDistanceRatio * m_EnemyController.DetectionModule.AttackRange))
+                    {
+                        m_EnemyController.SetNavDestination(m_EnemyController.KnownDetectedTarget.transform.position);
+                    }
+                    else
+                    {
+                        m_EnemyController.SetNavDestination(transform.position);
+                    }
+                    		
+						----
+						
+5) refactor follow into separate methods
+        // private void Follow()
+        // {
+        //     if (Vector3.Distance(m_EnemyController.KnownDetectedTarget.transform.position,
+        //             m_EnemyController.DetectionModule.DetectionSourcePoint.position)
+        //         >= (AttackStopDistanceRatio * m_EnemyController.DetectionModule.AttackRange))
+        //     {
+        //         m_EnemyController.SetNavDestination(m_EnemyController.KnownDetectedTarget.transform.position);
+        //     }
+        //     else
+        //     {
+        //         m_EnemyController.SetNavDestination(transform.position);
+        //     }
+        // }
+						
+Introduce wider iteration

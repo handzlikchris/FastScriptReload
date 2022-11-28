@@ -9,12 +9,20 @@ namespace ExistingNamespaceTest
         [ContextMenu(nameof(PrintExistingSingletonValue))]
         void PrintExistingSingletonValue()
         {
-            Debug.Log("t31");
+            void LocalTest()
+            {
+                Debug.Log("Local test ");  
+            }
+            
+            // LocalTest();  
+            int t = default;    
+            Debug.Log(t);      
+            Debug.Log("t31");    
         
-            Debug.Log($"_intValue: {ExistingSingletonTest.Instance._intValue}");
-            Debug.Log($"IntValueGetter: {ExistingSingletonTest.Instance.IntValueGetter}");
-            Debug.Log($"IntValueGetterAdjusted: {ExistingSingletonTest.Instance.IntValueGetterAdjusted}");
-            Debug.Log($"GetValuePlus1: {ExistingSingletonTest.Instance.GetValuePlus1()}");
+            Debug.Log($"_intValue: {ExistingSingletonTest.Instance._intValue}"); 
+            Debug.Log($"IntValueGetter: {ExistingSingletonTest.Instance.IntValueGetter}");     
+            Debug.Log($"IntValueGetterAdjusted: {ExistingSingletonTest.Instance.IntValueGetterAdjusted}");  
+            Debug.Log($"GetValuePlus1: {ExistingSingletonTest.Instance.GetValuePlus1()}");  
         }
 
         [ContextMenu(nameof(Add5ToIntValueViaMethod))]
