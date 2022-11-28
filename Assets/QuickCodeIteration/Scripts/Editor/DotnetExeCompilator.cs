@@ -64,7 +64,7 @@ namespace QuickCodeIteration.Scripts.Editor
 
                 var exitCode = ExecuteDotnetExeCompilation(_dotnetExePath, _cscDll, rspFile, outLibraryPath, out var outputMessages);
 
-                var compiledAssembly = Assembly.Load(File.ReadAllBytes(outLibraryPath), (byte[])null);
+                var compiledAssembly = Assembly.LoadFrom(outLibraryPath);
                 
                 foreach (var fileToCleanup in createdFilesToCleanUp)
                 {
