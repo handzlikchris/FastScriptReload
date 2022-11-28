@@ -22,6 +22,7 @@ namespace QuickCodeIteration.Scripts.Editor
 
         static DotnetExeDynamicCompilation()
         {
+            //TODO: save in player prefs so it stays between project opens
             _dotnetExePath = FindFileOrThrow("dotnet.exe");
             _cscDll = FindFileOrThrow("csc.dll");
             _tempFolder = Path.GetTempPath();
@@ -34,7 +35,7 @@ namespace QuickCodeIteration.Scripts.Editor
                 .FirstOrDefault();
             if (foundFile == null)
             {
-                throw new Exception($"Unable to find '{fileName}', make sure Editor version supports it. You can also add preprocessor directive 'QuickCodeIterationManager_CompileViaMCS' which will use Mono compiler instead")
+                throw new Exception($"Unable to find '{fileName}', make sure Editor version supports it. You can also add preprocessor directive 'QuickCodeIterationManager_CompileViaMCS' which will use Mono compiler instead");
             }
 
             return foundFile;
@@ -61,8 +62,7 @@ namespace QuickCodeIteration.Scripts.Editor
                 CreateFileAndTrackAsCleanup(assemblyAttributeFilePath, DynamicallyCreatedAssemblyAttributeSourceCode,
                     createdFilesToCleanUp);
 
-                var exitCode = ExecuteDotnetExeCompilation(_dotnetExePath, _cscDll, rspFile, outLibraryPath,
-                    out var outputMessages);
+                var exitCode = ExecuteDotnetExeCompilation(_dotnetExePath, _cscDll, rspFile, outLibraryPath, out var outputMessages);
 
                 var compiledAssembly = Assembly.Load(File.ReadAllBytes(outLibraryPath), (byte[])null);
                 
@@ -106,7 +106,7 @@ namespace QuickCodeIteration.Scripts.Editor
             rspContents.AppendLine($"\"{sourceCodeCombinedFilePath}\"");
             rspContents.AppendLine($"\"{assemblyAttributeFilePath}\"");
 
-            rspContents.AppendLine($"-langversion:{DynamicAssemblyCompiler.CSharpCompilerLangVersion}");
+            rspContents.AppendLine($"-langversion:latest");
 
             rspContents.AppendLine("/deterministic");
             rspContents.AppendLine("/optimize-");
