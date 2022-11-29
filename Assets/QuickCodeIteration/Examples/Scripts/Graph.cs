@@ -37,10 +37,10 @@ public class Graph : MonoBehaviour {
 	[ContextMenu(nameof(ResetIterationCounter))]
 	void ResetIterationCounter()
 	{
-		_testIterationCounter = 0;
+		_testIterationCounter = 0; 
 	}
 
-	void Update()
+	void Update() 
 	{
 		var f = FunctionLibrary.GetFunction(function);
 		var time = Time.time;
