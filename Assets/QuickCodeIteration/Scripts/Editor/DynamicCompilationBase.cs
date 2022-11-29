@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -17,9 +15,6 @@ namespace QuickCodeIteration.Scripts.Editor
     [InitializeOnLoad]
     public class DynamicCompilationBase
     {
-        //TODO: delegates will likely fail
-        private const string TypeNameRegexReplacementPattern = @"(class|struct|enum)(\W+)(?<typeName>\w+)(:| |\r\n|\n|{)";
-        
         protected static readonly string[] ActiveScriptCompilationDefines;
         protected static readonly string DynamicallyCreatedAssemblyAttributeSourceCode = $"[assembly: QuickCodeIteration.Scripts.Runtime.DynamicallyCreatedAssemblyAttribute()]";
 
@@ -36,31 +31,12 @@ namespace QuickCodeIteration.Scripts.Editor
             var sourceCodeWithAdjustments = fileSourceCode.Select(fileCode =>
             {
                 var tree = CSharpSyntaxTree.ParseText(fileCode);
-	
-                var originalRoot = tree.GetRoot();
-                var updatedRoot = originalRoot;
-                
-                //TODO: do same for structs / delegates / not nested enums?
-                foreach (var klass in updatedRoot.DescendantNodes().OfType<ClassDeclarationSyntax>().ToList())
-                {
-                    var existingIdentifier = klass.ChildTokens().First(k => k.RawKind == (int)SyntaxKind.IdentifierToken);
+                var root = tree.GetRoot();
+                var rewriter = new HotReloadCompliantRewriter();
+                root = rewriter.Visit(root);
+                combinedUsingStatements.AddRange(rewriter.StrippedUsingDirectives);
 
-                    var newIdentifier = SyntaxFactory.Identifier(existingIdentifier.Value + AssemblyChangesLoader.ClassnamePatchedPostfix + " ");
-                    var updateClass = klass.ReplaceToken(existingIdentifier, newIdentifier);
-	
-                    updatedRoot = updatedRoot.ReplaceNode(klass, updateClass); //PERF: is updating in this manner performant?
-                }
-
-                //top level using nodes need to remain on top of the file, otherwise it'll result in compilation error and won't be properly parsed
-                var topLevelUsingNodes = updatedRoot.DescendantNodes().OfType<UsingDirectiveSyntax>().Where(u => u.Parent is CompilationUnitSyntax).ToList();
-                combinedUsingStatements.AddRange(topLevelUsingNodes.Select(n => n.ToFullString()));
-                updatedRoot = updatedRoot.RemoveNodes(topLevelUsingNodes, SyntaxRemoveOptions.KeepEndOfLine);
-	
-                return updatedRoot.ToFullString();
-                
-                // var sourceCodeWithClassNamesAdjusted = Regex.Replace(fileCode, TypeNameRegexReplacementPattern, "$1$2${typeName}" + AssemblyChangesLoader.ClassnamePatchedPostfix + "$3");
-                //
-                // return Hack_EnsureNestedTypeNamesRemainUnchanged(fileCode, sourceCodeWithClassNamesAdjusted);
+                return root.ToFullString();
             }).ToList();
 
             var sourceCodeCombined = new StringBuilder();
@@ -106,25 +82,48 @@ namespace QuickCodeIteration.Scripts.Editor
             return referencesToAdd;
         }
 
-        protected static string Hack_EnsureNestedTypeNamesRemainUnchanged(string fileCode, string sourceCodeWithClassNamesAdjusted)
+        class HotReloadCompliantRewriter : CSharpSyntaxRewriter
         {
-            var matches = Regex.Matches(fileCode, TypeNameRegexReplacementPattern);
-            var originalNamesOfAdjustedTypes = matches.Cast<Match>().Select(m => m.Groups["typeName"].Value).Distinct().ToList();
-            foreach (var originalTypeName in originalNamesOfAdjustedTypes)
+            public List<string> StrippedUsingDirectives = new List<string>();
+            
+            public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
             {
-                var matchingType = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes())
-                    .FirstOrDefault(t => t.Name == originalTypeName); //TODO: that's very weak, it's entirely possible to have same class name across different namespace, without proper source code parsing it's difficult to tell
-
-                if (matchingType != null && matchingType.IsNested)
-                {
-                    //TODO: with proper parsing there'd be no need to adjust like that
-                    sourceCodeWithClassNamesAdjusted =
-                        sourceCodeWithClassNamesAdjusted.Replace(
-                            matchingType.Name + AssemblyChangesLoader.ClassnamePatchedPostfix, matchingType.Name);
-                }
+                return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
+                //if subclasses need to be adjusted, it's done via recursion.
+                // foreach (var childNode in node.ChildNodes().OfType<ClassDeclarationSyntax>())
+                // {
+                //     var changed = Visit(childNode);
+                //     node = node.ReplaceNode(childNode, changed);
+                // }
+            }
+            
+            public override SyntaxNode VisitStructDeclaration(StructDeclarationSyntax node)
+            {
+                return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
             }
 
-            return sourceCodeWithClassNamesAdjusted;
+            public override SyntaxNode VisitEnumDeclaration(EnumDeclarationSyntax node)
+            {
+                return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
+            }
+
+            public override SyntaxNode VisitDelegateDeclaration(DelegateDeclarationSyntax node)
+            {
+                return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
+            }
+
+            public override SyntaxNode VisitUsingDirective(UsingDirectiveSyntax node)
+            {
+                StrippedUsingDirectives.Add(node.ToFullString());
+                return null;
+            }
+            
+            private static SyntaxNode AddPatchedPostfixToTopLevelDeclarations(CSharpSyntaxNode node, SyntaxToken identifier)
+            {
+                var newIdentifier = SyntaxFactory.Identifier(identifier + AssemblyChangesLoader.ClassnamePatchedPostfix + " ");
+                node = node.ReplaceToken(identifier, newIdentifier);
+                return node;
+            }
         }
     }
 }

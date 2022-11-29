@@ -40,7 +40,7 @@ namespace SomeNamespace
 
     public class AnotherCompilationTestClass : MonoBehaviour
     {
-        
+         
     }
     
     public enum OuterEnum
