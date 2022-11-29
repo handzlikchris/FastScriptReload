@@ -7,6 +7,7 @@ using ImmersiveVRTools.Editor.Common.WelcomeScreen.GuiElements;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen.PreferenceDefinition;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen.Utilities;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -23,7 +24,6 @@ public class FastScriptReloadWelcomeScreen : ProductWelcomeScreenBase
 
     private static Vector2 _WindowSizePx = new Vector2(650, 500);
     private static string _WindowTitle = "Fast Code Reload";
-
 
     private static readonly List<GuiSection> LeftSections = new List<GuiSection>() {
         new GuiSection("", new List<ClickableElement>
@@ -60,8 +60,14 @@ public class FastScriptReloadWelcomeScreen : ProductWelcomeScreenBase
                     ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.BatchScriptChangesAndReloadEveryNSeconds);
                 }
 
-
                 GUILayout.Space(sectionBreakHeight);
+            }),
+            new ChangeMainViewButton("Exclusions", (screen) => 
+            {
+                EditorGUILayout.HelpBox("Those are easiest to manage from Project window by right clicking on script file and selecting: \r\nFast Script Reload -> (Enable) Always exclude from Hot-Reload \r\nFast Script Reload -> (Disable) Always exclude from Hot-Reload", MessageType.Info);
+                GUILayout.Space(10);
+                
+                ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.FilesExcludedFromHotReload);
             }),
             // new ChangeMainViewButton("Network", (screen) => //TODO: add for networked version, with compilation symbol?
             // {
@@ -175,6 +181,10 @@ public class FastScriptReloadPreference : ProductPreferenceBase
     public static readonly ToggleProjectEditorPreferenceDefinition EnableAutoReloadForChangedFiles = new ToggleProjectEditorPreferenceDefinition(
         "Enable auto Hot-Reload for changed files", "EnableAutoReloadForChangedFiles", true);
     
+    public static readonly StringListProjectEditorPreferenceDefinition FilesExcludedFromHotReload = new StringListProjectEditorPreferenceDefinition(
+        "Files excluded from Hot-Reload", "FilesExcludedFromHotReload", new List<string> {});
+
+
     //TODO: ensure URP / default shaders are set depending on project (for example scene)
     public static void SetCommonMaterialsShader(ShadersMode newShaderModeValue)
     {
