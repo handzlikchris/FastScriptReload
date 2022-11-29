@@ -71,7 +71,7 @@ namespace QuickCodeIteration.Scripts.Editor
                     File.Delete(fileToCleanup);
                 }
                 
-                return new CompileResult(outLibraryPath, outputMessages, exitCode, compiledAssembly);
+                return new CompileResult(outLibraryPath, outputMessages, exitCode, compiledAssembly, sourceCodeCombined);
             }
             catch (Exception)
             {

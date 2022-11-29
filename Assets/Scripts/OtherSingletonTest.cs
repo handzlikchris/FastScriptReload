@@ -36,6 +36,7 @@ namespace SomeNamespace
         void Test()
         {
             var content = File.ReadAllText(@"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Examples\Scripts\FunctionLibrary.cs");   
+
             var tree = CSharpSyntaxTree.ParseText(content);
 	
 // tree.DumpSyntaxTree();

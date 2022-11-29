@@ -1,4 +1,5 @@
 using UnityEngine;
+
 namespace OddNamespace
 {
     using static UnityEngine.Mathf;

@@ -112,8 +112,7 @@ public class QuickCodeIterationManager
                         .Select(e => e.First().FullFileName).ToList();
 
                     DynamicAssemblyCompiler.Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload);
-                    var dynamicallyLoadedAssemblyCompilerResult =
-                        DynamicAssemblyCompiler.Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload);
+                    var dynamicallyLoadedAssemblyCompilerResult = DynamicAssemblyCompiler.Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload);
                     if (!dynamicallyLoadedAssemblyCompilerResult.IsError)
                     {
                         changesAwaitingHotReload.ForEach(c =>
