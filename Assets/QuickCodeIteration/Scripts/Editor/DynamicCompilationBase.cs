@@ -114,8 +114,13 @@ namespace QuickCodeIteration.Scripts.Editor
 
             public override SyntaxNode VisitUsingDirective(UsingDirectiveSyntax node)
             {
-                StrippedUsingDirectives.Add(node.ToFullString());
-                return null;
+                if (node.Parent is CompilationUnitSyntax)
+                {
+                    StrippedUsingDirectives.Add(node.ToFullString());
+                    return null;
+                }
+
+                return base.VisitUsingDirective(node);
             }
             
             private static SyntaxNode AddPatchedPostfixToTopLevelDeclarations(CSharpSyntaxNode node, SyntaxToken identifier)

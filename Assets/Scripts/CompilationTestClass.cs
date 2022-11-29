@@ -22,7 +22,11 @@ namespace SomeNamespace
         // Start is called before the first frame update
         void Start()
         {
-        
+            string LocalMethod()
+            {
+                int d = default;
+                return d.ToString();
+            }
         }
 
         // Update is called once per frame
@@ -53,6 +57,16 @@ namespace SomeNamespace
     {
         public string Test { get; set; }
         public CompilationTestClass CompilationTestClass { get; set; }
+    }
+    
+    public struct TestStructWithMethods {
+ 
+        public void Deconstruct(out TestStructWithMethods t, out string dataToSend) {
+            // blinkedThrough = this.blinkedThrough;
+            // dataToSend = this.dataToSend;
+            dataToSend = "test";
+            t = new();
+        }
     }
 }
 
