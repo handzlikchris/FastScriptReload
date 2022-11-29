@@ -24,7 +24,6 @@ public class QuickCodeIterationManager
 
     private List<DynamicFileHotReloadState> _dynamicFileHotReloadStateEntries = new List<DynamicFileHotReloadState>();
 
-    private float _batchChangesEveryNSeconds = 5f; //TODO: expose, and make larger by default
     private DateTime _lastTimeChangeBatchRun = default(DateTime);
     private bool _executeOnlyInPlaymode = true; //TODO: potentially later add editor support - needed?
     
@@ -71,6 +70,7 @@ public class QuickCodeIterationManager
 
     static QuickCodeIterationManager()
     {
+        //do not add init code in here as with domain reload turned off it won't be properly set on play-mode enter, use Init method instead
         EditorApplication.update += Instance.Update;
         EditorApplication.playModeStateChanged += Instance.OnEditorApplicationOnplayModeStateChanged;
     }
@@ -82,75 +82,87 @@ public class QuickCodeIterationManager
             return;
         }
         
-        var assemblyChangesLoader = AssemblyChangesLoaderResolver.Instance.Resolve(); //WARN: need to resolve initially in case monobehaviour singleton is not created
-        if ((DateTime.UtcNow - _lastTimeChangeBatchRun).TotalSeconds > _batchChangesEveryNSeconds)
+        AssemblyChangesLoaderResolver.Instance.Resolve(); //WARN: need to resolve initially in case monobehaviour singleton is not created
+        if ((bool)FastScriptReloadPreference.EnableAutoReloadForChangedFiles.GetEditorPersistedValueOrDefault() &&
+            (DateTime.UtcNow - _lastTimeChangeBatchRun).TotalSeconds > (int)FastScriptReloadPreference.BatchScriptChangesAndReloadEveryNSeconds.GetEditorPersistedValueOrDefault())
         {
-            var changesAwaitingHotReload = _dynamicFileHotReloadStateEntries
-                .Where(e => e.IsAwaitingCompilation)
-                .ToList();
-
-            if (changesAwaitingHotReload.Any())
-            {
-                changesAwaitingHotReload.ForEach(c =>
-                {
-                    c.IsBeingProcessed = true;
-                });
-                
-                UnityMainThreadDispatcher.Instance.EnsureInitialized();
-                Task.Run(() =>
-                {
-                    List<string> sourceCodeFilesWithUniqueChangesAwaitingHotReload = null;
-                    try
-                    {
-                        sourceCodeFilesWithUniqueChangesAwaitingHotReload = changesAwaitingHotReload.GroupBy(e => e.FullFileName)
-                            .Select(e => e.First().FullFileName).ToList();
-
-                        DynamicAssemblyCompiler.Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload);
-                        var dynamicallyLoadedAssemblyCompilerResult = DynamicAssemblyCompiler.Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload);
-                        if (!dynamicallyLoadedAssemblyCompilerResult.IsError)
-                        {
-                            changesAwaitingHotReload.ForEach(c =>
-                            {
-                                c.FileCompiledOn = DateTime.UtcNow;
-                                c.AssemblyNameCompiledIn = dynamicallyLoadedAssemblyCompilerResult.CompiledAssemblyPath;
-                            });
-                            
-                            //TODO: return some proper results to make sure entries are correctly updated
-                            assemblyChangesLoader.DynamicallyUpdateMethodsForCreatedAssembly(dynamicallyLoadedAssemblyCompilerResult.CompiledAssembly);
-                            changesAwaitingHotReload.ForEach(c =>
-                            {
-                                c.HotSwappedOn = DateTime.UtcNow;
-                                c.IsBeingProcessed = false;
-                            }); //TODO: technically not all were hot swapped at same time
-                        }
-                        else
-                        {
-                            if (dynamicallyLoadedAssemblyCompilerResult.MessagesFromCompilerProcess.Count > 0) {
-                                var msg = new StringBuilder();
-                                foreach (string message in dynamicallyLoadedAssemblyCompilerResult.MessagesFromCompilerProcess) {
-                                    msg.AppendLine($"Error  when compiling, it's best to check code and make sure it's compilable \r\n {message}\n");
-                                }
-                                var errorMessage = msg.ToString();
-                                
-                                changesAwaitingHotReload.ForEach(c =>
-                                {
-                                    c.ErrorOn = DateTime.UtcNow;
-                                    c.ErrorText = errorMessage;
-                                });
-
-                                throw new Exception(errorMessage);
-                            } 
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogError($"Error when updating files: '{(sourceCodeFilesWithUniqueChangesAwaitingHotReload != null ? string.Join(",",sourceCodeFilesWithUniqueChangesAwaitingHotReload.Select(fn => new FileInfo(fn).Name)): "unknown")}', {ex}");
-                    }
-                });
-            }
-            
-            _lastTimeChangeBatchRun = DateTime.UtcNow;
+            TriggerReloadForChangedFiles();
         }
+    }
+
+    public void TriggerReloadForChangedFiles()
+    {
+        var assemblyChangesLoader = AssemblyChangesLoaderResolver.Instance.Resolve();
+        var changesAwaitingHotReload = _dynamicFileHotReloadStateEntries
+            .Where(e => e.IsAwaitingCompilation)
+            .ToList();
+
+        if (changesAwaitingHotReload.Any())
+        {
+            changesAwaitingHotReload.ForEach(c => { c.IsBeingProcessed = true; });
+
+            UnityMainThreadDispatcher.Instance.EnsureInitialized();
+            Task.Run(() =>
+            {
+                List<string> sourceCodeFilesWithUniqueChangesAwaitingHotReload = null;
+                try
+                {
+                    sourceCodeFilesWithUniqueChangesAwaitingHotReload = changesAwaitingHotReload
+                        .GroupBy(e => e.FullFileName)
+                        .Select(e => e.First().FullFileName).ToList();
+
+                    DynamicAssemblyCompiler.Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload);
+                    var dynamicallyLoadedAssemblyCompilerResult =
+                        DynamicAssemblyCompiler.Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload);
+                    if (!dynamicallyLoadedAssemblyCompilerResult.IsError)
+                    {
+                        changesAwaitingHotReload.ForEach(c =>
+                        {
+                            c.FileCompiledOn = DateTime.UtcNow;
+                            c.AssemblyNameCompiledIn = dynamicallyLoadedAssemblyCompilerResult.CompiledAssemblyPath;
+                        });
+
+                        //TODO: return some proper results to make sure entries are correctly updated
+                        assemblyChangesLoader.DynamicallyUpdateMethodsForCreatedAssembly(
+                            dynamicallyLoadedAssemblyCompilerResult.CompiledAssembly);
+                        changesAwaitingHotReload.ForEach(c =>
+                        {
+                            c.HotSwappedOn = DateTime.UtcNow;
+                            c.IsBeingProcessed = false;
+                        }); //TODO: technically not all were hot swapped at same time
+                    }
+                    else
+                    {
+                        if (dynamicallyLoadedAssemblyCompilerResult.MessagesFromCompilerProcess.Count > 0)
+                        {
+                            var msg = new StringBuilder();
+                            foreach (string message in dynamicallyLoadedAssemblyCompilerResult.MessagesFromCompilerProcess)
+                            {
+                                msg.AppendLine(
+                                    $"Error  when compiling, it's best to check code and make sure it's compilable \r\n {message}\n");
+                            }
+
+                            var errorMessage = msg.ToString();
+
+                            changesAwaitingHotReload.ForEach(c =>
+                            {
+                                c.ErrorOn = DateTime.UtcNow;
+                                c.ErrorText = errorMessage;
+                            });
+
+                            throw new Exception(errorMessage);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError(
+                        $"Error when updating files: '{(sourceCodeFilesWithUniqueChangesAwaitingHotReload != null ? string.Join(",", sourceCodeFilesWithUniqueChangesAwaitingHotReload.Select(fn => new FileInfo(fn).Name)) : "unknown")}', {ex}");
+                }
+            });
+        }
+
+        _lastTimeChangeBatchRun = DateTime.UtcNow;
     }
 
     private void OnEditorApplicationOnplayModeStateChanged(PlayModeStateChange obj)
@@ -166,7 +178,15 @@ public class QuickCodeIterationManager
             Instance._fileWatchers.Clear();
         }
 
-        if (obj == PlayModeStateChange.EnteredPlayMode && Instance._fileWatchers.Count == 0)
+        if (obj == PlayModeStateChange.EnteredPlayMode)
+        {
+            Init();
+        }
+    }
+
+    private static void Init()
+    {
+        if (Instance._fileWatchers.Count == 0)
         {
             Instance.StartWatchingDirectoryAndSubdirectories(Application.dataPath);
         }
