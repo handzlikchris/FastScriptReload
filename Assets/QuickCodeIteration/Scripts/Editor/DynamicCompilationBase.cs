@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using QuickCodeIteration.Scripts.Runtime;
 using UnityEditor;
 using Debug = UnityEngine.Debug;
@@ -27,15 +31,53 @@ namespace QuickCodeIteration.Scripts.Editor
         
         protected static string CreateSourceCodeCombinedContents(IEnumerable<string> fileSourceCode)
         {
-            //TODO: regex is quite problematic, use Roslyn instead? lots of dlls to include, something more lightweight
-            var sourceCodeWithClassNamesAdjustedCombined = fileSourceCode.Select(fileCode =>
+            var combinedUsingStatements = new List<string>();
+            
+            var sourceCodeWithAdjustments = fileSourceCode.Select(fileCode =>
             {
-                var sourceCodeWithClassNamesAdjusted = Regex.Replace(fileCode, TypeNameRegexReplacementPattern, "$1$2${typeName}" + AssemblyChangesLoader.ClassnamePatchedPostfix + "$3");
+                var tree = CSharpSyntaxTree.ParseText(fileCode);
+	
+                var originalRoot = tree.GetRoot();
+                var updatedRoot = originalRoot;
+                
+                //TODO: do same for structs / delegates / not nested enums?
+                foreach (var klass in updatedRoot.DescendantNodes().OfType<ClassDeclarationSyntax>().ToList())
+                {
+                    var existingIdentifier = klass.ChildTokens().First(k => k.RawKind == (int)SyntaxKind.IdentifierToken);
 
-                return Hack_EnsureNestedTypeNamesRemainUnchanged(fileCode, sourceCodeWithClassNamesAdjusted);
-            });
-            var sourceCodeCombined = string.Join(Environment.NewLine, sourceCodeWithClassNamesAdjustedCombined);
-            return sourceCodeCombined;
+                    var newIdentifier = SyntaxFactory.Identifier(existingIdentifier.Value + AssemblyChangesLoader.ClassnamePatchedPostfix + " ");
+                    var updateClass = klass.ReplaceToken(existingIdentifier, newIdentifier);
+	
+                    updatedRoot = updatedRoot.ReplaceNode(klass, updateClass); //PERF: is updating in this manner performant?
+                }
+
+                //top level using nodes need to remain on top of the file, otherwise it'll result in compilation error and won't be properly parsed
+                var topLevelUsingNodes = updatedRoot.DescendantNodes().OfType<UsingDirectiveSyntax>().Where(u => u.Parent is CompilationUnitSyntax).ToList();
+                combinedUsingStatements.AddRange(topLevelUsingNodes.Select(n => n.ToFullString()));
+                updatedRoot = updatedRoot.RemoveNodes(topLevelUsingNodes, SyntaxRemoveOptions.KeepEndOfLine);
+	
+                return updatedRoot.ToFullString();
+                
+                // var sourceCodeWithClassNamesAdjusted = Regex.Replace(fileCode, TypeNameRegexReplacementPattern, "$1$2${typeName}" + AssemblyChangesLoader.ClassnamePatchedPostfix + "$3");
+                //
+                // return Hack_EnsureNestedTypeNamesRemainUnchanged(fileCode, sourceCodeWithClassNamesAdjusted);
+            }).ToList();
+
+            var sourceCodeCombined = new StringBuilder();
+            foreach (var usingStatement in combinedUsingStatements.Distinct())
+            {
+                sourceCodeCombined.Append(usingStatement);
+            }
+
+            foreach (var sourceCodeWithAdjustment in sourceCodeWithAdjustments)
+            {
+                sourceCodeCombined.AppendLine(sourceCodeWithAdjustment);
+            }
+
+#if QuickCodeIterationManager_DebugEnabled
+            Debug.Log("Soruce Code Created:\r\n\r\n" + sourceCodeCombined);
+#endif
+            return sourceCodeCombined.ToString();
         }
 
         protected static List<string> ResolveReferencesToAdd(List<string> excludeAssyNames)

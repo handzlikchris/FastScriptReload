@@ -31,12 +31,14 @@ public class CompileResult
     public List<string> MessagesFromCompilerProcess { get; }
     public bool IsError => string.IsNullOrEmpty(CompiledAssemblyPath);
     public int NativeCompilerReturnValue { get; }
+    public string SourceCodeCombined { get; }
 
-    public CompileResult(string compiledAssemblyPath, List<string> messagesFromCompilerProcess, int nativeCompilerReturnValue, Assembly compiledAssembly)
+    public CompileResult(string compiledAssemblyPath, List<string> messagesFromCompilerProcess, int nativeCompilerReturnValue, Assembly compiledAssembly, string sourceCodeCombined)
     {
         CompiledAssemblyPath = compiledAssemblyPath;
         MessagesFromCompilerProcess = messagesFromCompilerProcess;
         NativeCompilerReturnValue = nativeCompilerReturnValue;
         CompiledAssembly = compiledAssembly;
+        SourceCodeCombined = sourceCodeCombined;
     }
 }
