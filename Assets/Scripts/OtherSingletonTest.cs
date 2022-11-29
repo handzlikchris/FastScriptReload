@@ -44,7 +44,7 @@ namespace SomeNamespace
         {
             while (true)
             {
-                Debug.Log("Test 111");
+                Debug.Log("Test coroutine 1");
                 yield return null;
             }
 
