@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if QuickCodeIterationManager_CompileViaMCS
+using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Text;
@@ -106,3 +107,4 @@ public class PatchMcsArgsGeneration
         }
     }
 }
+#endif
