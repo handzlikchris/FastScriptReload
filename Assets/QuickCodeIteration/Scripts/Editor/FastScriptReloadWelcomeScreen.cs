@@ -112,7 +112,7 @@ public class FastScriptReloadWelcomeScreen : ProductWelcomeScreenBase
         new List<ClickableElement>
         {
             new OpenUrlButton(" Unity Forum", $"{RedirectBaseUrl}/unity-forum"),
-            new OpenUrlButton(" or Write Short Review", $"{RedirectBaseUrl}/asset-store-review"),
+            new OpenUrlButton(" or Write a Short Review", $"{RedirectBaseUrl}/asset-store-review"),
         }
     );
 
@@ -184,7 +184,7 @@ public class FastScriptReloadPreference : ProductPreferenceBase
         "Enable auto Hot-Reload for changed files", "EnableAutoReloadForChangedFiles", true);
     
     public static readonly StringListProjectEditorPreferenceDefinition FilesExcludedFromHotReload = new StringListProjectEditorPreferenceDefinition(
-        "Files excluded from Hot-Reload", "FilesExcludedFromHotReload", new List<string> {});
+        "Files excluded from Hot-Reload", "FilesExcludedFromHotReload", new List<string> {}, isReadonly: true);
 
 
     //TODO: ensure URP / default shaders are set depending on project (for example scene)
