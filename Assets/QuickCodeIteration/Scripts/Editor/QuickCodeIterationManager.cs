@@ -37,11 +37,13 @@ public class QuickCodeIterationManager
             return;
         }
 
-        if (_currentFileExclusions != null && _currentFileExclusions.Any(fp => e.FullPath.EndsWith(fp)))
+        if (_currentFileExclusions != null && _currentFileExclusions.Any(fp => e.FullPath.Replace("\\", "/").EndsWith(fp)))
         {
             Debug.Log($"File: '{e.FullPath}' changed, but marked as exclusion. Hot-Reload will not be performed. You can manage exclusions via" +
                       $"\r\nRight click context menu (Fast Script Reload > Add / Remove Hot-Reload exclusion)" +
                       $"\r\nor via Window -> Fast Script Reload -> Start Screen -> Exclusion menu");
+            
+            return;
         }
         
         _dynamicFileHotReloadStateEntries.Add(new DynamicFileHotReloadState(e.FullPath, DateTime.UtcNow));
