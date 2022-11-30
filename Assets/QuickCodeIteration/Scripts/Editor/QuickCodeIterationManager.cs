@@ -162,8 +162,7 @@ public class QuickCodeIterationManager
                     sourceCodeFilesWithUniqueChangesAwaitingHotReload = changesAwaitingHotReload
                         .GroupBy(e => e.FullFileName)
                         .Select(e => e.First().FullFileName).ToList();
-
-                    DynamicAssemblyCompiler.Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload);
+                    
                     var dynamicallyLoadedAssemblyCompilerResult = DynamicAssemblyCompiler.Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload);
                     if (!dynamicallyLoadedAssemblyCompilerResult.IsError)
                     {
