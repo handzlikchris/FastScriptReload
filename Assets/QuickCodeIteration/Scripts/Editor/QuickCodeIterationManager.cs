@@ -112,6 +112,13 @@ public class QuickCodeIterationManager
                    .Contains(ResolveRelativeToAssetDirectoryFilePath(Selection.activeObject));
     }
     
+    [MenuItem("Assets/Fast Script Reload/Show Exclusions", false)]
+    public static void ShowExcludedFilesInUi()
+    {
+        var window = FastScriptReloadWelcomeScreen.Init();
+        window.OpenExclusionsSection();
+    }
+    
     private static string ResolveRelativeToAssetDirectoryFilePath(UnityEngine.Object obj)
     {
         return AssetDatabase.GetAssetPath(obj.GetInstanceID());
