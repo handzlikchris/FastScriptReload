@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -19,6 +20,7 @@ public class QuickCodeIterationManager
 
     private PlayModeStateChange _lastPlayModeStateChange;
     private List<FileSystemWatcher> _fileWatchers = new List<FileSystemWatcher>();
+    private IEnumerable<string> _currentFileExclusions;
 
     private List<DynamicFileHotReloadState> _dynamicFileHotReloadStateEntries = new List<DynamicFileHotReloadState>();
 
@@ -35,7 +37,7 @@ public class QuickCodeIterationManager
             return;
         }
 
-        if (FastScriptReloadPreference.FilesExcludedFromHotReload.GetElements().Any(fp => e.FullPath.EndsWith(fp)))
+        if (_currentFileExclusions != null && _currentFileExclusions.Any(fp => e.FullPath.EndsWith(fp)))
         {
             Debug.Log($"File: '{e.FullPath}' changed, but marked as exclusion. Hot-Reload will not be performed. You can manage exclusions via" +
                       $"\r\nRight click context menu (Fast Script Reload > Add / Remove Hot-Reload exclusion)" +
@@ -119,6 +121,9 @@ public class QuickCodeIterationManager
         {
             return;
         }
+
+        //TODO: PERF: needed in file watcher but when run on non-main thread causes exception. 
+        _currentFileExclusions = FastScriptReloadPreference.FilesExcludedFromHotReload.GetElements();
         
         AssemblyChangesLoaderResolver.Instance.Resolve(); //WARN: need to resolve initially in case monobehaviour singleton is not created
         if ((bool)FastScriptReloadPreference.EnableAutoReloadForChangedFiles.GetEditorPersistedValueOrDefault() &&
