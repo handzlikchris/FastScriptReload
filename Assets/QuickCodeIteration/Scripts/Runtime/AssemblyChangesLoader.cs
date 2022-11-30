@@ -71,6 +71,9 @@ namespace QuickCodeIteration.Scripts.Runtime
                         var matchingMethodInExistingType = allMethodsInExistingType.SingleOrDefault(m => m.FullDescription() == createdTypeMethodToUpdateFullDescriptionWithoutPatchedClassPostfix);
                         if (matchingMethodInExistingType != null)
                         {
+#if QuickCodeIterationManager_DebugEnabled
+                            Debug.Log($"Trying to detour method, from: '{matchingMethodInExistingType.FullDescription()}' to: '{createdTypeMethodToUpdate.FullDescription()}'");
+#endif
                             Memory.DetourMethod(matchingMethodInExistingType, createdTypeMethodToUpdate);
                         }
                         else
