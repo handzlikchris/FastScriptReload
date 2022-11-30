@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using ImmersiveVRTools.Editor.Common.Utilities;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen.GuiElements;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen.PreferenceDefinition;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen.Utilities;
 using UnityEditor;
-using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -16,14 +13,21 @@ public class FastScriptReloadWelcomeScreen : ProductWelcomeScreenBase
     public static string BaseUrl = "https://immersivevrtools.com";
     public static string GenerateGetUpdatesUrl(string userId, string versionId)
     {
-        return $"{BaseUrl}/updates/fast-code-reload/{userId}?CurrentVersion={versionId}";
+        return $"{BaseUrl}/updates/fast-script-reload/{userId}?CurrentVersion={versionId}";
     }
     public static string VersionId = "1.0";
     private static readonly string ProjectIconName = "ProductIcon64";
-    public static readonly string ProjectName = "fast-code-reload";
+    public static readonly string ProjectName = "fast-script-reload";
 
     private static Vector2 _WindowSizePx = new Vector2(650, 500);
-    private static string _WindowTitle = "Fast Code Reload";
+    private static string _WindowTitle = "Fast Script Reload";
+
+    public static ChangeMainViewButton ExclusionsSecion { get; private set; }
+
+    public void OpenExclusionsSection()
+    {
+        ExclusionsSecion.OnClick(this);
+    }
 
     private static readonly List<GuiSection> LeftSections = new List<GuiSection>() {
         new GuiSection("", new List<ClickableElement>
@@ -62,7 +66,7 @@ public class FastScriptReloadWelcomeScreen : ProductWelcomeScreenBase
 
                 GUILayout.Space(sectionBreakHeight);
             }),
-            new ChangeMainViewButton("Exclusions", (screen) => 
+            (ExclusionsSecion = new ChangeMainViewButton("Exclusions", (screen) => 
             {
                 EditorGUILayout.HelpBox("Those are easiest to manage from Project window by right clicking on script file and selecting: " +
                                         "\r\nFast Script Reload -> Add Hot-Reload Exclusion " +
@@ -70,7 +74,7 @@ public class FastScriptReloadWelcomeScreen : ProductWelcomeScreenBase
                 GUILayout.Space(10);
                 
                 ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.FilesExcludedFromHotReload);
-            }),
+            })),
             // new ChangeMainViewButton("Network", (screen) => //TODO: add for networked version, with compilation symbol?
             // {
             //     
@@ -142,9 +146,9 @@ public class FastScriptReloadWelcomeScreen : ProductWelcomeScreenBase
 
 
     [MenuItem("Window/Fast Script Reload/Start Screen", false, 1999)]
-    public static void Init()
+    public static FastScriptReloadWelcomeScreen Init()
     {
-        OpenWindow<FastScriptReloadWelcomeScreen>(_WindowTitle, _WindowSizePx);
+        return OpenWindow<FastScriptReloadWelcomeScreen>(_WindowTitle, _WindowSizePx);
     }
     
     [MenuItem("Window/Fast Script Reload/Force Reload", true, 1999)]
@@ -268,7 +272,7 @@ public class FastScriptReloadWelcomeScreenInitializer : WelcomeScreenInitializer
         var userId = ProductPreferenceBase.CreateDefaultUserIdDefinition(FastScriptReloadWelcomeScreen.ProjectName).GetEditorPersistedValueOrDefault().ToString();
 
         HandleUnityStartup(
-            FastScriptReloadWelcomeScreen.Init,
+            () => FastScriptReloadWelcomeScreen.Init(),
             FastScriptReloadWelcomeScreen.GenerateGetUpdatesUrl(userId, FastScriptReloadWelcomeScreen.VersionId),
             new List<ProjectEditorPreferenceDefinitionBase>(),
             (isFirstRun) =>
