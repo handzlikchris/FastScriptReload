@@ -46,7 +46,7 @@ public class Graph : MonoBehaviour {
 		var time = Time.time;
 		var step = 2f / resolution;
 		var v = 0.5f * step - 1f;
-		for (int i = 0, x = 0, z = 0; i < points.Length / 2; i++, x++)
+		for (int i = 0, x = 0, z = 0; i < points.Length; i++, x++)
 		{
 			if (x == resolution)
 			{
