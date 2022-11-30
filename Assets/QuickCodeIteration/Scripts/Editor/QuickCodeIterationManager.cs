@@ -1,9 +1,7 @@
 using System;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using ImmersiveVRTools.Runtime.Common;
@@ -35,6 +33,13 @@ public class QuickCodeIterationManager
             Debug.Log($"Application not playing, change to: {e.Name} won't be compiled and hot reloaded"); //TODO: remove when not in testing?
 #endif
             return;
+        }
+
+        if (FastScriptReloadPreference.FilesExcludedFromHotReload.GetElements().Any(fp => e.FullPath.EndsWith(fp)))
+        {
+            Debug.Log($"File: '{e.FullPath}' changed, but marked as exclusion. Hot-Reload will not be performed. You can manage exclusions via" +
+                      $"\r\nRight click context menu (Fast Script Reload > Add / Remove Hot-Reload exclusion)" +
+                      $"\r\nor via Window -> Fast Script Reload -> Start Screen -> Exclusion menu");
         }
         
         _dynamicFileHotReloadStateEntries.Add(new DynamicFileHotReloadState(e.FullPath, DateTime.UtcNow));
@@ -73,6 +78,39 @@ public class QuickCodeIterationManager
         //do not add init code in here as with domain reload turned off it won't be properly set on play-mode enter, use Init method instead
         EditorApplication.update += Instance.Update;
         EditorApplication.playModeStateChanged += Instance.OnEditorApplicationOnplayModeStateChanged;
+    }
+    
+    [MenuItem("Assets/Fast Script Reload/Add Hot-Reload Exclusion", false)]
+    public static void AddFileAsExcluded()
+    {
+        FastScriptReloadPreference.FilesExcludedFromHotReload.AddElement(ResolveRelativeToAssetDirectoryFilePath(Selection.activeObject));
+    }
+    
+    [MenuItem("Assets/Fast Script Reload/Add Hot-Reload Exclusion", true)]
+    public static bool AddFileAsExcludedValidateFn()
+    {
+        return Selection.activeObject is MonoScript
+            && !((FastScriptReloadPreference.FilesExcludedFromHotReload.GetEditorPersistedValueOrDefault() as IEnumerable<string>) ?? Array.Empty<string>())
+                .Contains(ResolveRelativeToAssetDirectoryFilePath(Selection.activeObject));
+    }
+
+    [MenuItem("Assets/Fast Script Reload/Remove Hot-Reload Exclusion", false)]
+    public static void RemoveFileAsExcluded()
+    {
+        FastScriptReloadPreference.FilesExcludedFromHotReload.RemoveElement(ResolveRelativeToAssetDirectoryFilePath(Selection.activeObject));
+    }
+    
+    [MenuItem("Assets/Fast Script Reload/Remove Hot-Reload Exclusion", true)]
+    public static bool RemoveFileAsExcludedValidateFn()
+    {
+        return Selection.activeObject is MonoScript
+               && ((FastScriptReloadPreference.FilesExcludedFromHotReload.GetEditorPersistedValueOrDefault() as IEnumerable<string>) ?? Array.Empty<string>())
+                   .Contains(ResolveRelativeToAssetDirectoryFilePath(Selection.activeObject));
+    }
+    
+    private static string ResolveRelativeToAssetDirectoryFilePath(UnityEngine.Object obj)
+    {
+        return AssetDatabase.GetAssetPath(obj.GetInstanceID());
     }
 
     private void Update()

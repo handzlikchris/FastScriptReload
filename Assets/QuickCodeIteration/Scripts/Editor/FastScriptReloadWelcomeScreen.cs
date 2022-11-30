@@ -64,7 +64,9 @@ public class FastScriptReloadWelcomeScreen : ProductWelcomeScreenBase
             }),
             new ChangeMainViewButton("Exclusions", (screen) => 
             {
-                EditorGUILayout.HelpBox("Those are easiest to manage from Project window by right clicking on script file and selecting: \r\nFast Script Reload -> (Enable) Always exclude from Hot-Reload \r\nFast Script Reload -> (Disable) Always exclude from Hot-Reload", MessageType.Info);
+                EditorGUILayout.HelpBox("Those are easiest to manage from Project window by right clicking on script file and selecting: " +
+                                        "\r\nFast Script Reload -> Add Hot-Reload Exclusion " +
+                                        "\r\nFast Script Reload -> Remove Hot-Reload Exclusion", MessageType.Info);
                 GUILayout.Space(10);
                 
                 ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.FilesExcludedFromHotReload);
