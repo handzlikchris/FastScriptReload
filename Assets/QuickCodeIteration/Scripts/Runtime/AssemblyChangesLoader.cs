@@ -40,9 +40,9 @@ namespace QuickCodeIteration.Scripts.Runtime
                 typeof(System.Object)
             }; //TODO: move out and possibly define a way to exclude all non-client created code? as this will crash editor
 
-            const BindingFlags ALL_METHODS_BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic |
+            const BindingFlags ALL_DECLARED_METHODS_BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic |
                                                            BindingFlags.Static | BindingFlags.Instance |
-                                                           BindingFlags.FlattenHierarchy; //TODO: move out
+                                                           BindingFlags.DeclaredOnly; //only declared methods can be redirected, otherwise it'll result in hang
 
             foreach (var createdType in dynamicallyLoadedAssemblyWithUpdates.GetTypes()
                          .Where(t => t.IsClass
@@ -61,14 +61,14 @@ namespace QuickCodeIteration.Scripts.Runtime
                 var matchingTypeInExistingAssemblies = allTypesInNonDynamicGeneratedAssemblies.SingleOrDefault(t => t.FullName == createdTypeNameWithoutPatchedPostfix);
                 if (matchingTypeInExistingAssemblies != null)
                 {
-                    var allMethodsInExistingType = matchingTypeInExistingAssemblies.GetMethods(ALL_METHODS_BINDING_FLAGS)
+                    var allDeclaredMethodsInExistingType = matchingTypeInExistingAssemblies.GetMethods(ALL_DECLARED_METHODS_BINDING_FLAGS)
                         .Where(m => !excludeMethodsDefinedOnTypes.Contains(m.DeclaringType))
                         .ToList();
-                    foreach (var createdTypeMethodToUpdate in createdType.GetMethods(ALL_METHODS_BINDING_FLAGS)
+                    foreach (var createdTypeMethodToUpdate in createdType.GetMethods(ALL_DECLARED_METHODS_BINDING_FLAGS)
                                  .Where(m => !excludeMethodsDefinedOnTypes.Contains(m.DeclaringType)))
                     {
                         var createdTypeMethodToUpdateFullDescriptionWithoutPatchedClassPostfix = RemoveClassPostfix(createdTypeMethodToUpdate.FullDescription());
-                        var matchingMethodInExistingType = allMethodsInExistingType.SingleOrDefault(m => m.FullDescription() == createdTypeMethodToUpdateFullDescriptionWithoutPatchedClassPostfix);
+                        var matchingMethodInExistingType = allDeclaredMethodsInExistingType.SingleOrDefault(m => m.FullDescription() == createdTypeMethodToUpdateFullDescriptionWithoutPatchedClassPostfix);
                         if (matchingMethodInExistingType != null)
                         {
 #if QuickCodeIterationManager_DebugEnabled
