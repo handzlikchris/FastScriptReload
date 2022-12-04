@@ -47,7 +47,7 @@ namespace FastScriptReload.Examples
 			var time = Time.time;
 			var step = 2f / resolution;
 			var v = 0.5f * step - 1f;
-			for (int i = 0, x = 0, z = 0; i < points.Length; i++, x++)
+			for (int i = 0, x = 0, z = 0; i < points.Length / 2; i++, x++)
 			{
 				if (x == resolution)
 				{
@@ -65,7 +65,13 @@ namespace FastScriptReload.Examples
 
 		void OnScriptHotReload()
 		{
-			Debug.Log("Script hot reloaded 1"); 
+			Debug.Log($"Script 'Graph.cs' was changed and hot reloaded, you have access to instance via 'this', eg: {nameof(_testIterationCounter)} value is: {_testIterationCounter}"); 
+		}
+		
+		static void OnScriptHotReloadNoInstance()
+		{
+			Debug.Log("Script 'Graph.cs' was changed - this method is executed even without any instance in the scene. There's no access to 'this'. " +
+			          "Useful if you just added a type / need to perform some one-off init"); 
 		}
 	}
 }
