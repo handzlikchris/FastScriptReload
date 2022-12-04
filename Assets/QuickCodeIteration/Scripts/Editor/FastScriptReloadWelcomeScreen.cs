@@ -190,21 +190,24 @@ public class FastScriptReloadPreference : ProductPreferenceBase
     public static readonly StringListProjectEditorPreferenceDefinition FilesExcludedFromHotReload = new StringListProjectEditorPreferenceDefinition(
         "Files excluded from Hot-Reload", "FilesExcludedFromHotReload", new List<string> {}, isReadonly: true);
 
-
-    //TODO: ensure URP / default shaders are set depending on project (for example scene)
+    
     public static void SetCommonMaterialsShader(ShadersMode newShaderModeValue)
     {
         var rootToolFolder = AssetPathResolver.GetAssetFolderPathRelativeToScript(ScriptableObject.CreateInstance(typeof(FastScriptReloadWelcomeScreen)), 1);
-        var assets = AssetDatabase.FindAssets("t:Material", new[] { rootToolFolder });
+        if (rootToolFolder.Contains("/Scripts"))
+        {
+            rootToolFolder = rootToolFolder.Replace("/Scripts", ""); //if nested remove that and go higher level
+        }
+        var assets = AssetDatabase.FindAssets("t:Material Point", new[] { rootToolFolder });
 
         try
         {
             Shader shaderToUse = null;
             switch (newShaderModeValue)
             {
-                case ShadersMode.HDRP: shaderToUse = Shader.Find("HDRP/Lit"); break;
-                case ShadersMode.URP: shaderToUse = Shader.Find("Universal Render Pipeline/Lit"); break;
-                case ShadersMode.Surface: shaderToUse = Shader.Find("Standard"); break;
+                case ShadersMode.HDRP: shaderToUse = Shader.Find("Shader Graphs/Point URP"); break;
+                case ShadersMode.URP: shaderToUse = Shader.Find("Shader Graphs/Point URP"); break;
+                case ShadersMode.Surface: shaderToUse = Shader.Find("Graph/Point Surface"); break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

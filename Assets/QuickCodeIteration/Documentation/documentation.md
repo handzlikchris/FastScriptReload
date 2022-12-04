@@ -161,3 +161,6 @@ When you're trying to reference new code in play-mode session that'll fail if as
 ### Auto-save
 - make sure to turn off auto save for files in editor (otherwise changes will be picked up)
 - tool will also batch changes and execute new compile every 5 seconds (which can be configured in settings [TODO])
+
+## FAQ
+- example loads with broken shaders (TODO should be auto adjusted, point how if not)
