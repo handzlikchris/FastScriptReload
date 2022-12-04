@@ -50,7 +50,7 @@ namespace FastScriptReload.Editor.Compilation
                 sourceCodeCombined.AppendLine(sourceCodeWithAdjustment);
             }
 
-#if QuickCodeIterationManager_DebugEnabled
+#if FastScriptReload_DebugEnabled
             Debug.Log("Soruce Code Created:\r\n\r\n" + sourceCodeCombined);
 #endif
             return sourceCodeCombined.ToString();

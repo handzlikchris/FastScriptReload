@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
-#if QuickCodeIterationManager_CompileViaMCS
+#if FastScriptReload_CompileViaMCS
 public class McsExeDynamicCompilation : DynamicCompilationBase
 {
     private const int ReferenceLenghtCountWarningThreshold = 32767 - 2000; //windows can accept up to 32767 chars as args, then it starts thorowing exceptions. MCS.exe is adding references via command /r:<full path>

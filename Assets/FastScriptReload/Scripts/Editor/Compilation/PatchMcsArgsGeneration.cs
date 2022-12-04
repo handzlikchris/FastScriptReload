@@ -1,10 +1,10 @@
-﻿#if QuickCodeIterationManager_CompileViaMCS
+﻿#if FastScriptReload_CompileViaMCS
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Text;
+using FastScriptReload.Runtime;
 using HarmonyLib;
-using QuickCodeIteration.Scripts.Runtime;
 using UnityEditor;
 
 [InitializeOnLoad]

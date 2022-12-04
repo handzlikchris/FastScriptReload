@@ -33,8 +33,8 @@ namespace FastScriptReload.Editor
         {
             if (_lastPlayModeStateChange != PlayModeStateChange.EnteredPlayMode)
             {
-#if QuickCodeIterationManager_DebugEnabled
-            Debug.Log($"Application not playing, change to: {e.Name} won't be compiled and hot reloaded"); //TODO: remove when not in testing?
+#if FastScriptReload_DebugEnabled
+            Debug.Log($"Application not playing, change to: {e.Name} won't be compiled and hot reloaded");
 #endif
                 return;
             }

@@ -7,8 +7,8 @@
 
         public IAssemblyChangesLoader Resolve()
         {
-#if QuickCodeIteration_LoadAssemblyOverNetwork_Enabled
-            return NetworkedAssemblyChangesSender.Instance;
+#if FastScriptReload_LoadAssemblyOverNetwork_Enabled
+            return LiveScriptReload.Runtime.NetworkedAssemblyChangesSender.Instance;
 #else
             return AssemblyChangesLoader.Instance;
 #endif
