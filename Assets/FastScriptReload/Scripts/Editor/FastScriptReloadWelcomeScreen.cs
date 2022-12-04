@@ -178,7 +178,9 @@ namespace FastScriptReload.Editor
 
     public class FastScriptReloadPreference : ProductPreferenceBase
     {
-        public static string BuildSymbol_LoadAssemblyChangesOverNetwork = "QuickCodeIteration_LoadAssemblyOverNetwork_Enabled"; //TODO: wire up
+#if FastScriptReload_LoadAssemblyOverNetwork_Enabled
+       public static string BuildSymbol_LoadAssemblyChangesOverNetwork = "FastScriptReload_LoadAssemblyOverNetwork_Enabled"; 
+#endif
 
         public const string ProductName = "Fast Script Reload";
         private static string[] ProductKeywords = new[] { "productivity", "tools" };

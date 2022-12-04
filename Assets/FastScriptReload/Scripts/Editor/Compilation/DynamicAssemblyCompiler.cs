@@ -14,7 +14,7 @@ namespace FastScriptReload.Editor.Compilation
             var sw = new Stopwatch();
             sw.Start();
         
-#if QuickCodeIterationManager_CompileViaMCS
+#if FastScriptReload_CompileViaMCS
         var result = McsExeDynamicCompilation.Compile(filePathsWithSourceCode);
 #else
             var result = DotnetExeDynamicCompilation.Compile(filePathsWithSourceCode);
