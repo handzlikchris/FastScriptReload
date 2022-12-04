@@ -25,7 +25,6 @@ namespace FastScriptReload.Runtime
             var sw = new Stopwatch();
             sw.Start();
             
-            //TODO: how to unload previously generated assembly?
             var allTypesInNonDynamicGeneratedAssemblies = AppDomain.CurrentDomain.GetAssemblies()
                 .Where(a => !a.GetCustomAttributes<DynamicallyCreatedAssemblyAttribute>().Any())
                 .SelectMany(a => a.GetTypes())
