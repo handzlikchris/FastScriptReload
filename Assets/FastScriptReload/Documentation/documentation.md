@@ -1,12 +1,12 @@
 ﻿# Fast Script Reload
 
-Tool will allow you to iterate quicker on your code. You simply go into play mode, make a change to any file and it'll be 
-compiled on the fly and hot-reloaded in your running play-mode session.
+Tool will allow you to iterate quicker on your code. You simply go into play mode, make a change to any file and it'll be compiled on the fly and hot-reloaded in your running play-mode session.
 
 ## Getting started
-1) Press play
-2) Make code change
-3) See results
+1) Import (welcome screen will introduce you to options / etc)
+2) Open example scene ``
+3) Make code change
+4) See results
 
 ## Executing custom code on hot reload
 Custom code can be executed on hot reload by adding a method to changed script
