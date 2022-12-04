@@ -1,10 +1,9 @@
 using UnityEngine;
 
-namespace OddNamespace
+namespace FastScriptReload.Examples
 {
     using static Mathf;
-
-
+    
     public static class FunctionLibrary
     {
         public delegate Vector3 Function(float u, float v, float t);

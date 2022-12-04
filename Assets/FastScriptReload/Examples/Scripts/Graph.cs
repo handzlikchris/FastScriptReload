@@ -1,70 +1,72 @@
 //Example comes from https://bitbucket.org/catlikecodingunitytutorials/basics-02-building-a-graph/src/master/
 
-using OddNamespace;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
-public class Graph : MonoBehaviour {
+namespace FastScriptReload.Examples
+{
+	public class Graph : MonoBehaviour {
 
-	[SerializeField]
-	Transform pointPrefab;
+		[SerializeField]
+		Transform pointPrefab;
 
-	[SerializeField, Range(10, 100)]
-	int resolution = 10;
+		[SerializeField, Range(10, 100)]
+		int resolution = 10;
 
-	[SerializeField]
-	FunctionLibrary.FunctionName function;
+		[SerializeField]
+		FunctionLibrary.FunctionName function;
 	
-	[SerializeField] private int _testIterationCounter = 1;
-	[SerializeField] [Range(-3, 3)] private float _testUMove = 0f;
+		[SerializeField] private int _testIterationCounter = 1;
+		[SerializeField] [Range(-3, 3)] private float _testUMove = 0f;
 
-	Transform[] points;
+		Transform[] points;
 
-	void Awake ()
-	{
-		var pointsHolderGo = new GameObject("PointsHolder");
-		
-		float step = 2f / resolution;
-		var scale = Vector3.one * step;
-		points = new Transform[resolution * resolution];
-		for (int i = 0; i < points.Length; i++) {
-			Transform point = points[i] = Instantiate(pointPrefab);
-			point.localScale = scale;
-			point.SetParent(pointsHolderGo.transform, false);
-		}
-	}
-
-	[ContextMenu(nameof(ResetIterationCounter))]
-	void ResetIterationCounter()
-	{
-		_testIterationCounter = 0; 
-	}
-
-	void Update() 
-	{
-		var f = FunctionLibrary.GetFunction(function);
-		var time = Time.time;
-		var step = 2f / resolution;
-		var v = 0.5f * step - 1f;
-		for (int i = 0, x = 0, z = 0; i < points.Length; i++, x++)
+		void Awake ()
 		{
-			if (x == resolution)
+			var pointsHolderGo = new GameObject("PointsHolder");
+		
+			float step = 2f / resolution;
+			var scale = Vector3.one * step;
+			points = new Transform[resolution * resolution];
+			for (int i = 0; i < points.Length; i++) {
+				Transform point = points[i] = Instantiate(pointPrefab);
+				point.localScale = scale;
+				point.SetParent(pointsHolderGo.transform, false);
+			}
+		}
+
+		[ContextMenu(nameof(ResetIterationCounter))]
+		void ResetIterationCounter()
+		{
+			_testIterationCounter = 0; 
+		}
+
+		void Update() 
+		{
+			var f = FunctionLibrary.GetFunction(function);
+			var time = Time.time;
+			var step = 2f / resolution;
+			var v = 0.5f * step - 1f;
+			for (int i = 0, x = 0, z = 0; i < points.Length; i++, x++)
 			{
-				x = 0;
-				z += 1;
-				v = (z + 0.5f) * step - 1f;
+				if (x == resolution)
+				{
+					x = 0;
+					z += 1;
+					v = (z + 0.5f) * step - 1f;
+				}
+
+				var u = (x + 0.5f) * step - 1f;
+				points[i].localPosition = f(u + _testUMove, v, time);
 			}
 
-			var u = (x + 0.5f) * step - 1f;
-			points[i].localPosition = f(u + _testUMove, v, time);
+			_testIterationCounter++;
 		}
 
-		_testIterationCounter++;
-	}
-
-	void OnScriptHotReload()
-	{
-		Debug.Log("Script hot reloaded 1"); 
+		void OnScriptHotReload()
+		{
+			Debug.Log("Script hot reloaded 1"); 
+		}
 	}
 }
 
