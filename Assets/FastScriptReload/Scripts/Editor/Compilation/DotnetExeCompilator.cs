@@ -34,7 +34,7 @@ namespace FastScriptReload.Editor.Compilation
                 .FirstOrDefault();
             if (foundFile == null)
             {
-                throw new Exception($"Unable to find '{fileName}', make sure Editor version supports it. You can also add preprocessor directive 'QuickCodeIterationManager_CompileViaMCS' which will use Mono compiler instead");
+                throw new Exception($"Unable to find '{fileName}', make sure Editor version supports it. You can also add preprocessor directive 'FastScriptReload_CompileViaMCS' which will use Mono compiler instead");
             }
 
             return foundFile;
