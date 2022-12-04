@@ -1,4 +1,6 @@
-﻿namespace FastScriptReload.Runtime
+﻿#if UNITY_EDITOR || FastScriptReload_LoadAssemblyOverNetwork_Enabled
+
+namespace FastScriptReload.Runtime
 {
     public class AssemblyChangesLoaderResolver
     {
@@ -16,3 +18,5 @@
         }
     }
 }
+
+#endif
