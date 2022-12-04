@@ -88,7 +88,7 @@ public class FastScriptReloadWelcomeScreen : ProductWelcomeScreenBase
 @"Asset is very simple to use:
 
 1) Hit play to start.
-2) Go to 'FunctionLibrary.cs' (Assets/QuickCodeIteration/Examples/Scripts/)
+2) Go to 'FunctionLibrary.cs' (Assets/FastScriptReload/Examples/Scripts/)
 3) Change 'Ripple' method (eg change line before return statement to 'p.z = v * 10'
 4) Save file
 5) See change immediately",
