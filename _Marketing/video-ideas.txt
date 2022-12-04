@@ -1,0 +1,40 @@
+breaking news - nide transition for side subs
+https://www.canva.com/design/DAFThKmIvQY/jkgxhbQqN5wNyNGybx1jsg/edit
+https://www.canva.com/p/templates/EAFK4mgdtLw-gray-neutral-minimalist-animated-open-house-real-estate-video/
+
+final slide?
+https://www.canva.com/p/templates/EAE4HP2gZ1c-blue-yellow-modern-home-real-estate-ad-video/
+
+
+Overview video
+- show script compilation window
+	- funny image, tired of waiting?
+	https://www.canva.com/p/templates/EAFHhB7sX1w-red-orange-white-black-simple-illustrated-bored-eyes-t-shirt/
+	
+- speed up, transition
+https://www.canva.com/p/templates/EAE3MPs7WPU-business-conference-2022/
+https://www.canva.com/p/templates/EAE-rJIvbB8-animated-breaking-news-intro-youtube/
+Fast Script Reload - full script like, list steps
+1) Make change
+2) Save file
+3) See results
+
+- transition, show running game (with play button [editor])
+- 1 make change (show somewhere in side, ideally see all steps and show where video is) - code editor bigger, just 1 function (ripple)
+- save file (hot reload, show console logs, time)
+3) see results immediately
+
+-- Full transiton to more complex project
+- Execute custom code on load show methods
+- supports your workflow, no code editor changes
+- speeds up (show hot reloads for few files and time stamps, EnemyController, etc)
+
+--- final slide, just logo
+
+
+
+- text to speed up
+
+
+
+https://www.canva.com/p/templates/EAFOnFjFbTE-minimalist-black-white-pixelated-coffee-loading-screen-video/
