@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if UNITY_EDITOR || FastScriptReload_LoadAssemblyOverNetwork_Enabled
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -153,3 +155,4 @@ namespace FastScriptReload.Runtime
     }
 }
 
+#endif

@@ -9,26 +9,43 @@ Tool will allow you to iterate quicker on your code. You simply go into play mod
 4) Make code change, eg to `FunctionLibrary` (in `Assets/FastScriptReload/Examples/Scripts/`), Change `Ripple` method (eg change line before return statement to `p.z = v * 10`
 5) See results
 
+```
+Example scene 'Point' material should automatically detect URP or surface shader, if it shows pink, please adjust by picking shader manually:
+1) URP: 'Shader Graphs/Point URP'
+2) Surface: 'Graph/Point Surface'
+```
+
 ## Executing custom code on hot reload
 Custom code can be executed on hot reload by adding a method to changed script.
 
 ```
     void OnScriptHotReload()
     {
-    //do whatever you want to do with access to instance via 'this'
+        //do whatever you want to do with access to instance via 'this'
     }
 ```
 
 ```
     static void OnScriptHotReloadNoInstance()
     {
-        //do whatever you want to do without instance
-        //useful if you've added brand new type
+       //do whatever you want to do without instance
+       //useful if you've added brand new type
        // or want to simply execute some code without |any instance created.
        //Like reload scene, call test function etc
     }
 ```
 
+## Running outside of editor workflow
+
+It's a development tool, by default no runtime scripts will be included outside of Editor.
+
+**If you want test standalone / Android builds in same manner please look at extension tool 'Live Script Reload'**
+
+## Performance
+
+Your app performance won't be affected in any meaningful way though.
+Biggest bit is additional memory used for your re-compiled code.
+Won't be visuble unless you make 100s of changes in same play-session.
 
 ## Limitations
 There are some limitation due to the method taken
