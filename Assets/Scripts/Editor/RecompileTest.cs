@@ -11,8 +11,8 @@ public class RecompileTest : MonoBehaviour
     {
         var result = DynamicAssemblyCompiler.Compile(new List<string>()
         {
-            @"E:\_src-unity\QuickCodeIteration\Assets\Scripts\CompilationTestClass.cs",
-            @"E:\_src-unity\QuickCodeIteration\Assets\QuickCodeIteration\Examples\Scripts\FunctionLibrary.cs"
+            @"E:\_src-unity\FastScriptReload\Assets\Scripts\CompilationTestClass.cs",
+            @"E:\_src-unity\FastScriptReload\Assets\FastScriptReload\Examples\Scripts\FunctionLibrary.cs"
         });
         
         Debug.Log(result.SourceCodeCombined);
