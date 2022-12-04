@@ -8,7 +8,7 @@ using ImmersiveVRTools.Runtime.Common;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
-namespace QuickCodeIteration.Scripts.Runtime
+namespace FastScriptReload.Runtime
 {
     [PreventHotReload]
     public class AssemblyChangesLoader: IAssemblyChangesLoader

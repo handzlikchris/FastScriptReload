@@ -1,20 +1,21 @@
 using System;
-using System.Collections;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
-using UnityEngine;
+using FastScriptReload.Runtime;
 using LiteNetLib;
 using LiteNetLib.Utils;
-using QuickCodeIteration.Scripts.Runtime;
+using UnityEngine;
 
-[PreventHotReload]
-public class NetworkedAssemblyChangesSender : SingletonBase<NetworkedAssemblyChangesSender>, IAssemblyChangesLoader
+namespace LiveScriptReload.Runtime
+{
+    [PreventHotReload]
+    public class NetworkedAssemblyChangesSender : SingletonBase<NetworkedAssemblyChangesSender>, IAssemblyChangesLoader
 #if UNITY_EDITOR
     , INetEventListener, INetLogger
 #endif
-{
+    {
 #if UNITY_EDITOR
     private NetManager _netServer;
     private NetPeer _ourPeer;
@@ -98,30 +99,31 @@ public class NetworkedAssemblyChangesSender : SingletonBase<NetworkedAssemblyCha
         Debug.LogFormat(str, args);
     }
 #else
-    public void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates) {
-        throw new Exception("Shouldn't be called in non-editor workflow");
-    }
+        public void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates) {
+            throw new Exception("Shouldn't be called in non-editor workflow");
+        }
 
 #endif
-}
-
-[Serializable]
-public struct DllData: INetSerializable
-{
-    public byte[] RawData;
-
-    public DllData(byte[] rawData)
-    {
-        RawData = rawData;
     }
 
-    public void Serialize(NetDataWriter writer)
+    [Serializable]
+    public struct DllData: INetSerializable
     {
-        writer.PutBytesWithLength(RawData);
-    }
+        public byte[] RawData;
 
-    public void Deserialize(NetDataReader reader)
-    {
-        RawData = reader.GetBytesWithLength();
+        public DllData(byte[] rawData)
+        {
+            RawData = rawData;
+        }
+
+        public void Serialize(NetDataWriter writer)
+        {
+            writer.PutBytesWithLength(RawData);
+        }
+
+        public void Deserialize(NetDataReader reader)
+        {
+            RawData = reader.GetBytesWithLength();
+        }
     }
 }

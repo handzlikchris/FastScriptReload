@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using FastScriptReload.Runtime;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using QuickCodeIteration.Scripts.Runtime;
 using UnityEditor;
 using Debug = UnityEngine.Debug;
 
-namespace QuickCodeIteration.Scripts.Editor
+namespace FastScriptReload.Editor
 {
     [InitializeOnLoad]
     public class DynamicCompilationBase

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using QuickCodeIteration.Scripts.Editor;
 using UnityEngine;
 
 #if QuickCodeIterationManager_CompileViaMCS

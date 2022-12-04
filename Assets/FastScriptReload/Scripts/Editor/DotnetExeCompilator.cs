@@ -10,7 +10,7 @@ using System.Threading;
 using UnityEditor;
 using Debug = UnityEngine.Debug;
 
-namespace QuickCodeIteration.Scripts.Editor
+namespace FastScriptReload.Editor
 {
     [InitializeOnLoad]
     public class DotnetExeDynamicCompilation: DynamicCompilationBase
