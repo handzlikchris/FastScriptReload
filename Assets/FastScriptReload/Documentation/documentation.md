@@ -4,33 +4,31 @@ Tool will allow you to iterate quicker on your code. You simply go into play mod
 
 ## Getting started
 1) Import (welcome screen will introduce you to options / etc)
-2) Open example scene ``
-3) Make code change
-4) See results
+2) Open example scene `FastScriptReload/Examples/Scenes/ExampleScene`
+3) Play
+4) Make code change, eg to `FunctionLibrary` (in `Assets/FastScriptReload/Examples/Scripts/`), Change `Ripple` method (eg change line before return statement to `p.z = v * 10`
+5) See results
 
 ## Executing custom code on hot reload
-Custom code can be executed on hot reload by adding a method to changed script
-
-## Synchronizing changes over network
-TODO: move and extend
-1) add preprocessor directive: QuickCodeIteration_LoadAssemblyOverNetwork_Enabled
-2) add NetworkedAssemblyChangesLoader to the scene (if testing in editor tick `Run In Editor`)
-
-Networked component right now will try to use broadcast to find server and auto connect, there's no way to put custom IP (TODO).
-Make sure Firewall is set correctly to allow connection
+Custom code can be executed on hot reload by adding a method to changed script.
 
 ```
-void OnScriptHotReload() {
-    //your code
-}
+    void OnScriptHotReload()
+    {
+    //do whatever you want to do with access to instance via 'this'
+    }
 ```
 
-You can also execute custom code without access to class instance via
 ```
-static OnScriptHotReloadNoInstance() {
-    //you code
-}
+    static void OnScriptHotReloadNoInstance()
+    {
+        //do whatever you want to do without instance
+        //useful if you've added brand new type
+       // or want to simply execute some code without |any instance created.
+       //Like reload scene, call test function etc
+    }
 ```
+
 
 ## Limitations
 There are some limitation due to the method taken
