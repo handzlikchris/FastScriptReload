@@ -16,7 +16,7 @@ namespace FastScriptReload.Editor
     public class DynamicCompilationBase
     {
         protected static readonly string[] ActiveScriptCompilationDefines;
-        protected static readonly string DynamicallyCreatedAssemblyAttributeSourceCode = $"[assembly: QuickCodeIteration.Scripts.Runtime.DynamicallyCreatedAssemblyAttribute()]";
+        protected static readonly string DynamicallyCreatedAssemblyAttributeSourceCode = $"[assembly: {typeof(DynamicallyCreatedAssemblyAttribute).FullName}()]";
 
         static DynamicCompilationBase()
         {
