@@ -18,6 +18,8 @@ Example scene 'Point' material should automatically detect URP or surface shader
 ## Executing custom code on hot reload
 Custom code can be executed on hot reload by adding a method to changed script.
 
+**You can see example by adjusting code in 'Graph.cs' file.**
+
 ```
     void OnScriptHotReload()
     {
@@ -43,15 +45,17 @@ It's a development tool, by default no runtime scripts will be included outside 
 
 ## Performance
 
-Your app performance won't be affected in any meaningful way though.
+Your app performance won't be affected in any meaningful way.
 Biggest bit is additional memory used for your re-compiled code.
 Won't be visuble unless you make 100s of changes in same play-session.
 
 ## Limitations
-There are some limitation due to the method taken
+There are some limitation due to the approach taken bu the tool to hot-reload your scripts.
 
-### Debugger can't be attached to changed files
-Right now if you hot-reloaded a file your debug breakpoints will no longer be hit
+### Breakpoints in hot-reloaded scripts won't be hit, sorry!
+
+- only for the scripts you changed, others will work
+- with how quick it compiles and reloads you may not even need a debugger
 
 ### Passing `this` reference to method that expect concrete class implementation
 It'll throw compilation error `The best overloaded method match for xxx has some invalid arguments` - this is due to the fact that changed code is technically different type.
@@ -64,7 +68,7 @@ public class EnemyController: MonoBehaviour {
 
     void Start()
     {
-        //calling this causes issues as after hot-reload the type of EnemyController will change
+        //calling 'this' causes issues as after hot-reload the type of EnemyController will change to 'EnemyController__Patched_'
         m_EnemyManager.RegisterEnemy(this);
     }
 }
@@ -76,7 +80,7 @@ public class EnemyManager : MonoBehaviour {
 }
 ```
 
-It could be changed to support hot-reload in following way.
+It could be changed to support Hot-Reload in following way:
 
 1) Don't depend on concrete implementations, instead use interfaces/abstraction
 ```
@@ -111,17 +115,44 @@ public class EnemyManager : MonoBehaviour {
 }
 ```
 
-### Creating new methods
-Hot swapped new methods will only work in case of private methods (eg only called by changed code)
-
-
-### No IL2CPP support
-Asset runs based on specific .NET functionality, IL2CPP builds will not be supported. Although as this is development workflow aid you can build your APK with Mono backend (android) and change later.
+### Creating new public methods
+Hot-reload for new methods will only work with private methods (only called by changed code)
 
 ### Adding new fields
-- adding new fields is not supported due to the way asset redirects method calls - will likely lead to crashes.
+As with methods, adding new fields is not supported in play mode.
+You can however simply create local variable and later quickly refactor that out.
 
-Below code will have unexpected results 
+eg. for a simple class that moves position by some vector on every update
+
+*Initial class before play mode entered*
+```
+public class SimpleTransformMover: MonoBehaviour {
+   void Update() {
+        transform.position += new Vector3(1, 0, 0);
+    }
+}
+```
+
+*Changes in playmode*
+```
+public class SimpleTransformMover: MonoBehaviour {
+   //public Vector3 _moveBy = new Vector3(1, 0, 0); //1) do not introduce fields in play mode
+    
+   void Update() {
+        var _moveBy = new Vector3(1, 0, 0); //2) instead declare variable in method scope 
+        // (optionally with instance scope name-convention)
+   
+        // transform.position += new Vector3(1, 0, 0); //original code - now will use variable
+        transform.position += _moveBy; //3) changed code - uses local variable
+        
+        4) iterate as needed and after play mode simply refactor added variables as fields
+    }
+}
+```
+
+**WARNING**
+
+Tool will compile and hot-reload newly added fileds but it'll likely result in unexpected behaviour. eg.
 ```
 	public class SomeClass : MonoBehaviour {
         [SerializeField] private int _val = 1; //added after initial compilation
@@ -132,50 +163,11 @@ Below code will have unexpected results
 	}
 ```
 
-Instead when iterating in playmode, define those values as a method variables (and this can then be very easily moved out after session)
-```
-	public class SomeClass : MonoBehaviour {
-        //[SerializeField] private int _val = 1; //add this line after play session
-	    
-	    void Update() {
-	        int _val = 1; //added after initial compilation, remove once play-test iteration finished
-	    
-	        Debug.Log($"val: {_val}"); //added after initial compilation
-	    }
-	}
-```
-
-This is likely down to the approach taken by asset in which it'll add [jmp] instruction to old class, seems like modifying structure (as in 
-new methods / fields) can create issues.
-
-What can help is moving new fields to be declared after all existing variables - ideally do not add new fields.
-
-eg
-```
-	[SerializeField] FunctionLibrary.FunctionName function;  //existing
-	
-	[SerializeField] private int _testIterationCounter = 1;  //existing
-	
-    [SerializeField] private int _dynamicallyAddedField; //dynamically added
-
-```
-
-- dynamically added fields will not run inline initializer, eg `private int _dynamicallyAddedField; = 1` will not initialize to 1, you have to do that in `OnScriptHotReload()` method
-- dynamically added fields will only show in editor after full reload
-
-## Networked Version
-- add info about broadcast and option to directly specify IP,
-- add basic info about fw
-
-### Performance
-Performance should be on par with your standard code. The only hit comes at change time when compilation happens. TODO: profiling session
+### No IL2CPP support
+Asset runs based on specific .NET functionality, IL2CPP builds will not be supported. Although as this is development workflow aid you can build your APK with Mono backend (android) and change later.
 
 ### Adding new references
 When you're trying to reference new code in play-mode session that'll fail if assembly is not yet referencing that (most often happens when using AsmDefs that are not yet referencing each other)
 
-### Auto-save
-- make sure to turn off auto save for files in editor (otherwise changes will be picked up)
-- tool will also batch changes and execute new compile every 5 seconds (which can be configured in settings [TODO])
-
-## FAQ
-- example loads with broken shaders (TODO should be auto adjusted, point how if not)
+## Roadmap
+- add debugger support for hot-reloaded scripts
