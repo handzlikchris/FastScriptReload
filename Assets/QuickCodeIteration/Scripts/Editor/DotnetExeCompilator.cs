@@ -51,7 +51,6 @@ namespace QuickCodeIteration.Scripts.Editor
                 var sourceCodeCombinedFilePath = _tempFolder + $"{asmName}.SourceCodeCombined.cs";
                 var outLibraryPath = $"{_tempFolder}{asmName}.dll";
 
-
                 var sourceCodeCombined = CreateSourceCodeCombinedContents(filePathsWithSourceCode.Select(File.ReadAllText));
                 CreateFileAndTrackAsCleanup(sourceCodeCombinedFilePath, sourceCodeCombined, createdFilesToCleanUp);
 

@@ -2,7 +2,7 @@
 
 public delegate bool CustomRootDelegate(string test);
 
-public class ClassDoDynamicallyUpdate: BaseClass
+public class ClassDoDynamicallyUpdate: MonoBehaviour
 {
     public delegate bool CustomNestedDelegate(string test); 
     
@@ -36,13 +36,5 @@ public class ClassDoDynamicallyUpdate: BaseClass
     private void OnDrawGizmosSelected()
     {
         Gizmos.DrawCube(new Vector3(0, 2, 0), Vector3.one);
-    }
-}
-
-public class BaseClass : MonoBehaviour
-{
-    private void OnDrawGizmos()
-    {
-        Gizmos.DrawCube(new Vector3(0, 3, 0), Vector3.one);
     }
 }
