@@ -9,6 +9,6 @@ public class BaseClassCallHangTest : BaseClassHang
 
     protected override void TestCallImpl()
     {
-        Debug.Log("Test Impl - changed");
+        Debug.Log("Test Impl");
     }
 }

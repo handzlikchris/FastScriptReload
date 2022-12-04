@@ -2,14 +2,14 @@ using UnityEngine;
 
 public class BaseClassTestCaller : MonoBehaviour
 {
-    [Tooltip("The projectile prefab")] public BaseClassHang BaseClassHangPrefab;
+    public BaseClassHang BaseClassHang;
 
 
     [ContextMenu(nameof(Test))]
     void Test()
     {
-        var o = Instantiate(BaseClassHangPrefab);
-        o.Call();
+        // var o = Instantiate(BaseClassHangPrefab);
+        BaseClassHang.Call();
     }
 
     // Update is called once per frame
