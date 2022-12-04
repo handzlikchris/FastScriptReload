@@ -162,7 +162,7 @@ namespace FastScriptReload.Editor
         [MenuItem("Window/Fast Script Reload/Force Reload", false, 1999)]
         public static void ForceReload()
         {
-            QuickCodeIterationManager.Instance.TriggerReloadForChangedFiles();
+            FastScriptReloadManager.Instance.TriggerReloadForChangedFiles();
         }
 
         public void OnEnable()

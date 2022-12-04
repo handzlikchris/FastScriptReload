@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FastScriptReload.Editor.Compilation;
 using FastScriptReload.Runtime;
 using ImmersiveVRTools.Runtime.Common;
 using UnityEditor;
@@ -14,10 +15,10 @@ namespace FastScriptReload.Editor
 {
     [InitializeOnLoad]
     [PreventHotReload]
-    public class QuickCodeIterationManager
+    public class FastScriptReloadManager
     {
-        private static QuickCodeIterationManager _instance;
-        public static QuickCodeIterationManager Instance => _instance ?? (_instance = new QuickCodeIterationManager());
+        private static FastScriptReloadManager _instance;
+        public static FastScriptReloadManager Instance => _instance ?? (_instance = new FastScriptReloadManager());
 
         private PlayModeStateChange _lastPlayModeStateChange;
         private List<FileSystemWatcher> _fileWatchers = new List<FileSystemWatcher>();
@@ -78,7 +79,7 @@ namespace FastScriptReload.Editor
             _fileWatchers.Add(fileWatcher);
         }
 
-        static QuickCodeIterationManager()
+        static FastScriptReloadManager()
         {
             //do not add init code in here as with domain reload turned off it won't be properly set on play-mode enter, use Init method instead
             EditorApplication.update += Instance.Update;

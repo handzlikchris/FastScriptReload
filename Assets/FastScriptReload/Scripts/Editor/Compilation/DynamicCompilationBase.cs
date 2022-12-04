@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using UnityEditor;
 using Debug = UnityEngine.Debug;
 
-namespace FastScriptReload.Editor
+namespace FastScriptReload.Editor.Compilation
 {
     [InitializeOnLoad]
     public class DynamicCompilationBase

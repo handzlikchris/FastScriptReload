@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using Debug = UnityEngine.Debug;
 
-namespace FastScriptReload.Editor
+namespace FastScriptReload.Editor.Compilation
 {
     public class DynamicAssemblyCompiler
     {

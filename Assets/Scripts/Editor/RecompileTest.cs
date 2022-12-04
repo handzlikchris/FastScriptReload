@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using FastScriptReload.Editor;
+using FastScriptReload.Editor.Compilation;
 using UnityEditor;
 using UnityEngine;
 
