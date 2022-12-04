@@ -101,7 +101,7 @@ public class FastScriptReloadWelcomeScreen : ProductWelcomeScreenBase
         })
     };
 
-    private static readonly string RedirectBaseUrl = "https://immersivevrtools.com/redirect/immersive-vr-mechanic-tools"; 
+    private static readonly string RedirectBaseUrl = "https://immersivevrtools.com/redirect/fast-script-reload"; 
     private static readonly GuiSection TopSection = new GuiSection("Support", new List<ClickableElement>
         {
             new OpenUrlButton("Documentation", $"{RedirectBaseUrl}/documentation"),
