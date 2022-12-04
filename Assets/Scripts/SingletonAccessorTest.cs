@@ -9,11 +9,6 @@ namespace ExistingNamespaceTest
         [ContextMenu(nameof(PrintExistingSingletonValue))]
         void PrintExistingSingletonValue()
         {
-            void LocalTest()
-            {
-                Debug.Log("Local test ");  
-            }
-            
             // LocalTest();  
             int t = default;    
             Debug.Log(t);      

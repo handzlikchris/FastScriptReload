@@ -1,4 +1,4 @@
-﻿namespace QuickCodeIteration.Scripts.Runtime
+﻿namespace FastScriptReload.Runtime
 {
     public class AssemblyChangesLoaderResolver
     {

@@ -22,7 +22,9 @@ namespace SomeNamespace
         // Start is called before the first frame update
         void Start()
         {
+#pragma warning disable CS8321
             string LocalMethod()
+#pragma warning restore CS8321
             {
                 int d = default;
                 return d.ToString();
