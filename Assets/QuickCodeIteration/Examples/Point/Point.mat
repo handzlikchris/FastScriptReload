@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Point Surface
+  m_Name: Point
   m_Shader: {fileID: 4800000, guid: 465e84f7c06b44e05a7ae6f3dccab691, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
