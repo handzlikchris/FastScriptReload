@@ -67,6 +67,16 @@ namespace FastScriptReload.Editor
                     }
 
                     GUILayout.Space(sectionBreakHeight);
+                    
+                    using (LayoutHelper.LabelWidth(350))
+                    {
+                        ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalThisCallLimitationFix);
+                    }
+                    GUILayout.Space(sectionBreakHeight);
+                
+                    EditorGUILayout.HelpBox("Method calls utilizing 'this' will trigger compiler exception, if enabled tool will rewrite the calls to have proper type after adjustments." +
+                                            "\r\n\r\nIn case you're seeing compile errors relating to 'this' keyword please let me know via support page. Also turning this setting off will prevent rewrite.", MessageType.Info);
+
                 }),
                 (ExclusionsSecion = new ChangeMainViewButton("Exclusions", (screen) => 
                 {
@@ -128,10 +138,11 @@ namespace FastScriptReload.Editor
                 GenerateCommonWelcomeText(FastScriptReloadPreference.ProductName, screen);
 
                 GUILayout.Label("Quick adjustments:", screen.LabelStyle);
-                using (LayoutHelper.LabelWidth(300))
+                using (LayoutHelper.LabelWidth(350))
                 {
                     ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.BatchScriptChangesAndReloadEveryNSeconds);
                     ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableAutoReloadForChangedFiles);
+                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalThisCallLimitationFix);
                 }
             }
         );
@@ -190,6 +201,9 @@ namespace FastScriptReload.Editor
 
         public static readonly ToggleProjectEditorPreferenceDefinition EnableAutoReloadForChangedFiles = new ToggleProjectEditorPreferenceDefinition(
             "Enable auto Hot-Reload for changed files", "EnableAutoReloadForChangedFiles", true);
+        
+        public static readonly ToggleProjectEditorPreferenceDefinition EnableExperimentalThisCallLimitationFix = new ToggleProjectEditorPreferenceDefinition(
+            "(Experimental) Enable method calls with 'this' as argument fix", "EnableExperimentalThisCallLimitationFix", true);
     
         public static readonly StringListProjectEditorPreferenceDefinition FilesExcludedFromHotReload = new StringListProjectEditorPreferenceDefinition(
             "Files excluded from Hot-Reload", "FilesExcludedFromHotReload", new List<string> {}, isReadonly: true);
@@ -235,7 +249,8 @@ namespace FastScriptReload.Editor
         {
             CreateDefaultShowOptionPreferenceDefinition(),
             BatchScriptChangesAndReloadEveryNSeconds,
-            EnableAutoReloadForChangedFiles
+            EnableAutoReloadForChangedFiles,
+            EnableExperimentalThisCallLimitationFix
         };
 
         private static bool PrefsLoaded = false;

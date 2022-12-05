@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 public class PassingSelfTest : MonoBehaviour 
@@ -9,6 +8,17 @@ public class PassingSelfTest : MonoBehaviour
     [ContextMenu(nameof(Pass))]
     void Pass()
     {
-        PassingSelfManager.Pass(this);
+        
+        this.Value = Value;
+        Debug.Log(this + "This test" + Value); 
+        PassingSelfManager.Pass(this, "test"); 
+         
+        PassingSelfManager.Pass((t) =>
+        {
+            t.Value = "changed in lambda";
+            Debug.Log(t.Value);
+            
+            Debug.Log("local this.Value = " + this.Value);
+        }, this, "raw string");
     }
 }

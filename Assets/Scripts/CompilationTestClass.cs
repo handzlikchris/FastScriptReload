@@ -1,11 +1,12 @@
 using SomeNamespace;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace SomeNamespace
 {
     public delegate CompilationTestClass RootDelegate(int test, CompilationTestClass test1);
     
-    public class CompilationTestClass : MonoBehaviour
+    public class CompilationTestClass : MonoBehaviour, ICompilationTestClass
     {
         public class NestedClass
         {
@@ -29,18 +30,33 @@ namespace SomeNamespace
                 int d = default;
                 return d.ToString();
             }
+            
+            PassingSelfManager.Pass(this); 
+            PassingSelfManager.PassInterface(this); 
+        }
+        
+        [ContextMenu(nameof(Pass))]
+        void Pass()
+        {
+            PassingSelfManager.Pass(this); 
+            PassingSelfManager.PassInterface(this);  
         }
 
         // Update is called once per frame
         void Update()
         {
-        
+            
         }
         
         public enum NestedEnum
         {
             Value1,
             Value2
+        }
+
+        public void TestInterface()
+        {
+            throw new System.NotImplementedException();
         }
     }
 
@@ -70,6 +86,11 @@ namespace SomeNamespace
             t = new();
         }
     }
+}
+
+public interface ICompilationTestClass
+{
+    void TestInterface();
 }
 
 public struct StructNoNamespace
