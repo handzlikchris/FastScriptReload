@@ -93,6 +93,16 @@ namespace FastScriptReload.Editor.Compilation
         {
             public List<string> StrippedUsingDirectives = new List<string>();
             
+            public override SyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
+            {
+                var typeName = (node.Ancestors().First(n => n is TypeDeclarationSyntax) as TypeDeclarationSyntax).Identifier.ToString();
+                if(!typeName.EndsWith(AssemblyChangesLoader.ClassnamePatchedPostfix)) {
+                    typeName += AssemblyChangesLoader.ClassnamePatchedPostfix;
+                }
+                
+                return node.ReplaceToken(node.Identifier, SyntaxFactory.Identifier(typeName));
+            }
+            
             public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
             {
                 return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
@@ -137,7 +147,7 @@ namespace FastScriptReload.Editor.Compilation
             
             private static SyntaxNode AddPatchedPostfixToTopLevelDeclarations(CSharpSyntaxNode node, SyntaxToken identifier)
             {
-                var newIdentifier = SyntaxFactory.Identifier(identifier + AssemblyChangesLoader.ClassnamePatchedPostfix + " ");
+                var newIdentifier = SyntaxFactory.Identifier(identifier + AssemblyChangesLoader.ClassnamePatchedPostfix);
                 node = node.ReplaceToken(identifier, newIdentifier);
                 return node;
             }
@@ -149,7 +159,7 @@ namespace FastScriptReload.Editor.Compilation
             {
                 if (node.Parent is ArgumentSyntax)
                 {
-                    var methodInType = (node.Ancestors().First(n => n is ClassDeclarationSyntax) as ClassDeclarationSyntax).Identifier.ToString();
+                    var methodInType = (node.Ancestors().First(n => n is TypeDeclarationSyntax) as TypeDeclarationSyntax).Identifier.ToString();
                     return SyntaxFactory.CastExpression(
                         SyntaxFactory.ParseTypeName(methodInType),
                         SyntaxFactory.CastExpression(
