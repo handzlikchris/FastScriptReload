@@ -33,7 +33,14 @@ namespace FastScriptReload.Editor.Compilation
                 var tree = CSharpSyntaxTree.ParseText(fileCode);
                 var root = tree.GetRoot();
                 var rewriter = new HotReloadCompliantRewriter();
+                
+                if (FastScriptReloadManager.Instance.EnableExperimentalThisCallLimitationFix)
+                {
+                    root = new ThisCallRewriter().Visit(root);
+                }
+
                 root = rewriter.Visit(root);
+                
                 combinedUsingStatements.AddRange(rewriter.StrippedUsingDirectives);
 
                 return root.ToFullString();
@@ -112,6 +119,11 @@ namespace FastScriptReload.Editor.Compilation
                 return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
             }
 
+            public override SyntaxNode VisitInterfaceDeclaration(InterfaceDeclarationSyntax node)
+            {
+                return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
+            }
+
             public override SyntaxNode VisitUsingDirective(UsingDirectiveSyntax node)
             {
                 if (node.Parent is CompilationUnitSyntax)
@@ -128,6 +140,25 @@ namespace FastScriptReload.Editor.Compilation
                 var newIdentifier = SyntaxFactory.Identifier(identifier + AssemblyChangesLoader.ClassnamePatchedPostfix + " ");
                 node = node.ReplaceToken(identifier, newIdentifier);
                 return node;
+            }
+        }
+        
+        class ThisCallRewriter : CSharpSyntaxRewriter
+        {
+            public override SyntaxNode VisitThisExpression(ThisExpressionSyntax node)
+            {
+                if (node.Parent is ArgumentSyntax)
+                {
+                    var methodInType = (node.Ancestors().First(n => n is ClassDeclarationSyntax) as ClassDeclarationSyntax).Identifier.ToString();
+                    return SyntaxFactory.CastExpression(
+                        SyntaxFactory.ParseTypeName(methodInType),
+                        SyntaxFactory.CastExpression(
+                            SyntaxFactory.ParseTypeName(typeof(object).FullName),
+                            node
+                        )
+                    );
+                }
+                return base.VisitThisExpression(node);
             }
         }
     }
