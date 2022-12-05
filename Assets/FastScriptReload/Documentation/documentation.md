@@ -58,8 +58,12 @@ There are some limitation due to the approach taken bu the tool to hot-reload yo
 - with how quick it compiles and reloads you may not even need a debugger
 
 ### Passing `this` reference to method that expect concrete class implementation
+
 It'll throw compilation error `The best overloaded method match for xxx has some invalid arguments` - this is due to the fact that changed code is technically different type.
-The code will need to be adjusted to depend on some abstraction instead (before hot-reload)
+The code will need to be adjusted to depend on some abstraction instead (before hot-reload).
+
+`**By default experimental setting 'Enable method calls with 'this' as argument fix' is turned on in options, and should fix 'this' calls issue.
+If you see issues with that please turn setting off and get in touch via support email.**
 
 This code would cause the above error.
 ```
