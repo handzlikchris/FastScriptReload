@@ -15,9 +15,26 @@ namespace FastScriptReload.Runtime
     [PreventHotReload]
     public class AssemblyChangesLoader: IAssemblyChangesLoader
     {
+        const BindingFlags ALL_BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic |
+                                               BindingFlags.Static | BindingFlags.Instance |
+                                               BindingFlags.FlattenHierarchy;
+            
+        const BindingFlags ALL_DECLARED_METHODS_BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic |
+                                                                BindingFlags.Static | BindingFlags.Instance |
+                                                                BindingFlags.DeclaredOnly; //only declared methods can be redirected, otherwise it'll result in hang
+        
         public const string ClassnamePatchedPostfix = "__Patched_";
         public const string ON_HOT_RELOAD_METHOD_NAME = "OnScriptHotReload";
         public const string ON_HOT_RELOAD_NO_INSTANCE_STATIC_METHOD_NAME = "OnScriptHotReloadNoInstance";
+        
+        private static readonly List<Type> ExcludeMethodsDefinedOnTypes = new List<Type>
+        {
+            typeof(MonoBehaviour),
+            typeof(Behaviour),
+            typeof(UnityEngine.Object),
+            typeof(Component),
+            typeof(System.Object)
+        }; //TODO: move out and possibly define a way to exclude all non-client created code? as this will crash editor
         
         private static AssemblyChangesLoader _instance;
         public static AssemblyChangesLoader Instance => _instance ?? (_instance = new AssemblyChangesLoader());
@@ -31,19 +48,6 @@ namespace FastScriptReload.Runtime
                 .Where(a => !a.GetCustomAttributes<DynamicallyCreatedAssemblyAttribute>().Any())
                 .SelectMany(a => a.GetTypes())
                 .ToList();
-
-            var excludeMethodsDefinedOnTypes = new List<Type>
-            {
-                typeof(MonoBehaviour),
-                typeof(Behaviour),
-                typeof(UnityEngine.Object),
-                typeof(Component),
-                typeof(System.Object)
-            }; //TODO: move out and possibly define a way to exclude all non-client created code? as this will crash editor
-
-            const BindingFlags ALL_DECLARED_METHODS_BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic |
-                                                           BindingFlags.Static | BindingFlags.Instance |
-                                                           BindingFlags.DeclaredOnly; //only declared methods can be redirected, otherwise it'll result in hang
 
             foreach (var createdType in dynamicallyLoadedAssemblyWithUpdates.GetTypes()
                          .Where(t => t.IsClass
@@ -62,11 +66,16 @@ namespace FastScriptReload.Runtime
                 var matchingTypeInExistingAssemblies = allTypesInNonDynamicGeneratedAssemblies.SingleOrDefault(t => t.FullName == createdTypeNameWithoutPatchedPostfix);
                 if (matchingTypeInExistingAssemblies != null)
                 {
+                    if (DidFieldsOrPropertyCountChanged(createdType,  matchingTypeInExistingAssemblies))
+                    {
+                        continue;
+                    }
+
                     var allDeclaredMethodsInExistingType = matchingTypeInExistingAssemblies.GetMethods(ALL_DECLARED_METHODS_BINDING_FLAGS)
-                        .Where(m => !excludeMethodsDefinedOnTypes.Contains(m.DeclaringType))
+                        .Where(m => !ExcludeMethodsDefinedOnTypes.Contains(m.DeclaringType))
                         .ToList();
                     foreach (var createdTypeMethodToUpdate in createdType.GetMethods(ALL_DECLARED_METHODS_BINDING_FLAGS)
-                                 .Where(m => !excludeMethodsDefinedOnTypes.Contains(m.DeclaringType)))
+                                 .Where(m => !ExcludeMethodsDefinedOnTypes.Contains(m.DeclaringType)))
                     {
                         var createdTypeMethodToUpdateFullDescriptionWithoutPatchedClassPostfix = RemoveClassPostfix(createdTypeMethodToUpdate.FullDescription());
                         var matchingMethodInExistingType = allDeclaredMethodsInExistingType.SingleOrDefault(m => m.FullDescription() == createdTypeMethodToUpdateFullDescriptionWithoutPatchedClassPostfix);
@@ -98,6 +107,19 @@ namespace FastScriptReload.Runtime
             }
             
             Debug.Log($"Hot-reload completed (took {sw.ElapsedMilliseconds}ms)");
+        }
+
+        private static bool DidFieldsOrPropertyCountChanged(Type createdType, Type matchingTypeInExistingAssemblies)
+        {
+            var createdTypeFieldAndPropertiesCount = createdType.GetFields(ALL_BINDING_FLAGS).Length + createdType.GetProperties(ALL_BINDING_FLAGS).Length;
+            var matchingTypeFieldAndPropertiesCount = matchingTypeInExistingAssemblies.GetFields(ALL_BINDING_FLAGS).Length + matchingTypeInExistingAssemblies.GetProperties(ALL_BINDING_FLAGS).Length;
+            if (createdTypeFieldAndPropertiesCount != matchingTypeFieldAndPropertiesCount)
+            {
+                Debug.LogError($"It seems you've added/removed field to changed script. This is not supported and will result in undefined behaviour. Hot-reload will not be performed for type: {matchingTypeInExistingAssemblies.Name}");
+                return true;
+            }
+
+            return false;
         }
 
         private static void FindAndExecuteStaticOnScriptHotReloadNoInstance(Type createdType)
