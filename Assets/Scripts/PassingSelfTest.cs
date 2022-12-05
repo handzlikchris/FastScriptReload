@@ -10,7 +10,7 @@ public class PassingSelfTest : MonoBehaviour
     {
         
         this.Value = Value;
-        Debug.Log(this + "This test" + Value); 
+        Debug.Log(this + "This test test" + Value); 
         PassingSelfManager.Pass(this, "test"); 
          
         PassingSelfManager.Pass((t) =>
