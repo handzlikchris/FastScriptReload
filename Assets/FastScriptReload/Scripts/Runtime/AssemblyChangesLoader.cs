@@ -6,13 +6,17 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
+using ImmersiveVRTools.Editor.Common.WelcomeScreen.PreferenceDefinition;
 using ImmersiveVRTools.Runtime.Common;
+using ImmersiveVRTools.Runtime.Common.Extensions;
+using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 namespace FastScriptReload.Runtime
 {
     [PreventHotReload]
+    [InitializeOnLoad]
     public class AssemblyChangesLoader: IAssemblyChangesLoader
     {
         const BindingFlags ALL_BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic |
@@ -26,7 +30,7 @@ namespace FastScriptReload.Runtime
         public const string ClassnamePatchedPostfix = "__Patched_";
         public const string ON_HOT_RELOAD_METHOD_NAME = "OnScriptHotReload";
         public const string ON_HOT_RELOAD_NO_INSTANCE_STATIC_METHOD_NAME = "OnScriptHotReloadNoInstance";
-        
+
         private static readonly List<Type> ExcludeMethodsDefinedOnTypes = new List<Type>
         {
             typeof(MonoBehaviour),
@@ -41,72 +45,80 @@ namespace FastScriptReload.Runtime
 
         public void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates)
         {
-            var sw = new Stopwatch();
-            sw.Start();
-            
-            var allTypesInNonDynamicGeneratedAssemblies = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(a => !a.GetCustomAttributes<DynamicallyCreatedAssemblyAttribute>().Any())
-                .SelectMany(a => a.GetTypes())
-                .ToList();
-
-            foreach (var createdType in dynamicallyLoadedAssemblyWithUpdates.GetTypes()
-                         .Where(t => t.IsClass
-                                     && !typeof(Delegate).IsAssignableFrom(t) //don't redirect delegates
-                         )
-                    )
+            try
             {
-                if (createdType.GetCustomAttribute<PreventHotReload>() != null)
-                {
-                    //TODO: ideally type would be excluded from compilation not just from detour
-                    Debug.Log($"Type: {createdType.Name} marked as {nameof(PreventHotReload)} - ignoring change.");
-                    continue;
-                }
+                var sw = new Stopwatch();
+                sw.Start();
                 
-                var createdTypeNameWithoutPatchedPostfix = RemoveClassPostfix(createdType.FullName);
-                var matchingTypeInExistingAssemblies = allTypesInNonDynamicGeneratedAssemblies.SingleOrDefault(t => t.FullName == createdTypeNameWithoutPatchedPostfix);
-                if (matchingTypeInExistingAssemblies != null)
+                var allTypesInNonDynamicGeneratedAssemblies = AppDomain.CurrentDomain.GetAssemblies()
+                    .Where(a => !a.GetCustomAttributes<DynamicallyCreatedAssemblyAttribute>().Any())
+                    .SelectMany(a => a.GetTypes())
+                    .ToList();
+
+                foreach (var createdType in dynamicallyLoadedAssemblyWithUpdates.GetTypes()
+                             .Where(t => t.IsClass
+                                         && !typeof(Delegate).IsAssignableFrom(t) //don't redirect delegates
+                             )
+                        )
                 {
-                    if (DidFieldsOrPropertyCountChanged(createdType,  matchingTypeInExistingAssemblies))
+                    if (createdType.GetCustomAttribute<PreventHotReload>() != null)
                     {
+                        //TODO: ideally type would be excluded from compilation not just from detour
+                        Debug.Log($"Type: {createdType.Name} marked as {nameof(PreventHotReload)} - ignoring change.");
                         continue;
                     }
-
-                    var allDeclaredMethodsInExistingType = matchingTypeInExistingAssemblies.GetMethods(ALL_DECLARED_METHODS_BINDING_FLAGS)
-                        .Where(m => !ExcludeMethodsDefinedOnTypes.Contains(m.DeclaringType))
-                        .ToList();
-                    foreach (var createdTypeMethodToUpdate in createdType.GetMethods(ALL_DECLARED_METHODS_BINDING_FLAGS)
-                                 .Where(m => !ExcludeMethodsDefinedOnTypes.Contains(m.DeclaringType)))
-                    {
-                        var createdTypeMethodToUpdateFullDescriptionWithoutPatchedClassPostfix = RemoveClassPostfix(createdTypeMethodToUpdate.FullDescription());
-                        var matchingMethodInExistingType = allDeclaredMethodsInExistingType.SingleOrDefault(m => m.FullDescription() == createdTypeMethodToUpdateFullDescriptionWithoutPatchedClassPostfix);
-                        if (matchingMethodInExistingType != null)
-                        {
-#if FastScriptReload_DebugEnabled
-                            Debug.Log($"Trying to detour method, from: '{matchingMethodInExistingType.FullDescription()}' to: '{createdTypeMethodToUpdate.FullDescription()}'");
-#endif
-                            Memory.DetourMethod(matchingMethodInExistingType, createdTypeMethodToUpdate);
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"Method: {createdTypeMethodToUpdate.FullDescription()} does not exist in initially compiled type: {matchingTypeInExistingAssemblies.FullName}. " +
-                                             $"Adding new methods at runtime is not fully supported. \r\n" +
-                                             $"It'll only work new method is only used by declaring class (eg private method)\r\n" +
-                                             $"Make sure to add method before initial compilation.");
-                        }
-                    }
                     
-                    FindAndExecuteStaticOnScriptHotReloadNoInstance(createdType);
-                    FindAndExecuteOnScriptHotReload(matchingTypeInExistingAssemblies);
+                    var createdTypeNameWithoutPatchedPostfix = RemoveClassPostfix(createdType.FullName);
+                    var matchingTypeInExistingAssemblies = allTypesInNonDynamicGeneratedAssemblies.SingleOrDefault(t => t.FullName == createdTypeNameWithoutPatchedPostfix);
+                    if (matchingTypeInExistingAssemblies != null)
+                    {
+                        if (DidFieldsOrPropertyCountChanged(createdType,  matchingTypeInExistingAssemblies))
+                        {
+                            continue;
+                        }
+
+                        var allDeclaredMethodsInExistingType = matchingTypeInExistingAssemblies.GetMethods(ALL_DECLARED_METHODS_BINDING_FLAGS)
+                            .Where(m => !ExcludeMethodsDefinedOnTypes.Contains(m.DeclaringType))
+                            .ToList();
+                        foreach (var createdTypeMethodToUpdate in createdType.GetMethods(ALL_DECLARED_METHODS_BINDING_FLAGS)
+                                     .Where(m => !ExcludeMethodsDefinedOnTypes.Contains(m.DeclaringType)))
+                        {
+                            var createdTypeMethodToUpdateFullDescriptionWithoutPatchedClassPostfix = RemoveClassPostfix(createdTypeMethodToUpdate.FullDescription());
+                            var matchingMethodInExistingType = allDeclaredMethodsInExistingType.SingleOrDefault(m => m.FullDescription() == createdTypeMethodToUpdateFullDescriptionWithoutPatchedClassPostfix);
+                            if (matchingMethodInExistingType != null)
+                            {
+    #if FastScriptReload_DebugEnabled
+                                Debug.Log($"Trying to detour method, from: '{matchingMethodInExistingType.FullDescription()}' to: '{createdTypeMethodToUpdate.FullDescription()}'");
+    #endif
+                                DetourCrashHandler.LogDetour(matchingMethodInExistingType.ResolveFullName());
+                                Memory.DetourMethod(matchingMethodInExistingType, createdTypeMethodToUpdate);
+                            }
+                            else
+                            {
+                                Debug.LogWarning($"Method: {createdTypeMethodToUpdate.FullDescription()} does not exist in initially compiled type: {matchingTypeInExistingAssemblies.FullName}. " +
+                                                 $"Adding new methods at runtime is not fully supported. \r\n" +
+                                                 $"It'll only work new method is only used by declaring class (eg private method)\r\n" +
+                                                 $"Make sure to add method before initial compilation.");
+                            }
+                        }
+                        
+                        FindAndExecuteStaticOnScriptHotReloadNoInstance(createdType);
+                        FindAndExecuteOnScriptHotReload(matchingTypeInExistingAssemblies);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Unable to find existing type for: '{createdType.FullName}', this is not an issue if you added new type");
+                        FindAndExecuteStaticOnScriptHotReloadNoInstance(createdType);
+                        FindAndExecuteOnScriptHotReload(createdType);
+                    }
                 }
-                else
-                {
-                    Debug.LogWarning($"Unable to find existing type for: '{createdType.FullName}', this is not an issue if you added new type");
-                    FindAndExecuteStaticOnScriptHotReloadNoInstance(createdType);
-                    FindAndExecuteOnScriptHotReload(createdType);
-                }
+                
+                Debug.Log($"Hot-reload completed (took {sw.ElapsedMilliseconds}ms)");
             }
-            
-            Debug.Log($"Hot-reload completed (took {sw.ElapsedMilliseconds}ms)");
+            finally
+            {
+                DetourCrashHandler.ClearDetourLog();
+            }
         }
 
         private static bool DidFieldsOrPropertyCountChanged(Type createdType, Type matchingTypeInExistingAssemblies)

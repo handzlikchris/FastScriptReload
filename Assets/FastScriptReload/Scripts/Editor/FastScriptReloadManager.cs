@@ -177,8 +177,7 @@ namespace FastScriptReload.Editor
                             });
 
                             //TODO: return some proper results to make sure entries are correctly updated
-                            assemblyChangesLoader.DynamicallyUpdateMethodsForCreatedAssembly(
-                                dynamicallyLoadedAssemblyCompilerResult.CompiledAssembly);
+                            assemblyChangesLoader.DynamicallyUpdateMethodsForCreatedAssembly(dynamicallyLoadedAssemblyCompilerResult.CompiledAssembly);
                             changesAwaitingHotReload.ForEach(c =>
                             {
                                 c.HotSwappedOn = DateTime.UtcNow;
