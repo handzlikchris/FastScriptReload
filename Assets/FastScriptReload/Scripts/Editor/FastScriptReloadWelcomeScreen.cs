@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using FastScriptReload.Runtime;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen.GuiElements;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen.PreferenceDefinition;
@@ -208,7 +209,6 @@ namespace FastScriptReload.Editor
         public static readonly StringListProjectEditorPreferenceDefinition FilesExcludedFromHotReload = new StringListProjectEditorPreferenceDefinition(
             "Files excluded from Hot-Reload", "FilesExcludedFromHotReload", new List<string> {}, isReadonly: true);
 
-    
         public static void SetCommonMaterialsShader(ShadersMode newShaderModeValue)
         {
             var rootToolFolder = AssetPathResolver.GetAssetFolderPathRelativeToScript(ScriptableObject.CreateInstance(typeof(FastScriptReloadWelcomeScreen)), 1);
@@ -302,6 +302,37 @@ namespace FastScriptReload.Editor
                     AutoDetectAndSetShaderMode();
                 }
             );
+            
+            DisplayMessageIfLastDetourPotentiallyCrashedEditor();
+        }
+
+        private static void DisplayMessageIfLastDetourPotentiallyCrashedEditor()
+        {
+            const string firstInitSessionKey = "FastScriptReloadWelcomeScreenInitializer_FirstInitDone";
+            if (!SessionState.GetBool(firstInitSessionKey, false))
+            {
+                SessionState.SetBool(firstInitSessionKey, true);
+
+                var lastDetour = DetourCrashHandler.RetrieveLastDetour();
+                if (!string.IsNullOrEmpty(lastDetour))
+                {
+                    EditorUtility.DisplayDialog("Fast Script Reload",
+                        $@"That's embarrassing!
+
+It seems like I've crashed your editor, sorry!
+
+Last detoured method was: '{lastDetour}'
+
+If this happens again, please reach out via support and we'll sort it out.
+
+In the meantime, you can exclude any file from Hot-Reload by 
+1) right-clicking on .cs file in Project menu
+2) Fast Script Reload 
+3) Add Hot-Reload Exclusion
+", "Ok");
+                    DetourCrashHandler.ClearDetourLog();
+                }
+            }
         }
 
         private static void AutoDetectAndSetShaderMode()

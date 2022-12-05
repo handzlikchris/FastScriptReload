@@ -43,6 +43,10 @@ It's a development tool, by default no runtime scripts will be included outside 
 
 **If you want test standalone / Android builds in same manner please look at extension tool 'Live Script Reload'**
 
+## Excluding files from Hot-Reload
+
+## TODO: describe other options
+
 ## Performance
 
 Your app performance won't be affected in any meaningful way.
