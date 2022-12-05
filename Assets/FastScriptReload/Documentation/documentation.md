@@ -43,9 +43,38 @@ It's a development tool, by default no runtime scripts will be included outside 
 
 **If you want test standalone / Android builds in same manner please look at extension tool 'Live Script Reload'**
 
-## Excluding files from Hot-Reload
+## Options
+You can access Welcome Screen / Options via 'Window -> Fast Script Reload -> Start Screen' - it contains useful information as well as options.
 
-## TODO: describe other options
+```
+Options can aslo be accessed via 'Edit -> Preferences -> Fast Script Reload'
+```
+
+### Auto Hot-Reload
+By default tool will pick changes made to any file in playmode. You can add exclusions to that behaviour, more on that later.
+
+You can also manually manage reload, to do so:
+1) Un-tick 'Enable auto Hot-Reload for changed files' in Options -> Reload page
+2) Click Window -> Fast Script Reload -> Force Reload to trigger
+3) or call `FastScriptReloadManager.TriggerReloadForChangedFiles()` method from code
+
+### Managing file exclusions
+
+#### via 'Project' context menu
+1) Right click on any *.cs file
+2) Click Fast Script Reload
+3) Add Hot-Reload Exclusion
+
+*You can remove exclusion from same menu*
+
+#### via Exclusions page
+To view all exclusions:
+1) Right click on any *.cs file
+2) Click Fast Script Reload
+3) Click Show Exclusions
+
+### Batch script changes and reload every N seconds
+Script will batch all your playmode changes and Hot-Reload them in bulk every 3 seconds - you can change that value from 'Reload' options page.
 
 ## Performance
 
