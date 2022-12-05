@@ -1,5 +1,6 @@
 using System;
 using SomeNamespace;
+using Test;
 using UnityEngine;
 
 public class PassingSelfManager
@@ -22,5 +23,20 @@ public class PassingSelfManager
     public static void PassInterface(ICompilationTestClass t) 
     {
         Debug.Log($"Passed CompilationTestClass via interface: {t}"); 
+    }
+
+    public static void Pass(NestedStructTest.TestNestedStruct s)
+    {
+        Debug.Log($"Passed {s}"); 
+    }
+    
+    public static void Pass(RootStruct s)
+    {
+        Debug.Log($"Passed {s}"); 
+    }
+    
+    public static void Pass(NestedStructTest.NestedClass s)
+    {
+        Debug.Log($"Passed {s}"); 
     }
 }

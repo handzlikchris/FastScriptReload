@@ -33,12 +33,13 @@ namespace FastScriptReload.Editor.Compilation
                 var tree = CSharpSyntaxTree.ParseText(fileCode);
                 var root = tree.GetRoot();
                 var rewriter = new HotReloadCompliantRewriter();
-                
+
+                //WARN: application order is important, eg ctors need to happen before class names as otherwise ctors will not be recognised as ctors
                 if (FastScriptReloadManager.Instance.EnableExperimentalThisCallLimitationFix)
                 {
-                    root = new ThisCallRewriter().Visit(root);
+					root = new ThisCallRewriter().Visit(root);
                 }
-
+                root = new ConstructorRewriter( adjustCtorOnlyForNonNestedTypes: true).Visit(root);
                 root = rewriter.Visit(root);
                 
                 combinedUsingStatements.AddRange(rewriter.StrippedUsingDirectives);
@@ -89,87 +90,123 @@ namespace FastScriptReload.Editor.Compilation
             return referencesToAdd;
         }
 
-        class HotReloadCompliantRewriter : CSharpSyntaxRewriter
+        class ConstructorRewriter : CSharpSyntaxRewriter
         {
-            public List<string> StrippedUsingDirectives = new List<string>();
-            
-            public override SyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
-            {
-                var typeName = (node.Ancestors().First(n => n is TypeDeclarationSyntax) as TypeDeclarationSyntax).Identifier.ToString();
-                if(!typeName.EndsWith(AssemblyChangesLoader.ClassnamePatchedPostfix)) {
-                    typeName += AssemblyChangesLoader.ClassnamePatchedPostfix;
-                }
-                
-                return node.ReplaceToken(node.Identifier, SyntaxFactory.Identifier(typeName));
-            }
-            
-            public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
-            {
-                return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
-                //if subclasses need to be adjusted, it's done via recursion.
-                // foreach (var childNode in node.ChildNodes().OfType<ClassDeclarationSyntax>())
-                // {
-                //     var changed = Visit(childNode);
-                //     node = node.ReplaceNode(childNode, changed);
-                // }
-            }
-            
-            public override SyntaxNode VisitStructDeclaration(StructDeclarationSyntax node)
-            {
-                return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
-            }
+	        private readonly bool _adjustCtorOnlyForNonNestedTypes;
+	        
+	        public ConstructorRewriter(bool adjustCtorOnlyForNonNestedTypes)
+	        {
+		        _adjustCtorOnlyForNonNestedTypes = adjustCtorOnlyForNonNestedTypes;
+	        }
+	        
+	        public override SyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
+	        {
+		        if (_adjustCtorOnlyForNonNestedTypes)
+		        {
+			        var typeNestedLevel = node.Ancestors().Count(a => a is TypeDeclarationSyntax);
+			        if (typeNestedLevel == 1)
+			        {
+				        return AdjustCtorNameForTypeAdjustment(node);
+			        }
+		        }
+		        else
+		        {
+			        return AdjustCtorNameForTypeAdjustment(node);
+		        }
 
-            public override SyntaxNode VisitEnumDeclaration(EnumDeclarationSyntax node)
-            {
-                return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
-            }
+		        return base.VisitConstructorDeclaration(node);
+	        }
 
-            public override SyntaxNode VisitDelegateDeclaration(DelegateDeclarationSyntax node)
-            {
-                return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
-            }
+	        private static SyntaxNode AdjustCtorNameForTypeAdjustment(ConstructorDeclarationSyntax node)
+	        {
+		        var typeName = (node.Ancestors().First(n => n is TypeDeclarationSyntax) as TypeDeclarationSyntax).Identifier
+			        .ToString();
+		        if (!typeName.EndsWith(AssemblyChangesLoader.ClassnamePatchedPostfix))
+		        {
+			        typeName += AssemblyChangesLoader.ClassnamePatchedPostfix;
+		        }
 
-            public override SyntaxNode VisitInterfaceDeclaration(InterfaceDeclarationSyntax node)
-            {
-                return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
-            }
-
-            public override SyntaxNode VisitUsingDirective(UsingDirectiveSyntax node)
-            {
-                if (node.Parent is CompilationUnitSyntax)
-                {
-                    StrippedUsingDirectives.Add(node.ToFullString());
-                    return null;
-                }
-
-                return base.VisitUsingDirective(node);
-            }
-            
-            private static SyntaxNode AddPatchedPostfixToTopLevelDeclarations(CSharpSyntaxNode node, SyntaxToken identifier)
-            {
-                var newIdentifier = SyntaxFactory.Identifier(identifier + AssemblyChangesLoader.ClassnamePatchedPostfix);
-                node = node.ReplaceToken(identifier, newIdentifier);
-                return node;
-            }
+		        return node.ReplaceToken(node.Identifier, SyntaxFactory.Identifier(typeName));
+	        }
         }
-        
-        class ThisCallRewriter : CSharpSyntaxRewriter
-        {
-            public override SyntaxNode VisitThisExpression(ThisExpressionSyntax node)
-            {
-                if (node.Parent is ArgumentSyntax)
-                {
-                    var methodInType = (node.Ancestors().First(n => n is TypeDeclarationSyntax) as TypeDeclarationSyntax).Identifier.ToString();
-                    return SyntaxFactory.CastExpression(
-                        SyntaxFactory.ParseTypeName(methodInType),
-                        SyntaxFactory.CastExpression(
-                            SyntaxFactory.ParseTypeName(typeof(object).FullName),
-                            node
-                        )
-                    );
-                }
-                return base.VisitThisExpression(node);
-            }
-        }
+
+		class HotReloadCompliantRewriter : CSharpSyntaxRewriter
+		{
+			public List<string> StrippedUsingDirectives = new List<string>();
+			
+			public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
+			{
+				return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
+				//if subclasses need to be adjusted, it's done via recursion.
+				// foreach (var childNode in node.ChildNodes().OfType<ClassDeclarationSyntax>())
+				// {
+				//     var changed = Visit(childNode);
+				//     node = node.ReplaceNode(childNode, changed);
+				// }
+			}
+
+			public override SyntaxNode VisitStructDeclaration(StructDeclarationSyntax node)
+			{
+				return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
+			}
+
+			public override SyntaxNode VisitEnumDeclaration(EnumDeclarationSyntax node)
+			{
+				return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
+			}
+
+			public override SyntaxNode VisitDelegateDeclaration(DelegateDeclarationSyntax node)
+			{
+				return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
+			}
+
+			public override SyntaxNode VisitInterfaceDeclaration(InterfaceDeclarationSyntax node)
+			{
+				return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
+			}
+
+			public override SyntaxNode VisitUsingDirective(UsingDirectiveSyntax node)
+			{
+				if (node.Parent is CompilationUnitSyntax)
+				{
+					StrippedUsingDirectives.Add(node.ToFullString());
+					return null;
+				}
+
+				return base.VisitUsingDirective(node);
+			}
+
+			private static SyntaxNode AddPatchedPostfixToTopLevelDeclarations(CSharpSyntaxNode node, SyntaxToken identifier)
+			{
+				var newIdentifier = SyntaxFactory.Identifier(identifier + AssemblyChangesLoader.ClassnamePatchedPostfix);
+				node = node.ReplaceToken(identifier, newIdentifier);
+				return node;
+			}
+		}
+
+		class ThisCallRewriter : CSharpSyntaxRewriter
+		{
+			public override SyntaxNode VisitThisExpression(ThisExpressionSyntax node)
+			{
+				if (node.Parent is ArgumentSyntax)
+				{
+					var ancestors = node.Ancestors().Where(n => n is TypeDeclarationSyntax).Cast<TypeDeclarationSyntax>().ToList();
+					if (ancestors.Count() > 1)
+					{
+						Debug.LogError($"{ancestors.First().Identifier} - 'this' call is in a nested class / struct - currently that's not supported and will cause compilation error. You can move type out of class / struct in order for this call to be correctly Hot-Reloaded.");
+					}
+					
+					var methodInType = ancestors.First().Identifier.ToString();
+					return SyntaxFactory.CastExpression(
+						SyntaxFactory.ParseTypeName(methodInType),
+						SyntaxFactory.CastExpression(
+							SyntaxFactory.ParseTypeName(typeof(object).FullName),
+							node
+						)
+					);
+				}
+				return base.VisitThisExpression(node);
+			}
+		}
     }
 }

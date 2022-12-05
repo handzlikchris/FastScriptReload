@@ -23,7 +23,7 @@ namespace FastScriptReload.Editor
         private PlayModeStateChange _lastPlayModeStateChange;
         private List<FileSystemWatcher> _fileWatchers = new List<FileSystemWatcher>();
         private IEnumerable<string> _currentFileExclusions;
-        public bool EnableExperimentalThisCallLimitationFix { get; private set; }
+        public bool EnableExperimentalThisCallLimitationFix { get; set; }
 
         private List<DynamicFileHotReloadState> _dynamicFileHotReloadStateEntries = new List<DynamicFileHotReloadState>();
 
