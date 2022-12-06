@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
-using ImmersiveVRTools.Editor.Common.WelcomeScreen.PreferenceDefinition;
 using ImmersiveVRTools.Runtime.Common;
 using ImmersiveVRTools.Runtime.Common.Extensions;
 using UnityEditor;
