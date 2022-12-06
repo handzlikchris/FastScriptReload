@@ -7,6 +7,14 @@ namespace Test
 {
     public class NestedStructTest : MonoBehaviour
     {
+        public class NestedClass 
+        {
+            public NestedClass()
+            {
+                // PassingSelfManager.Pass(this);   
+            }
+        }
+        
         private List<TestNestedStruct> nestedStructBuffer = new();
 
         public NestedStructTest()
@@ -38,14 +46,6 @@ namespace Test
             new NestedClass();
         }
 
-        public class NestedClass 
-        {
-            public NestedClass()
-            {
-                // PassingSelfManager.Pass(this);   
-            }
-        }
-    
         public struct TestNestedStruct
         {
             public TestNestedStruct(NestedStructTest nestedStructTest, string test) {

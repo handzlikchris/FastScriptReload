@@ -72,6 +72,24 @@ namespace FastScriptReload.Editor.Compilation
             catch (Exception)
             {
                 Debug.LogError($"Compilation error: temporary files were not removed so they can be inspected: {string.Join(", ", createdFilesToCleanUp)}");
+                if (LogHowToFixMessageOnCompilationError)
+                {
+                    Debug.LogWarning($@"HOW TO FIX - INSTRUCTIONS:
+
+(error could be caused by a normal compilation error that you created in source file, in that case please fix and it'll recompile, read further if you see that message repeatedly)
+
+Apologies this happened, tool is still under development and they are still some cases that'll trip it up.
+
+If you could please get in touch with me via 'support@immersivevrtools.com' and include error you see in the console as well as created files (paths in previous error). This way I can get it fixed for you.
+
+In the meantime, you can:
+1) Look at 'limitation' section in the docs - used code pattern might not be supported yet 
+2) Move some of the code that you want to work on to different file - compilation happens on whole file, if you have multiple types there it could increase the chance of issues
+3) Have a look at compilation error, it shows error line (in the '*.SourceCodeCombined.cs' file, it's going to be something that compiler does not accept, likely easy to spot. To workaround you can change that part of code in original file. It's specific patterns that'll break it.
+
+*If you want to prevent that message from reappearing please go to Window -> Fast Script Reload -> Start Screen -> Logging -> tick off 'Log how to fix message on compilation error'*");
+
+                }
                 throw;
             }
         }
