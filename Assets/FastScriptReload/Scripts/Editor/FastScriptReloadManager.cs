@@ -29,6 +29,7 @@ namespace FastScriptReload.Editor
 
         private DateTime _lastTimeChangeBatchRun = default(DateTime);
         private bool _executeOnlyInPlaymode = true; //TODO: potentially later add editor support - needed?
+        private bool _assemblyChangesLoaderResolverResolutionAlreadyCalled;
     
         private void OnWatchedFileChange(object source, FileSystemEventArgs e)
         {
@@ -137,8 +138,13 @@ namespace FastScriptReload.Editor
             //TODO: PERF: needed in file watcher but when run on non-main thread causes exception. 
             _currentFileExclusions = FastScriptReloadPreference.FilesExcludedFromHotReload.GetElements();
             EnableExperimentalThisCallLimitationFix = (bool)FastScriptReloadPreference.EnableExperimentalThisCallLimitationFix.GetEditorPersistedValueOrDefault();
-        
-            AssemblyChangesLoaderResolver.Instance.Resolve(); //WARN: need to resolve initially in case monobehaviour singleton is not created
+
+            if (!_assemblyChangesLoaderResolverResolutionAlreadyCalled)
+            {
+                AssemblyChangesLoaderResolver.Instance.Resolve(); //WARN: need to resolve initially in case monobehaviour singleton is not created
+                _assemblyChangesLoaderResolverResolutionAlreadyCalled = true;
+            }
+
             if ((bool)FastScriptReloadPreference.EnableAutoReloadForChangedFiles.GetEditorPersistedValueOrDefault() &&
                 (DateTime.UtcNow - _lastTimeChangeBatchRun).TotalSeconds > (int)FastScriptReloadPreference.BatchScriptChangesAndReloadEveryNSeconds.GetEditorPersistedValueOrDefault())
             {
