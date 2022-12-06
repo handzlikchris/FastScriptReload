@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using FastScriptReload.Editor.Compilation;
 using FastScriptReload.Runtime;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen.GuiElements;
@@ -77,7 +78,6 @@ namespace FastScriptReload.Editor
                 
                     EditorGUILayout.HelpBox("Method calls utilizing 'this' will trigger compiler exception, if enabled tool will rewrite the calls to have proper type after adjustments." +
                                             "\r\n\r\nIn case you're seeing compile errors relating to 'this' keyword please let me know via support page. Also turning this setting off will prevent rewrite.", MessageType.Info);
-
                 }),
                 (ExclusionsSecion = new ChangeMainViewButton("Exclusions", (screen) => 
                 {
@@ -87,6 +87,13 @@ namespace FastScriptReload.Editor
                     GUILayout.Space(10);
                 
                     ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.FilesExcludedFromHotReload);
+                })),
+                (ExclusionsSecion = new ChangeMainViewButton("Logging", (screen) => 
+                {
+                    using (LayoutHelper.LabelWidth(350))
+                    {
+                        ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.LogHowToFixMessageOnCompilationError);
+                    }
                 })),
                 // new ChangeMainViewButton("Network", (screen) => //TODO: add for networked version, with compilation symbol?
                 // {
@@ -144,6 +151,7 @@ namespace FastScriptReload.Editor
                     ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.BatchScriptChangesAndReloadEveryNSeconds);
                     ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableAutoReloadForChangedFiles);
                     ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalThisCallLimitationFix);
+                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.LogHowToFixMessageOnCompilationError);
                 }
             }
         );
@@ -208,6 +216,16 @@ namespace FastScriptReload.Editor
     
         public static readonly StringListProjectEditorPreferenceDefinition FilesExcludedFromHotReload = new StringListProjectEditorPreferenceDefinition(
             "Files excluded from Hot-Reload", "FilesExcludedFromHotReload", new List<string> {}, isReadonly: true);
+        
+        public static readonly ToggleProjectEditorPreferenceDefinition LogHowToFixMessageOnCompilationError = new ToggleProjectEditorPreferenceDefinition(
+            "Log how to fix message on compilation error", "LogHowToFixMessageOnCompilationError", true, (object newValue, object oldValue) =>
+            {
+                DynamicCompilationBase.LogHowToFixMessageOnCompilationError = (bool)newValue;
+            },
+            (value) =>
+            {
+                DynamicCompilationBase.LogHowToFixMessageOnCompilationError = (bool)value;
+            });
 
         public static void SetCommonMaterialsShader(ShadersMode newShaderModeValue)
         {
@@ -250,7 +268,8 @@ namespace FastScriptReload.Editor
             CreateDefaultShowOptionPreferenceDefinition(),
             BatchScriptChangesAndReloadEveryNSeconds,
             EnableAutoReloadForChangedFiles,
-            EnableExperimentalThisCallLimitationFix
+            EnableExperimentalThisCallLimitationFix,
+            LogHowToFixMessageOnCompilationError
         };
 
         private static bool PrefsLoaded = false;
@@ -304,6 +323,8 @@ namespace FastScriptReload.Editor
             );
             
             DisplayMessageIfLastDetourPotentiallyCrashedEditor();
+            
+            DynamicCompilationBase.LogHowToFixMessageOnCompilationError = (bool)FastScriptReloadPreference.LogHowToFixMessageOnCompilationError.GetEditorPersistedValueOrDefault();
         }
 
         private static void DisplayMessageIfLastDetourPotentiallyCrashedEditor()
