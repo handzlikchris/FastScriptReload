@@ -33,7 +33,7 @@ namespace FastScriptReload.Editor
             ExclusionsSecion.OnClick(this);
         }
 
-        private static readonly List<GuiSection> LeftSections = new List<GuiSection>() {
+        protected static readonly List<GuiSection> LeftSections = new List<GuiSection>() {
             new GuiSection("", new List<ClickableElement>
             {
                 new LastUpdateButton("New Update!", (screen) => LastUpdateUpdateScrollViewSection.RenderMainScrollViewSection(screen)),
@@ -198,10 +198,6 @@ namespace FastScriptReload.Editor
 
     public class FastScriptReloadPreference : ProductPreferenceBase
     {
-#if FastScriptReload_LoadAssemblyOverNetwork_Enabled
-       public static string BuildSymbol_LoadAssemblyChangesOverNetwork = "FastScriptReload_LoadAssemblyOverNetwork_Enabled"; 
-#endif
-
         public const string ProductName = "Fast Script Reload";
         private static string[] ProductKeywords = new[] { "productivity", "tools" };
 

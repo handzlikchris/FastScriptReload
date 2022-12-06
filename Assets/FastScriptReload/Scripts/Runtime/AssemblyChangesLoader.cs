@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR || FastScriptReload_LoadAssemblyOverNetwork_Enabled
+﻿#if UNITY_EDITOR || LiveScriptReload_Enabled
 
 using System;
 using System.Collections.Generic;
