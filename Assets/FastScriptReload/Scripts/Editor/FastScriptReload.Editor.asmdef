@@ -1,0 +1,18 @@
+{
+    "name": "FastScriptReload.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:b75b497805046c443a21f90e84a5ff4f",
+        "GUID:971602466d1134f40bda5ed1a8b97f97",
+        "GUID:c980e020b7ab6c64cb9e3764e7b6e57b"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
