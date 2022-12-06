@@ -88,7 +88,7 @@ namespace FastScriptReload.Editor
                 
                     ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.FilesExcludedFromHotReload);
                 })),
-                (ExclusionsSecion = new ChangeMainViewButton("Logging", (screen) => 
+                (new ChangeMainViewButton("Logging", (screen) => 
                 {
                     using (LayoutHelper.LabelWidth(350))
                     {
