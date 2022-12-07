@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using FastScriptReload.Editor.Compilation;
 using FastScriptReload.Runtime;
+using ImmersiveVRTools.Editor.Common.Utilities;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen.GuiElements;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen.PreferenceDefinition;
@@ -34,13 +35,30 @@ namespace FastScriptReload.Editor
             ExclusionsSecion.OnClick(this);
         }
 
-        private static readonly List<GuiSection> LeftSections = CreateLeftSections(
-            "ExampleScene", 
-            @"Assets/FastScriptReload/Examples/Scripts/", 
-            null
-        );
+        private static readonly List<GuiSection> LeftSections = CreateLeftSections(null, 
+            new LaunchSceneButton("Basic Example", (s) => GetScenePath("ExampleScene"), (screen) =>
+            {
+                GUILayout.Label(
+                    $@"Asset is very simple to use:
 
-        protected static List<GuiSection> CreateLeftSections(string demoSceneName, string scriptsPath, ChangeMainViewButton additionalSection)
+1) Hit play to start.
+2) Go to 'FunctionLibrary.cs' ({@"Assets/FastScriptReload/Examples/Scripts/"})", screen.TextStyle);
+                
+                CreateOpenFunctionLibraryOnRippleMethodButton();
+
+                
+                GUILayout.Label(
+                    $@"3) Change 'Ripple' method (eg change line before return statement to 'p.z = v * 10'
+4) Save file
+5) See change immediately",
+                    screen.TextStyle
+                );
+                
+                GUILayout.Space(10);
+                EditorGUILayout.HelpBox("There are some limitations to what can be Hot-Reloaded, documentation lists them under 'limitations' section.", MessageType.Warning);
+            }));
+
+        protected static List<GuiSection> CreateLeftSections(ChangeMainViewButton additionalSection, LaunchSceneButton launchSceneButton)
         {
             return new List<GuiSection>() {
                 new GuiSection("", new List<ClickableElement>
@@ -108,22 +126,7 @@ namespace FastScriptReload.Editor
                 }.Where(s => s != null).ToList()),
                 new GuiSection("Launch Demo", new List<ClickableElement>
                 {
-                    new LaunchSceneButton("Basic Example", (s) => GetScenePath(demoSceneName), (screen) =>
-                    {
-                        GUILayout.Label(
-                            $@"Asset is very simple to use:
-
-1) Hit play to start.
-2) Go to 'FunctionLibrary.cs' ({scriptsPath})
-3) Change 'Ripple' method (eg change line before return statement to 'p.z = v * 10'
-4) Save file
-5) See change immediately",
-                            screen.TextStyle
-                        );
-                
-                        GUILayout.Space(10);
-                        EditorGUILayout.HelpBox("There are some limitations to what can be Hot-Reloaded, documentation lists them under 'limitations' section.", MessageType.Warning);
-                    })
+                    launchSceneButton
                 })
             };
         }
@@ -205,6 +208,15 @@ namespace FastScriptReload.Editor
         public void OnGUI()
         {
             RenderGUI(LeftSections, TopSection, BottomSection, MainScrollViewSection);
+        }
+        
+        protected static void CreateOpenFunctionLibraryOnRippleMethodButton()
+        {
+            if (GUILayout.Button("Open 'FunctionLibrary.cs'"))
+            {
+                var codeComponent = AssetDatabase.LoadAssetAtPath<MonoScript>(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets($"t:Script FunctionLibrary")[0]));
+                CodeEditorManager.GotoScript(codeComponent, "Ripple");
+            }
         }
     }
 

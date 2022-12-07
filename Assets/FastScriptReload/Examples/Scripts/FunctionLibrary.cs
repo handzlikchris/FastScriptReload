@@ -4,7 +4,7 @@ namespace FastScriptReload.Examples
 {
     using static Mathf;
     
-    public static class FunctionLibrary
+    public class FunctionLibrary: MonoBehaviour
     {
         public delegate Vector3 Function(float u, float v, float t);
 
