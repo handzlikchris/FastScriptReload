@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using FastScriptReload.Editor.Compilation;
 using FastScriptReload.Runtime;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen;
@@ -33,93 +34,99 @@ namespace FastScriptReload.Editor
             ExclusionsSecion.OnClick(this);
         }
 
-        protected static readonly List<GuiSection> LeftSections = new List<GuiSection>() {
-            new GuiSection("", new List<ClickableElement>
-            {
-                new LastUpdateButton("New Update!", (screen) => LastUpdateUpdateScrollViewSection.RenderMainScrollViewSection(screen)),
-                new ChangeMainViewButton("Welcome", (screen) => MainScrollViewSection.RenderMainScrollViewSection(screen)),
-            }),
-            new GuiSection("Options", new List<ClickableElement>
-            {
-                new ChangeMainViewButton("Reload", (screen) =>
+        private static readonly List<GuiSection> LeftSections = CreateLeftSections(
+            "ExampleScene", 
+            @"Assets/FastScriptReload/Examples/Scripts/", 
+            null
+        );
+
+        protected static List<GuiSection> CreateLeftSections(string demoSceneName, string scriptsPath, ChangeMainViewButton additionalSection)
+        {
+            return new List<GuiSection>() {
+                new GuiSection("", new List<ClickableElement>
                 {
-                    const int sectionBreakHeight = 15;
-                    GUILayout.Label(
-                        @"Asset watches all script files and automatically hot-reloads on change, you can disable that behaviour and reload on demand.",
-                        screen.TextStyle
-                    );
-                
-                    using (LayoutHelper.LabelWidth(300))
-                    {
-                        ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableAutoReloadForChangedFiles);
-                    }
-                    GUILayout.Space(sectionBreakHeight);
-                
-                    EditorGUILayout.HelpBox("On demand reload:\r\nvia Window -> Fast Script Reload -> Force Reload, \r\nor by calling 'FastScriptIterationManager.Instance.TriggerReloadForChangedFiles()'", MessageType.Info);
-                    GUILayout.Space(sectionBreakHeight);
-                
-                    GUILayout.Label(
-                        @"For performance reasons script changes are batched are reloaded every N seconds",
-                        screen.TextStyle
-                    );
-
-                    using (LayoutHelper.LabelWidth(300))
-                    {
-                        ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.BatchScriptChangesAndReloadEveryNSeconds);
-                    }
-
-                    GUILayout.Space(sectionBreakHeight);
-                    
-                    using (LayoutHelper.LabelWidth(350))
-                    {
-                        ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalThisCallLimitationFix);
-                    }
-                    GUILayout.Space(sectionBreakHeight);
-                
-                    EditorGUILayout.HelpBox("Method calls utilizing 'this' will trigger compiler exception, if enabled tool will rewrite the calls to have proper type after adjustments." +
-                                            "\r\n\r\nIn case you're seeing compile errors relating to 'this' keyword please let me know via support page. Also turning this setting off will prevent rewrite.", MessageType.Info);
+                    new LastUpdateButton("New Update!", (screen) => LastUpdateUpdateScrollViewSection.RenderMainScrollViewSection(screen)),
+                    new ChangeMainViewButton("Welcome", (screen) => MainScrollViewSection.RenderMainScrollViewSection(screen)),
                 }),
-                (ExclusionsSecion = new ChangeMainViewButton("Exclusions", (screen) => 
+                new GuiSection("Options", new List<ClickableElement>
                 {
-                    EditorGUILayout.HelpBox("Those are easiest to manage from Project window by right clicking on script file and selecting: " +
-                                            "\r\nFast Script Reload -> Add Hot-Reload Exclusion " +
-                                            "\r\nFast Script Reload -> Remove Hot-Reload Exclusion", MessageType.Info);
-                    GUILayout.Space(10);
-                
-                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.FilesExcludedFromHotReload);
-                })),
-                (new ChangeMainViewButton("Logging", (screen) => 
-                {
-                    using (LayoutHelper.LabelWidth(350))
+                    new ChangeMainViewButton("Reload", (screen) =>
                     {
-                        ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.LogHowToFixMessageOnCompilationError);
-                    }
-                })),
-                // new ChangeMainViewButton("Network", (screen) => //TODO: add for networked version, with compilation symbol?
-                // {
-                //     
-                // })
-            }),
-            new GuiSection("Launch Demo", new List<ClickableElement>
-            {
-                new LaunchSceneButton("Basic Example", (s) => GetScenePath("ExampleScene"), (screen) =>
+                        const int sectionBreakHeight = 15;
+                        GUILayout.Label(
+                            @"Asset watches all script files and automatically hot-reloads on change, you can disable that behaviour and reload on demand.",
+                            screen.TextStyle
+                        );
+                
+                        using (LayoutHelper.LabelWidth(300))
+                        {
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableAutoReloadForChangedFiles);
+                        }
+                        GUILayout.Space(sectionBreakHeight);
+                
+                        EditorGUILayout.HelpBox("On demand reload:\r\nvia Window -> Fast Script Reload -> Force Reload, \r\nor by calling 'FastScriptIterationManager.Instance.TriggerReloadForChangedFiles()'", MessageType.Info);
+                        GUILayout.Space(sectionBreakHeight);
+                
+                        GUILayout.Label(
+                            @"For performance reasons script changes are batched are reloaded every N seconds",
+                            screen.TextStyle
+                        );
+
+                        using (LayoutHelper.LabelWidth(300))
+                        {
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.BatchScriptChangesAndReloadEveryNSeconds);
+                        }
+
+                        GUILayout.Space(sectionBreakHeight);
+                    
+                        using (LayoutHelper.LabelWidth(350))
+                        {
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalThisCallLimitationFix);
+                        }
+                        GUILayout.Space(sectionBreakHeight);
+                
+                        EditorGUILayout.HelpBox("Method calls utilizing 'this' will trigger compiler exception, if enabled tool will rewrite the calls to have proper type after adjustments." +
+                                                "\r\n\r\nIn case you're seeing compile errors relating to 'this' keyword please let me know via support page. Also turning this setting off will prevent rewrite.", MessageType.Info);
+                    }),
+                    (ExclusionsSecion = new ChangeMainViewButton("Exclusions", (screen) => 
+                    {
+                        EditorGUILayout.HelpBox("Those are easiest to manage from Project window by right clicking on script file and selecting: " +
+                                                "\r\nFast Script Reload -> Add Hot-Reload Exclusion " +
+                                                "\r\nFast Script Reload -> Remove Hot-Reload Exclusion", MessageType.Info);
+                        GUILayout.Space(10);
+                
+                        ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.FilesExcludedFromHotReload);
+                    })),
+                    (new ChangeMainViewButton("Logging", (screen) => 
+                    {
+                        using (LayoutHelper.LabelWidth(350))
+                        {
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.LogHowToFixMessageOnCompilationError);
+                        }
+                    })),
+                    additionalSection
+                }.Where(s => s != null).ToList()),
+                new GuiSection("Launch Demo", new List<ClickableElement>
                 {
-                    GUILayout.Label(
-                        @"Asset is very simple to use:
+                    new LaunchSceneButton("Basic Example", (s) => GetScenePath(demoSceneName), (screen) =>
+                    {
+                        GUILayout.Label(
+                            $@"Asset is very simple to use:
 
 1) Hit play to start.
-2) Go to 'FunctionLibrary.cs' (Assets/FastScriptReload/Examples/Scripts/)
+2) Go to 'FunctionLibrary.cs' ({scriptsPath})
 3) Change 'Ripple' method (eg change line before return statement to 'p.z = v * 10'
 4) Save file
 5) See change immediately",
-                        screen.TextStyle
-                    );
+                            screen.TextStyle
+                        );
                 
-                    GUILayout.Space(10);
-                    EditorGUILayout.HelpBox("There are some limitations to what can be Hot-Reloaded, documentation lists them under 'limitations' section.", MessageType.Warning);
+                        GUILayout.Space(10);
+                        EditorGUILayout.HelpBox("There are some limitations to what can be Hot-Reloaded, documentation lists them under 'limitations' section.", MessageType.Warning);
+                    })
                 })
-            })
-        };
+            };
+        }
 
         private static readonly string RedirectBaseUrl = "https://immersivevrtools.com/redirect/fast-script-reload"; 
         private static readonly GuiSection TopSection = new GuiSection("Support", new List<ClickableElement>
@@ -166,20 +173,25 @@ namespace FastScriptReload.Editor
         public override string WindowTitle { get; } = _WindowTitle;
         public override Vector2 WindowSizePx { get; } = _WindowSizePx;
 
-
+#if !LiveScriptReload_Enabled
         [MenuItem("Window/Fast Script Reload/Start Screen", false, 1999)]
+#endif
         public static FastScriptReloadWelcomeScreen Init()
         {
             return OpenWindow<FastScriptReloadWelcomeScreen>(_WindowTitle, _WindowSizePx);
         }
     
+#if !LiveScriptReload_Enabled
         [MenuItem("Window/Fast Script Reload/Force Reload", true, 1999)]
+#endif
         public static bool ForceReloadValidate()
         {
             return EditorApplication.isPlaying;
         }
     
+#if !LiveScriptReload_Enabled
         [MenuItem("Window/Fast Script Reload/Force Reload", false, 1999)]
+#endif
         public static void ForceReload()
         {
             FastScriptReloadManager.Instance.TriggerReloadForChangedFiles();
@@ -301,9 +313,12 @@ namespace FastScriptReload.Editor
         }
     }
 
+#if !LiveScriptReload_Enabled
     [InitializeOnLoad]
+#endif
     public class FastScriptReloadWelcomeScreenInitializer : WelcomeScreenInitializerBase
     {
+#if !LiveScriptReload_Enabled
         static FastScriptReloadWelcomeScreenInitializer()
         {
             var userId = ProductPreferenceBase.CreateDefaultUserIdDefinition(FastScriptReloadWelcomeScreen.ProjectName).GetEditorPersistedValueOrDefault().ToString();
@@ -322,8 +337,9 @@ namespace FastScriptReload.Editor
             
             DynamicCompilationBase.LogHowToFixMessageOnCompilationError = (bool)FastScriptReloadPreference.LogHowToFixMessageOnCompilationError.GetEditorPersistedValueOrDefault();
         }
+#endif
 
-        private static void DisplayMessageIfLastDetourPotentiallyCrashedEditor()
+        protected static void DisplayMessageIfLastDetourPotentiallyCrashedEditor()
         {
             const string firstInitSessionKey = "FastScriptReloadWelcomeScreenInitializer_FirstInitDone";
             if (!SessionState.GetBool(firstInitSessionKey, false))
@@ -352,7 +368,7 @@ In the meantime, you can exclude any file from Hot-Reload by
             }
         }
 
-        private static void AutoDetectAndSetShaderMode()
+        protected static void AutoDetectAndSetShaderMode()
         {
             var usedShaderMode = FastScriptReloadPreference.ShadersMode.Surface;
             var renderPipelineAsset = GraphicsSettings.renderPipelineAsset;

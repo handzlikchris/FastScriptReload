@@ -73,6 +73,9 @@ To view all exclusions:
 2) Click Fast Script Reload
 3) Click Show Exclusions
 
+#### via class attribute
+You can also add `[PreventHotReload]` attribute to a class to prevent hot reload for that class.
+
 ### Batch script changes and reload every N seconds
 Script will batch all your playmode changes and Hot-Reload them in bulk every 3 seconds - you can change that value from 'Reload' options page.
 
