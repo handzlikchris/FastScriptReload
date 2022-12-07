@@ -8,14 +8,15 @@ using System.Reflection;
 using HarmonyLib;
 using ImmersiveVRTools.Runtime.Common;
 using ImmersiveVRTools.Runtime.Common.Extensions;
-using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 namespace FastScriptReload.Runtime
 {
     [PreventHotReload]
-    [InitializeOnLoad]
+#if UNITY_EDITOR
+    [UnityEditor.InitializeOnLoad]
+#endif
     public class AssemblyChangesLoader: IAssemblyChangesLoader
     {
         const BindingFlags ALL_BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic |

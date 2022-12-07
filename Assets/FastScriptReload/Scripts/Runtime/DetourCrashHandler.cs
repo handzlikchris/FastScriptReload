@@ -2,18 +2,26 @@
 using System;
 using System.IO;
 using System.Linq;
-using UnityEditor;
+using UnityEngine;
 
 namespace FastScriptReload.Runtime
 {
-    [InitializeOnLoad]
+#if UNITY_EDITOR
+    [UnityEditor.InitializeOnLoad]
+#endif
     public class DetourCrashHandler
     {
         public static string LastDetourFilePath;
     
         static DetourCrashHandler()
         {
-            LastDetourFilePath = Path.GetTempPath() + PlayerSettings.productName + "-last-detour.txt";
+            Init();
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        static void Init()
+        {
+            LastDetourFilePath = Path.GetTempPath() + Application.productName + "-last-detour.txt";
         }
 
         public static void LogDetour(string fullName)
