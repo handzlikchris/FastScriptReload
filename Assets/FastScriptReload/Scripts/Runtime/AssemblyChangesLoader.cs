@@ -87,9 +87,9 @@ namespace FastScriptReload.Runtime
                             var matchingMethodInExistingType = allDeclaredMethodsInExistingType.SingleOrDefault(m => m.FullDescription() == createdTypeMethodToUpdateFullDescriptionWithoutPatchedClassPostfix);
                             if (matchingMethodInExistingType != null)
                             {
-    #if FastScriptReload_DebugEnabled
+#if FastScriptReload_DebugEnabled
                                 Debug.Log($"Trying to detour method, from: '{matchingMethodInExistingType.FullDescription()}' to: '{createdTypeMethodToUpdate.FullDescription()}'");
-    #endif
+#endif
                                 DetourCrashHandler.LogDetour(matchingMethodInExistingType.ResolveFullName());
                                 Memory.DetourMethod(matchingMethodInExistingType, createdTypeMethodToUpdate);
                             }
