@@ -79,6 +79,10 @@ You can also add `[PreventHotReload]` attribute to a class to prevent hot reload
 ### Batch script changes and reload every N seconds
 Script will batch all your playmode changes and Hot-Reload them in bulk every 3 seconds - you can change that value from 'Reload' options page.
 
+## Production Build Exclusions
+Asset code will be excluded from any builds, if you're also using LiveCodeReload and want to create a build which will support Hot-Reload, 
+add `LiveScriptReload_IncludeInBuild_Enabled` Scripting Define Symbol via 'Window -> Fast Script Reload -> Welcome Screen -> Build -> Enable Hot Reload For Build'
+
 ## Performance
 
 Your app performance won't be affected in any meaningful way.
