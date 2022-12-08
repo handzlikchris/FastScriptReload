@@ -28,14 +28,14 @@ namespace FastScriptReload.Editor
         private static Vector2 _WindowSizePx = new Vector2(650, 500);
         private static string _WindowTitle = "Fast Script Reload";
 
-        public static ChangeMainViewButton ExclusionsSecion { get; private set; }
+        public static ChangeMainViewButton ExclusionsSection { get; private set; }
 
         public void OpenExclusionsSection()
         {
-            ExclusionsSecion.OnClick(this);
+            ExclusionsSection.OnClick(this);
         }
 
-        private static readonly List<GuiSection> LeftSections = CreateLeftSections(null, 
+        private static readonly List<GuiSection> LeftSections = CreateLeftSections(new List<ChangeMainViewButton>(), 
             new LaunchSceneButton("Basic Example", (s) => GetScenePath("ExampleScene"), (screen) =>
             {
                 GUILayout.Label(
@@ -58,7 +58,7 @@ namespace FastScriptReload.Editor
                 EditorGUILayout.HelpBox("There are some limitations to what can be Hot-Reloaded, documentation lists them under 'limitations' section.", MessageType.Warning);
             }));
 
-        protected static List<GuiSection> CreateLeftSections(ChangeMainViewButton additionalSection, LaunchSceneButton launchSceneButton)
+        protected static List<GuiSection> CreateLeftSections(List<ChangeMainViewButton> additionalSections, LaunchSceneButton launchSceneButton)
         {
             return new List<GuiSection>() {
                 new GuiSection("", new List<ClickableElement>
@@ -106,7 +106,7 @@ namespace FastScriptReload.Editor
                         EditorGUILayout.HelpBox("Method calls utilizing 'this' will trigger compiler exception, if enabled tool will rewrite the calls to have proper type after adjustments." +
                                                 "\r\n\r\nIn case you're seeing compile errors relating to 'this' keyword please let me know via support page. Also turning this setting off will prevent rewrite.", MessageType.Info);
                     }),
-                    (ExclusionsSecion = new ChangeMainViewButton("Exclusions", (screen) => 
+                    (ExclusionsSection = new ChangeMainViewButton("Exclusions", (screen) => 
                     {
                         EditorGUILayout.HelpBox("Those are easiest to manage from Project window by right clicking on script file and selecting: " +
                                                 "\r\nFast Script Reload -> Add Hot-Reload Exclusion " +
@@ -121,9 +121,8 @@ namespace FastScriptReload.Editor
                         {
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.LogHowToFixMessageOnCompilationError);
                         }
-                    })),
-                    additionalSection
-                }.Where(s => s != null).ToList()),
+                    }))
+                }.Concat(additionalSections).ToList()),
                 new GuiSection("Launch Demo", new List<ClickableElement>
                 {
                     launchSceneButton
