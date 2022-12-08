@@ -25,7 +25,7 @@ public class PassingSelfManager
         Debug.Log($"Passed CompilationTestClass via interface: {t}"); 
     }
 
-    public static void Pass(NestedStructTest.TestNestedStruct s)
+    public static void PassStruct(NestedStructTest.TestNestedStruct s)
     {
         Debug.Log($"Passed {s}"); 
     }

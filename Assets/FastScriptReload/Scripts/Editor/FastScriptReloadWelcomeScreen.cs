@@ -248,7 +248,14 @@ namespace FastScriptReload.Editor
             "Enable auto Hot-Reload for changed files", "EnableAutoReloadForChangedFiles", true);
         
         public static readonly ToggleProjectEditorPreferenceDefinition EnableExperimentalThisCallLimitationFix = new ToggleProjectEditorPreferenceDefinition(
-            "(Experimental) Enable method calls with 'this' as argument fix", "EnableExperimentalThisCallLimitationFix", true);
+            "(Experimental) Enable method calls with 'this' as argument fix", "EnableExperimentalThisCallLimitationFix", true, (object newValue, object oldValue) =>
+            {
+                DynamicCompilationBase.EnableExperimentalThisCallLimitationFix = (bool)newValue;
+            },
+            (value) =>
+            {
+                DynamicCompilationBase.EnableExperimentalThisCallLimitationFix = (bool)value;
+            });
     
         public static readonly StringListProjectEditorPreferenceDefinition FilesExcludedFromHotReload = new StringListProjectEditorPreferenceDefinition(
             "Files excluded from Hot-Reload", "FilesExcludedFromHotReload", new List<string> {}, isReadonly: true);

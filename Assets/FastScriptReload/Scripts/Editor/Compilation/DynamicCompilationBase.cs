@@ -17,6 +17,7 @@ namespace FastScriptReload.Editor.Compilation
     public class DynamicCompilationBase
     {
 	    public static bool LogHowToFixMessageOnCompilationError;
+	    public static bool EnableExperimentalThisCallLimitationFix;
 	    
         protected static readonly string[] ActiveScriptCompilationDefines;
         protected static readonly string DynamicallyCreatedAssemblyAttributeSourceCode = $"[assembly: {typeof(DynamicallyCreatedAssemblyAttribute).FullName}()]";
@@ -95,7 +96,11 @@ namespace FastScriptReload.Editor.Compilation
                 }
             }
 
-            IncludeMicrosoftCsharpReferenceToSupportDynamicKeyword(referencesToAdd);
+            if (EnableExperimentalThisCallLimitationFix)
+            {
+	            IncludeMicrosoftCsharpReferenceToSupportDynamicKeyword(referencesToAdd);
+            }
+
             return referencesToAdd;
         }
 

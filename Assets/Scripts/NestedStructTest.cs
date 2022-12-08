@@ -49,7 +49,8 @@ namespace Test
         public struct TestNestedStruct
         {
             public TestNestedStruct(NestedStructTest nestedStructTest, string test) {
-                PassingSelfManager.Pass(this);   
+                Debug.Log("Text: " + test);
+                PassingSelfManager.PassStruct(this);   
             }
         }
     }
