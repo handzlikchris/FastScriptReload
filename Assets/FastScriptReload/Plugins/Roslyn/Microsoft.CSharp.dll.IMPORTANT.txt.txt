@@ -1,0 +1,1 @@
+library is excluded from any compilation by default. It's only purpose is to serve as a reference for dynamic keyword when targetting NET Standard 2.1 - as this is required by ThisRewriters to function properly

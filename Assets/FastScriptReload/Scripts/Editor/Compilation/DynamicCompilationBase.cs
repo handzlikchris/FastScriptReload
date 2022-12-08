@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using UnityEditor;
+using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 namespace FastScriptReload.Editor.Compilation
@@ -19,11 +20,15 @@ namespace FastScriptReload.Editor.Compilation
 	    
         protected static readonly string[] ActiveScriptCompilationDefines;
         protected static readonly string DynamicallyCreatedAssemblyAttributeSourceCode = $"[assembly: {typeof(DynamicallyCreatedAssemblyAttribute).FullName}()]";
-
+        private static readonly string AssemblyCsharpFullPath;
+        
         static DynamicCompilationBase()
         {
             //needs to be set from main thread
             ActiveScriptCompilationDefines = EditorUserBuildSettings.activeScriptCompilationDefines;
+            AssemblyCsharpFullPath = AssetDatabase.FindAssets("Microsoft.CSharp")
+	            .Select(g => new System.IO.FileInfo(UnityEngine.Application.dataPath + "/../" + AssetDatabase.GUIDToAssetPath(g)))
+	            .First(fi => fi.Name.ToLower() == "Microsoft.CSharp.dll".ToLower()).FullName;
         }
         
         protected static string CreateSourceCodeCombinedContents(IEnumerable<string> fileSourceCode)
@@ -40,6 +45,7 @@ namespace FastScriptReload.Editor.Compilation
                 if (FastScriptReloadManager.Instance.EnableExperimentalThisCallLimitationFix)
                 {
 					root = new ThisCallRewriter().Visit(root);
+					root = new ThisAssignmentRewriter().Visit(root);
                 }
                 root = new ConstructorRewriter( adjustCtorOnlyForNonNestedTypes: true).Visit(root);
                 root = rewriter.Visit(root);
@@ -89,7 +95,16 @@ namespace FastScriptReload.Editor.Compilation
                 }
             }
 
+            IncludeMicrosoftCsharpReferenceToSupportDynamicKeyword(referencesToAdd);
             return referencesToAdd;
+        }
+
+        private static void IncludeMicrosoftCsharpReferenceToSupportDynamicKeyword(List<string> referencesToAdd)
+        {
+	        //TODO: check .net4.5 backend not breaking?
+	        //ThisRewriters will cast to dynamic - if using .NET Standard 2.1 - reference is required
+	        referencesToAdd.Add(AssemblyCsharpFullPath);
+	        // referencesToAdd.Add(@"C:\Program Files\Unity\Hub\Editor\2021.3.12f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Microsoft.CSharp.dll");
         }
 
         class ConstructorRewriter : CSharpSyntaxRewriter
@@ -186,27 +201,54 @@ namespace FastScriptReload.Editor.Compilation
 			}
 		}
 
-		class ThisCallRewriter : CSharpSyntaxRewriter
+		abstract class ThisRewriterBase : CSharpSyntaxRewriter
+		{
+			protected static SyntaxNode CreateCastedThisExpression(ThisExpressionSyntax node)
+			{
+				var ancestors = node.Ancestors().Where(n => n is TypeDeclarationSyntax).Cast<TypeDeclarationSyntax>().ToList();
+				if (ancestors.Count() > 1)
+				{
+					Debug.LogWarning($"ThisRewriter: for class: '{ancestors.First().Identifier}' - 'this' call/assignment in nested class / struct. Dynamic cast will be used but this could cause issues in some cases:" +
+					               $"\r\n\r\n1) - If called method has multiple overrides, using dynamic will cause compiler issue as it'll no longer be able to pick correct one" +
+					               $"\r\n\r\n If you see any issues with that message, please look at 'Limitation' section in documentation as this outlines how to deal with it.");
+
+					//TODO: casting to dynamic seems to be best option (and one that doesn't fail for nested classes), what's the performance overhead?
+					return SyntaxFactory.CastExpression(
+						SyntaxFactory.ParseTypeName("dynamic"),
+						node
+					);
+				}
+
+				var methodInType = ancestors.First().Identifier.ToString();
+				return SyntaxFactory.CastExpression(
+					SyntaxFactory.ParseTypeName(methodInType),
+					SyntaxFactory.CastExpression(
+						SyntaxFactory.ParseTypeName(typeof(object).FullName),
+						node
+					)
+				);
+			}
+		}
+
+		class ThisCallRewriter : ThisRewriterBase
 		{
 			public override SyntaxNode VisitThisExpression(ThisExpressionSyntax node)
 			{
 				if (node.Parent is ArgumentSyntax)
 				{
-					var ancestors = node.Ancestors().Where(n => n is TypeDeclarationSyntax).Cast<TypeDeclarationSyntax>().ToList();
-					if (ancestors.Count() > 1)
-					{
-						Debug.LogError($"{ancestors.First().Identifier} - 'this' call is in a nested class / struct - currently that's not supported and will cause compilation error. You can move type out of class / struct in order for this call to be correctly Hot-Reloaded.");
-					}
-					
-					var methodInType = ancestors.First().Identifier.ToString();
-					return SyntaxFactory.CastExpression(
-						SyntaxFactory.ParseTypeName(methodInType),
-						SyntaxFactory.CastExpression(
-							SyntaxFactory.ParseTypeName(typeof(object).FullName),
-							node
-						)
-					);
+					return CreateCastedThisExpression(node);
 				}
+				return base.VisitThisExpression(node);
+			}
+		}
+		
+		class ThisAssignmentRewriter: ThisRewriterBase {
+			public override SyntaxNode VisitThisExpression(ThisExpressionSyntax node)
+			{
+				if (node.Parent is AssignmentExpressionSyntax) {
+					return CreateCastedThisExpression(node);
+				}
+
 				return base.VisitThisExpression(node);
 			}
 		}

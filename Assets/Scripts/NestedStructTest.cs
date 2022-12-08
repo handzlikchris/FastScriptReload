@@ -11,12 +11,12 @@ namespace Test
         {
             public NestedClass()
             {
-                // PassingSelfManager.Pass(this);   
+                PassingSelfManager.Pass(this);      
             }
         }
         
-        private List<TestNestedStruct> nestedStructBuffer = new();
-
+        private List<TestNestedStruct> nestedStructBuffer = new(); 
+        
         public NestedStructTest()
         {
         
@@ -27,11 +27,11 @@ namespace Test
         {
         
         }
-
+        
         [ContextMenu(nameof(Test))]
         private void Test()
         {
-            new TestNestedStruct(this, "raw ");
+            new TestNestedStruct(this, "raw 1");
         }
         
         [ContextMenu(nameof(TestRootStruct))]
@@ -41,15 +41,15 @@ namespace Test
         }
         
         [ContextMenu(nameof(TestNestedClass))] 
-        private void TestNestedClass()
+        private void TestNestedClass() 
         {
             new NestedClass();
         }
-
+        
         public struct TestNestedStruct
         {
             public TestNestedStruct(NestedStructTest nestedStructTest, string test) {
-                // PassingSelfManager.Pass(this);   
+                PassingSelfManager.Pass(this);   
             }
         }
     }
