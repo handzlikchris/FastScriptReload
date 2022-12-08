@@ -15,6 +15,12 @@ Example scene 'Point' material should automatically detect URP or surface shader
 2) Surface: 'Graph/Point Surface'
 ```
 
+### Reporting Compilation Errors
+I've put lots of effort to test various code patterns various codebases and also worked with other developers. Still - it's likely you'll find some instances where code would not compile, it's easiest to:
+1) Look at compiler error and compare with generated source code, usually it'll be very obvious why issue is occuring
+2) Refactor problematic part (look at limitations as they'll explain how)
+3) Let me know via support email and I'll get it fixed
+
 ## Executing custom code on hot reload
 Custom code can be executed on hot reload by adding a method to changed script.
 
@@ -155,6 +161,22 @@ public interface IRegistrableEnemy
 public class EnemyManager : MonoBehaviour {
     public void RegisterEnemy(MonoBehaviour enemy) { //Using common MonoBehaviour will go around error
         //impementation
+    }
+}
+```
+
+### Assigning `this` to a field references
+Similar as above, this could cause some trouble although 'Enable method calls with 'this' as argument fix' setting will fix most of the issues. 
+
+Especially visible with singletons.
+eg.
+
+```
+public class MySingleton: MonoBehaviour {
+    public static MySingleton Instance;
+    
+    void Start() {
+        Instance = this;
     }
 }
 ```
