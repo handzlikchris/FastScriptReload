@@ -71,8 +71,8 @@ namespace FastScriptReload.Editor.Compilation
             var referencesToAdd = new List<string>();
             foreach (var assembly in AppDomain.CurrentDomain
                          .GetAssemblies() //TODO: PERF: just need to load once and cache? or get assembly based on changed file only?
-                         .Where(a => excludeAssyNames.All(assyName => !a.FullName.StartsWith(assyName)
-                                                                      && CustomAttributeExtensions.GetCustomAttribute<DynamicallyCreatedAssemblyAttribute>((Assembly)a) == null)))
+                         .Where(a => excludeAssyNames.All(assyName => !a.FullName.StartsWith(assyName))
+												&& CustomAttributeExtensions.GetCustomAttribute<DynamicallyCreatedAssemblyAttribute>((Assembly)a) == null))
             {
                 try
                 {
