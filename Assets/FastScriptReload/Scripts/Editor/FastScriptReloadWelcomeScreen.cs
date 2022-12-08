@@ -35,7 +35,24 @@ namespace FastScriptReload.Editor
             ExclusionsSection.OnClick(this);
         }
 
-        private static readonly List<GuiSection> LeftSections = CreateLeftSections(new List<ChangeMainViewButton>(), 
+        private static readonly List<GuiSection> LeftSections = CreateLeftSections(new List<ChangeMainViewButton>
+            {
+                new ChangeMainViewButton("On-Device\r\nHot-Reload",  
+                    (screen) =>
+                    {
+                        EditorGUILayout.LabelField("Live Script Reload", screen.BoldTextStyle); 
+                        
+                        GUILayout.Space(10);
+                        EditorGUILayout.LabelField(@"There's an extension to this asset that'll allow you to include Hot-Reload capability in builds (standalone / Android), please click the button below to learn more.", screen.TextStyle);
+
+                        GUILayout.Space(20);
+                        if (GUILayout.Button("View Live Script Reload on Asset Store"))
+                        {
+                            Application.OpenURL($"{RedirectBaseUrl}/live-script-reload-extension");
+                        }
+                    }
+                )
+            }, 
             new LaunchSceneButton("Basic Example", (s) => GetScenePath("ExampleScene"), (screen) =>
             {
                 GUILayout.Label(
