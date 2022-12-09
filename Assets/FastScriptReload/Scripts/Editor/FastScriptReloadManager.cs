@@ -130,7 +130,7 @@ namespace FastScriptReload.Editor
 
         private void Update()
         {
-            if (_executeOnlyInPlaymode && !EditorApplication.isPlayingOrWillChangePlaymode)
+            if (_executeOnlyInPlaymode && !EditorApplication.isPlaying)
             {
                 return;
             }
