@@ -3,17 +3,26 @@
 Tool will allow you to iterate quicker on your code. You simply go into play mode, make a change to any file and it'll be compiled on the fly and hot-reloaded in your running play-mode session.
 
 ## Getting started
-1) Import (welcome screen will introduce you to options / etc)
-2) Open example scene `FastScriptReload/Examples/Scenes/ExampleScene`
-3) Play
-4) Make code change, eg to `FunctionLibrary` (in `Assets/FastScriptReload/Examples/Scripts/`), Change `Ripple` method (eg change line before return statement to `p.z = v * 10`
-5) See results
+1) Import
+2) Welcome screen will open - it contains all needed info to get started as well as support links and configuration.
+`You can always get back to this screen via 'Window -> Fast/Live Script Reload -> Start Screen'`
+3) Go to Launch Demo -> Basic Example window
+4) Follow instructions listed there
 
 ```
 Example scene 'Point' material should automatically detect URP or surface shader, if it shows pink, please adjust by picking shader manually:
 1) URP: 'Shader Graphs/Point URP'
 2) Surface: 'Graph/Point Surface'
 ```
+
+### On-Device Hot-Reload (Live Script reload)
+There's an addon to this tool - Live Script Reload - that'll allow you to use same functionality over the network in device build, eg:
+- android (including VR headsets like Quest 2)
+- standalone windows
+
+[Find more details here](https://immersivevrtools.com/redirect/fast-script-reload/live-script-reload-extension)
+
+**Live Script Reload is using Fast Script Reload as a base asset - documentation is combined, if you don't use Live Script Reload you can skip any sections prefixed with [Live-Reload]**
 
 ### Reporting Compilation Errors
 I've put lots of effort to test various code patterns various codebases and also worked with other developers. Still - it's likely you'll find some instances where code would not compile, it's easiest to:
@@ -43,17 +52,15 @@ Custom code can be executed on hot reload by adding a method to changed script.
     }
 ```
 
-## Running outside of editor workflow
-
-It's a development tool, by default no runtime scripts will be included outside of Editor.
-
-**If you want test standalone / Android builds in same manner please look at extension tool 'Live Script Reload'**
-
 ## Options
-You can access Welcome Screen / Options via 'Window -> Fast Script Reload -> Start Screen' - it contains useful information as well as options.
+```
+Context menus will be prefixed with used version, either Fast Script Reload or Live Script Reload
+```
+
+You can access Welcome Screen / Options via 'Window -> Fast/Live Script Reload -> Start Screen' - it contains useful information as well as options.
 
 ```
-Options can aslo be accessed via 'Edit -> Preferences -> Fast Script Reload'
+Options can aslo be accessed via 'Edit -> Preferences -> Fast/Live Script Reload'
 ```
 
 ### Auto Hot-Reload
@@ -63,6 +70,30 @@ You can also manually manage reload, to do so:
 1) Un-tick 'Enable auto Hot-Reload for changed files' in Options -> Reload page
 2) Click Window -> Fast Script Reload -> Force Reload to trigger
 3) or call `FastScriptReloadManager.TriggerReloadForChangedFiles()` method from code
+
+### [Live-Reload] Hot Reload over Network
+With on-device build, your changes will be distributed over the network.
+
+By default running application will send a broadcast and try to discover editor running the tool. 
+
+Broadcast is initiated from device where build is running on (not from editor) - this means device running editor needs to allow the connection.
+
+#### [Live-Reload] Troubleshooting network issues
+
+If for whatever reason that behaviour doesn't work, please:
+
+1) go to 'Window -> Live Script Reload -> Options/Network'
+2) make sure port used is not already used by any other application
+3) make sure your FW allows connections on that port
+4) If you think broadcast discovery will not work in your scenario it's best to specify IP Address explicitly
+   - this will allow client (build on device) connect directly to specified address
+
+#### [Live-Reload] Connected Client
+In playmode, message will be logged when clients connects. Also Network page in options will display connected client, eg Android phone could be identified as:
+
+`SM-100232 connected from 192.189.168.68:12548`
+
+**Only 1 client can be connected at any time.**
 
 ### Managing file exclusions
 
@@ -85,18 +116,21 @@ You can also add `[PreventHotReload]` attribute to a class to prevent hot reload
 ### Batch script changes and reload every N seconds
 Script will batch all your playmode changes and Hot-Reload them in bulk every 3 seconds - you can change that value from 'Reload' options page.
 
-## Production Build Exclusions
-Asset code will be excluded from any builds, if you're also using LiveCodeReload and want to create a build which will support Hot-Reload, 
-add `LiveScriptReload_IncludeInBuild_Enabled` Scripting Define Symbol via 'Window -> Fast Script Reload -> Welcome Screen -> Build -> Enable Hot Reload For Build'
+## [Live-Reload] Production Build
+For Fast Script Reload asset code will be excluded from any builds, if you're also using Live Script Reload and want to create a build which will support Hot-Reload, 
+add `LiveScriptReload_IncludeInBuild_Enabled` Scripting Define Symbol 
+- via 'Window -> Fast Script Reload -> Welcome Screen -> Build -> Enable Hot Reload For Build'
+- When building via File -> Build Settings - you'll also see Live Script Reload status under 'Build' button. You can click 'Adjust' button which will take you to build page for asset.
+```This is designed to make sure you don't accidentally build tool into release althoguh best approach would be to ensure your release process takes care of that.```
 
 ## Performance
 
 Your app performance won't be affected in any meaningful way.
 Biggest bit is additional memory used for your re-compiled code.
-Won't be visuble unless you make 100s of changes in same play-session.
+Won't be visible unless you make 100s of changes in same play-session.
 
-## Limitations
-There are some limitation due to the approach taken bu the tool to hot-reload your scripts.
+## LIMITATIONS (please make sure to read those)
+There are some limitation due to the approach taken bu the tool to Hot-Reload your scripts.
 
 ### Breakpoints in hot-reloaded scripts won't be hit, sorry!
 
@@ -105,11 +139,11 @@ There are some limitation due to the approach taken bu the tool to hot-reload yo
 
 ### Passing `this` reference to method that expect concrete class implementation
 
-It'll throw compilation error `The best overloaded method match for xxx has some invalid arguments` - this is due to the fact that changed code is technically different type.
-The code will need to be adjusted to depend on some abstraction instead (before hot-reload).
-
-`**By default experimental setting 'Enable method calls with 'this' as argument fix' is turned on in options, and should fix 'this' calls issue.
+`**By default experimental setting 'Enable method calls with 'this' as argument fix' is turned on in options, and should fix 'this' calls/assignment issue.
 If you see issues with that please turn setting off and get in touch via support email.**
+
+Unless experimental setting is on - it'll throw compilation error `The best overloaded method match for xxx has some invalid arguments` - this is due to the fact that changed code is technically different type.
+The code will need to be adjusted to depend on some abstraction instead (before hot-reload).
 
 This code would cause the above error.
 ```
@@ -181,6 +215,9 @@ public class MySingleton: MonoBehaviour {
 }
 ```
 
+### Extensive use of nested classed / structs
+If your code-base contains lots of nested classes - you may see more compilation errors.
+
 ### Creating new public methods
 Hot-reload for new methods will only work with private methods (only called by changed code)
 
@@ -233,10 +270,11 @@ Tool will compile and hot-reload newly added fileds but it'll likely result in u
 Asset runs based on specific .NET functionality, IL2CPP builds will not be supported. Although as this is development workflow aid you can build your APK with Mono backend (android) and change later.
 
 ### Windows only
-Tool is unlikely to run outside of windows os.
+Tool is unlikely to run outside of windows OS.
 
 ### Adding new references
 When you're trying to reference new code in play-mode session that'll fail if assembly is not yet referencing that (most often happens when using AsmDefs that are not yet referencing each other)
 
 ## Roadmap
 - add debugger support for hot-reloaded scripts
+- better compiler support to work around limitations
