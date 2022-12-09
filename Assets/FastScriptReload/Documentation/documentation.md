@@ -298,14 +298,14 @@ public class SimpleTransformMover: MonoBehaviour {
 
 *Tool will show error if you try to add/remove fields and won't perform Hot-Reload.*
 
+### Adding new references
+When you're trying to reference new code in play-mode session that'll fail if assembly is not yet referencing that (most often happens when using AsmDefs that are not yet referencing each other)
+
 ### No IL2CPP support
 Asset runs based on specific .NET functionality, IL2CPP builds will not be supported. Although as this is development workflow aid you can build your APK with Mono backend (android) and change later.
 
 ### Windows only
 Tool is unlikely to run outside of windows OS.
-
-### Adding new references
-When you're trying to reference new code in play-mode session that'll fail if assembly is not yet referencing that (most often happens when using AsmDefs that are not yet referencing each other)
 
 ## Roadmap
 - add debugger support for hot-reloaded scripts
