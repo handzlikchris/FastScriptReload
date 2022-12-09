@@ -87,6 +87,18 @@ namespace FastScriptReload.Runtime
                             var matchingMethodInExistingType = allDeclaredMethodsInExistingType.SingleOrDefault(m => m.FullDescription() == createdTypeMethodToUpdateFullDescriptionWithoutPatchedClassPostfix);
                             if (matchingMethodInExistingType != null)
                             {
+                                if (matchingMethodInExistingType.IsGenericMethod)
+                                {
+                                    Debug.LogWarning($"Method: '{matchingMethodInExistingType.FullDescription()}' is generic. Hot-Reload for generic methods is not supported yet, you won't see changes for that method.");
+                                    continue;
+                                }
+
+                                if (matchingMethodInExistingType.DeclaringType != null && matchingMethodInExistingType.DeclaringType.IsGenericType)
+                                {
+                                    Debug.LogWarning($"Type for method: '{matchingMethodInExistingType.FullDescription()}' is generic. Hot-Reload for generic types is not supported yet, you won't see changes for that type.");
+                                    continue;
+                                }
+                                
 #if FastScriptReload_DebugEnabled
                                 Debug.Log($"Trying to detour method, from: '{matchingMethodInExistingType.FullDescription()}' to: '{createdTypeMethodToUpdate.FullDescription()}'");
 #endif

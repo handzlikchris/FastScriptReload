@@ -150,6 +150,34 @@ In some cases however you may need to use workarounds as described below.
 - only for the scripts you changed, others will work
 - with how quick it compiles and reloads you may not even need a debugger
 
+### Generic methods and classes won't be Hot-Reloaded
+Unfortunately generics will not be Hot-Reloaded, to workaround you'd need to move code to non-generic class / method.
+
+Tool will try to change non-generic methods in those files and will simply skip generic ones.
+
+*Note - you can still Hot-Reload for class implementations that derive from generic base class but are not generic themselves, eg.*
+```
+
+class SingletonImplementation: SingletonBase<SomeConcreteType> {
+   public void SomeSpecificFunctionality() {
+      //you can change code here and it'll be Hot-Reloaded as type itself is not generic
+   }
+   
+   public void GenericMethod<T>(T arg) {
+      //changes here won't be Hot-Reloaded as method is generic
+   }
+}
+
+class SingletonBase<T> where T: new() {
+   public T Instance;
+   
+   public void Init() {
+      Instance = new T(); //if you change this code it won't be Hot-Reloaded as it's in generic type
+   }
+}
+
+```
+
 ### Passing `this` reference to method that expect concrete class implementation
 
 `**By default experimental setting 'Enable method calls with 'this' as argument fix' is turned on in options, and should fix 'this' calls/assignment issue.
