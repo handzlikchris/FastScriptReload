@@ -318,16 +318,17 @@ namespace FastScriptReload.Editor
         private static bool PrefsLoaded = false;
 
 
-
-#if UNITY_2019_1_OR_NEWER
+#if !LiveScriptReload_Enabled
+    #if UNITY_2019_1_OR_NEWER
         [SettingsProvider]
         public static SettingsProvider ImpostorsSettings()
         {
             return GenerateProvider(ProductName, ProductKeywords, PreferencesGUI);
         }
 
-#else
+    #else
 	[PreferenceItem(ProductName)]
+    #endif
 #endif
         public static void PreferencesGUI()
         {
