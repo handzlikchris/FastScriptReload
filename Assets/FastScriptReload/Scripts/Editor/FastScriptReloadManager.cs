@@ -19,6 +19,7 @@ namespace FastScriptReload.Editor
     {
         private static FastScriptReloadManager _instance;
         public static FastScriptReloadManager Instance => _instance ?? (_instance = new FastScriptReloadManager());
+        private static string DataPath = Application.dataPath;
 
         private PlayModeStateChange _lastPlayModeStateChange;
         private List<FileSystemWatcher> _fileWatchers = new List<FileSystemWatcher>();
@@ -49,7 +50,19 @@ namespace FastScriptReload.Editor
             
                 return;
             }
-        
+
+            //workaround for FileWatcherBug //TODO: work out a way to detect issue and only look for file in that case
+            // var changedFileName = new FileInfo(e.FullPath).Name;
+            // var fileFoundInAssets = Directory.GetFiles(DataPath, changedFileName, SearchOption.AllDirectories);
+            // if (fileFoundInAssets.Length == 0)
+            // {
+            //     Debug.LogWarning($"Unable to find file '{changedFileName}' via FileWatcherBugWorkaround, changes will not be reloaded, please contact support.");
+            // }
+            // else
+            // {
+            //     _dynamicFileHotReloadStateEntries.Add(new DynamicFileHotReloadState(fileFoundInAssets[0], DateTime.UtcNow));
+            // }
+            
             _dynamicFileHotReloadStateEntries.Add(new DynamicFileHotReloadState(e.FullPath, DateTime.UtcNow));
         }
 
