@@ -19,18 +19,29 @@ namespace FastScriptReload.Editor.Compilation
         private static string _cscDll;
         private static string _tempFolder;
 
+        private static string ApplicationContentsPath = EditorApplication.applicationContentsPath;
+
         static DotnetExeDynamicCompilation()
         {
-            //TODO: save in player prefs so it stays between project opens
-            _dotnetExePath = FindFileOrThrow("dotnet.exe");
-            _cscDll = FindFileOrThrow("csc.dll");
-            _tempFolder = Path.GetTempPath();
+            System.Threading.Tasks.Task.Run(() =>
+            {
+#if UNITY_EDITOR_WIN
+                const string dotnetExecutablePath = "dotnet.exe";
+#else
+                const string dotnetExecutablePath = "dotnet"; //mac and linux, no extension
+#endif
+                
+                //TODO: save in player prefs so it stays between project opens
+                _dotnetExePath = FindFileOrThrow(dotnetExecutablePath);
+                _cscDll = FindFileOrThrow("csc.dll"); //even on mac/linux need to find dll and use, not no extension one
+                _tempFolder = Path.GetTempPath();
+            });
         }
 
         private static string FindFileOrThrow(string fileName)
         {
             var foundFile = Directory
-                .GetFiles(EditorApplication.applicationContentsPath, fileName, SearchOption.AllDirectories)
+                .GetFiles(ApplicationContentsPath, fileName, SearchOption.AllDirectories)
                 .FirstOrDefault();
             if (foundFile == null)
             {
