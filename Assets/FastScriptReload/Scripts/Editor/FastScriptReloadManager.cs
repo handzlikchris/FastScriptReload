@@ -42,28 +42,47 @@ namespace FastScriptReload.Editor
                 return;
             }
 
-            if (_currentFileExclusions != null && _currentFileExclusions.Any(fp => e.FullPath.Replace("\\", "/").EndsWith(fp)))
+            var filePathToUse = e.FullPath;
+            if (!File.Exists(filePathToUse))
             {
-                Debug.Log($"File: '{e.FullPath}' changed, but marked as exclusion. Hot-Reload will not be performed. You can manage exclusions via" +
+                Debug.LogWarning(@"Fast Script Reload - Unity File Path Bug - Warning!
+Path for changed file passed by Unity does not exist. This is a known editor bug, more info: https://issuetracker.unity3d.com/issues/filesystemwatcher-returns-bad-file-path
+                    
+Best course of action is to update editor as issue is already fixed in newer (minor and major) versions.
+                    
+As a workaround asset will try to resolve paths via directory search.
+                    
+Workaround will search in all folders (under project root) and will use first found file. This means it's possible it'll pick up wrong file as there's no directory information available.");
+                
+                var changedFileName = new FileInfo(filePathToUse).Name;
+                var fileFoundInAssets = Directory.GetFiles(DataPath, changedFileName, SearchOption.AllDirectories);
+                if (fileFoundInAssets.Length == 0)
+                {
+                    Debug.LogError($"FileWatcherBugWorkaround: Unable to find file '{changedFileName}', changes will not be reloaded. Please update unity editor.");
+                    return;
+                }
+                else if(fileFoundInAssets.Length  == 1)
+                {
+                    Debug.Log($"FileWatcherBugWorkaround: Original Unity passed file path: '{e.FullPath}' adjusted to found: '{fileFoundInAssets[0]}'");
+                    filePathToUse = fileFoundInAssets[0];
+                }
+                else
+                {
+                    Debug.LogWarning($"FileWatcherBugWorkaround: Multiple files found. Original Unity passed file path: '{e.FullPath}' adjusted to found: '{fileFoundInAssets[0]}'");
+                    filePathToUse = fileFoundInAssets[0];
+                }
+            }
+
+            if (_currentFileExclusions != null && _currentFileExclusions.Any(fp => filePathToUse.Replace("\\", "/").EndsWith(fp)))
+            {
+                Debug.Log($"File: '{filePathToUse}' changed, but marked as exclusion. Hot-Reload will not be performed. You can manage exclusions via" +
                           $"\r\nRight click context menu (Fast Script Reload > Add / Remove Hot-Reload exclusion)" +
                           $"\r\nor via Window -> Fast Script Reload -> Start Screen -> Exclusion menu");
             
                 return;
             }
 
-            //workaround for FileWatcherBug //TODO: work out a way to detect issue and only look for file in that case
-            // var changedFileName = new FileInfo(e.FullPath).Name;
-            // var fileFoundInAssets = Directory.GetFiles(DataPath, changedFileName, SearchOption.AllDirectories);
-            // if (fileFoundInAssets.Length == 0)
-            // {
-            //     Debug.LogWarning($"Unable to find file '{changedFileName}' via FileWatcherBugWorkaround, changes will not be reloaded, please contact support.");
-            // }
-            // else
-            // {
-            //     _dynamicFileHotReloadStateEntries.Add(new DynamicFileHotReloadState(fileFoundInAssets[0], DateTime.UtcNow));
-            // }
-            
-            _dynamicFileHotReloadStateEntries.Add(new DynamicFileHotReloadState(e.FullPath, DateTime.UtcNow));
+            _dynamicFileHotReloadStateEntries.Add(new DynamicFileHotReloadState(filePathToUse, DateTime.UtcNow));
         }
 
         public void StartWatchingDirectoryAndSubdirectories(string directoryPath) 
