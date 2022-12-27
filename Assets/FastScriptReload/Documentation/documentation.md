@@ -304,8 +304,18 @@ When you're trying to reference new code in play-mode session that'll fail if as
 ### No IL2CPP support
 Asset runs based on specific .NET functionality, IL2CPP builds will not be supported. Although as this is development workflow aid you can build your APK with Mono backend (android) and change later.
 
-### Windows only
-Tool is unlikely to run outside of windows OS.
+## FAQ
+### Editor makes full reload on any change in playmode
+
+Unity Editor has an option to auto recompile changes. **For tool to work properly you want to have that either disabled or enabled only outside of playmode.**
+
+You can adjusted auto-reload at any time via `Edit -> Preferences -> Asset Pipeline -> Auto Refresh`.
+
+*Tool will also offer to disable auto-refresh on startup.*
+
+It's possible to set auto-refresh to enabled but only outside of playmode. Depending on editor version used this can be found in:
+- `Edit -> Preferences -> General -> Script Changes While Playing -> Recompile After Finished Playing`
+- or `Edit -> Preferences -> Asset Pipeline -> Auto Refresh -> Enabled Outside Playmode`
 
 ## Roadmap
 - add debugger support for hot-reloaded scripts
