@@ -16,7 +16,7 @@ If it shows pink, please adjust by picking shader manually:
 2) Surface: 'Graph/Point Surface'
 ```
 
-## On-Device Hot-Reload (Live Script reload)
+## On-Device Hot-Reload - Live Script reload
 There's an addon to this tool - Live Script Reload - that'll allow you to use same functionality over the network in device build, eg:
 - android (including VR headsets like Quest 2)
 - standalone windows
@@ -140,7 +140,7 @@ Your app performance won't be affected in any meaningful way.
 Biggest bit is additional memory used for your re-compiled code.
 Won't be visible unless you make 100s of changes in same play-session.
 
-## LIMITATIONS (please make sure to read those)
+## LIMITATIONS -please make sure to read those
 There are some limitation due to the approach taken to Hot-Reload your scripts. I've tried to minimise the impact to standard dev-workflow as much as possible.
 
 In some cases however you may need to use workarounds as described below.
