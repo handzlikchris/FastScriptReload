@@ -125,6 +125,13 @@ You can also add `[PreventHotReload]` attribute to a class to prevent hot reload
 ### Batch script changes and reload every N seconds
 Script will batch all your playmode changes and Hot-Reload them in bulk every 3 seconds - you can change duration from 'Reload' options page.
 
+### Disable added/removed fields check
+By default if you add / remove fields, tool will not redirect method calls for recompiled class.
+This is to ensure there are no issues as that is generally not supported.
+
+Some assets however will use IL weaving to adjust your classes (eg Mirror) as a post compile step. In that case it's quite likely hot-reload will still work.
+
+
 ## Production Build
 For Fast Script Reload asset code will be excluded from any builds.
 

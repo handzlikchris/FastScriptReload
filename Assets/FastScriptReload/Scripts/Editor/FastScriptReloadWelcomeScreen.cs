@@ -287,7 +287,7 @@ namespace FastScriptReload.Editor
             "Stop showing assets/script auto-reload enabled warning", "StopShowingAutoReloadEnabledDialogBox", false);
         
         public static readonly ToggleProjectEditorPreferenceDefinition IsDidFieldsOrPropertyCountChangedCheckDisabled = new ToggleProjectEditorPreferenceDefinition(
-            "Should method be detoured if filed count changed?", "IsDidFieldsOrPropertyCountChangedCheckDisabled", false,
+            "Disable added/removed fields check", "IsDidFieldsOrPropertyCountChangedCheckDisabled", false,
             (object newValue, object oldValue) =>
             {
                 AssemblyChangesLoader.IsDidFieldsOrPropertyCountChangedCheckDisabled = (bool)newValue;
