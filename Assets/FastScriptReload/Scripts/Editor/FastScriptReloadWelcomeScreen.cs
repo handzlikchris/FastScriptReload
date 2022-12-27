@@ -118,10 +118,21 @@ namespace FastScriptReload.Editor
                         {
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalThisCallLimitationFix);
                         }
-                        GUILayout.Space(sectionBreakHeight);
-                
                         EditorGUILayout.HelpBox("Method calls utilizing 'this' will trigger compiler exception, if enabled tool will rewrite the calls to have proper type after adjustments." +
                                                 "\r\n\r\nIn case you're seeing compile errors relating to 'this' keyword please let me know via support page. Also turning this setting off will prevent rewrite.", MessageType.Info);
+                        
+                        GUILayout.Space(sectionBreakHeight);
+                        using (LayoutHelper.LabelWidth(350))
+                        {
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.IsDidFieldsOrPropertyCountChangedCheckDisabled);
+                        }
+                        EditorGUILayout.HelpBox("By default if you add / remove fields, tool will not redirect method calls for recompiled class." +
+                                                "\r\nThis is to ensure there are no issues as that is generally not supported." +
+                                                "\r\n\r\nSome assets however will use IL weaving to adjust your classes (eg Mirror) as a post compile step. In that case it's quite likely hot-reload will still work. " +
+                                                "\r\n\r\nTick this box for tool to try and reload changes when that happens."
+                            
+                            , MessageType.Info);
+
                     }),
                     (ExclusionsSection = new ChangeMainViewButton("Exclusions", (screen) => 
                     {
@@ -269,12 +280,24 @@ namespace FastScriptReload.Editor
             (value) =>
             {
                 DynamicCompilationBase.LogHowToFixMessageOnCompilationError = (bool)value;
-            });
+            }
+        );
         
         public static readonly ToggleProjectEditorPreferenceDefinition StopShowingAutoReloadEnabledDialogBox = new ToggleProjectEditorPreferenceDefinition(
             "Stop showing assets/script auto-reload enabled warning", "StopShowingAutoReloadEnabledDialogBox", false);
-
-
+        
+        public static readonly ToggleProjectEditorPreferenceDefinition IsDidFieldsOrPropertyCountChangedCheckDisabled = new ToggleProjectEditorPreferenceDefinition(
+            "Should method be detoured if filed count changed?", "IsDidFieldsOrPropertyCountChangedCheckDisabled", false,
+            (object newValue, object oldValue) =>
+            {
+                AssemblyChangesLoader.IsDidFieldsOrPropertyCountChangedCheckDisabled = (bool)newValue;
+            },
+            (value) =>
+            {
+                AssemblyChangesLoader.IsDidFieldsOrPropertyCountChangedCheckDisabled = (bool)value;
+            }
+        );
+        
         public static void SetCommonMaterialsShader(ShadersMode newShaderModeValue)
         {
             var rootToolFolder = AssetPathResolver.GetAssetFolderPathRelativeToScript(ScriptableObject.CreateInstance(typeof(FastScriptReloadWelcomeScreen)), 1);
@@ -318,7 +341,8 @@ namespace FastScriptReload.Editor
             EnableAutoReloadForChangedFiles,
             EnableExperimentalThisCallLimitationFix,
             LogHowToFixMessageOnCompilationError,
-            StopShowingAutoReloadEnabledDialogBox
+            StopShowingAutoReloadEnabledDialogBox,
+            IsDidFieldsOrPropertyCountChangedCheckDisabled
         };
 
         private static bool PrefsLoaded = false;
@@ -385,6 +409,7 @@ namespace FastScriptReload.Editor
             EnsureUserAwareOfAutoRefresh();
 
             DynamicCompilationBase.LogHowToFixMessageOnCompilationError = (bool)FastScriptReloadPreference.LogHowToFixMessageOnCompilationError.GetEditorPersistedValueOrDefault();
+            AssemblyChangesLoader.IsDidFieldsOrPropertyCountChangedCheckDisabled = (bool)FastScriptReloadPreference.IsDidFieldsOrPropertyCountChangedCheckDisabled.GetEditorPersistedValueOrDefault();
         }
 
         private static void EnsureUserAwareOfAutoRefresh()
