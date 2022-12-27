@@ -137,6 +137,7 @@ namespace FastScriptReload.Editor
                         using (LayoutHelper.LabelWidth(350))
                         {
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.LogHowToFixMessageOnCompilationError);
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.StopShowingAutoReloadEnabledDialogBox);
                         }
                     }))
                 }.Concat(additionalSections).ToList()),
@@ -269,6 +270,10 @@ namespace FastScriptReload.Editor
             {
                 DynamicCompilationBase.LogHowToFixMessageOnCompilationError = (bool)value;
             });
+        
+        public static readonly ToggleProjectEditorPreferenceDefinition StopShowingAutoReloadEnabledDialogBox = new ToggleProjectEditorPreferenceDefinition(
+            "Stop showing assets/script auto-reload enabled warning", "StopShowingAutoReloadEnabledDialogBox", false);
+
 
         public static void SetCommonMaterialsShader(ShadersMode newShaderModeValue)
         {
@@ -312,7 +317,8 @@ namespace FastScriptReload.Editor
             BatchScriptChangesAndReloadEveryNSeconds,
             EnableAutoReloadForChangedFiles,
             EnableExperimentalThisCallLimitationFix,
-            LogHowToFixMessageOnCompilationError
+            LogHowToFixMessageOnCompilationError,
+            StopShowingAutoReloadEnabledDialogBox
         };
 
         private static bool PrefsLoaded = false;
@@ -369,13 +375,77 @@ namespace FastScriptReload.Editor
                 }
             );
             
-            DisplayMessageIfLastDetourPotentiallyCrashedEditor();
-            
-            DynamicCompilationBase.LogHowToFixMessageOnCompilationError = (bool)FastScriptReloadPreference.LogHowToFixMessageOnCompilationError.GetEditorPersistedValueOrDefault();
+            InitCommon();
         }
 #endif
+        
+        protected static void InitCommon()
+        {
+            DisplayMessageIfLastDetourPotentiallyCrashedEditor();
+            EnsureUserAwareOfAutoRefresh();
 
-        protected static void DisplayMessageIfLastDetourPotentiallyCrashedEditor()
+            DynamicCompilationBase.LogHowToFixMessageOnCompilationError = (bool)FastScriptReloadPreference.LogHowToFixMessageOnCompilationError.GetEditorPersistedValueOrDefault();
+        }
+
+        private static void EnsureUserAwareOfAutoRefresh()
+        {
+            var autoRefreshMode = (AssetPipelineAutoRefreshMode)EditorPrefs.GetInt("kAutoRefreshMode", EditorPrefs.GetBool("kAutoRefresh") ? 1 : 0);
+            if (autoRefreshMode == AssetPipelineAutoRefreshMode.Enabled)
+            {
+                Debug.LogWarning("Fast Script Reload - asset auto refresh enabled - full reload will be triggered unless editor preference adjusted - see documentation for more details.");
+
+                if (!(bool)FastScriptReloadPreference.StopShowingAutoReloadEnabledDialogBox.GetEditorPersistedValueOrDefault())
+                {
+                    var chosenOption = EditorUtility.DisplayDialogComplex("Fast Script Reload - Warning",
+                        "Auto reload for assets/scripts is enabled." +
+                        $"\n\nThis means any change made in playmode will likely trigger full recompile." +
+                        $"\r\n\r\nIt's an editor setting and can be adjusted at any time via Edit -> Preferences -> Asset Pipeline -> Auto Refresh" +
+                        $"\r\n\r\nI can also adjust that for you now - that means you'll need to manually load changes (outside of playmode) via Assets -> Refresh (CTRL + R)." +
+                        $"\r\n\r\nIn some editor versions you can also set script compilation to happen only outside of playmode. " +
+                        $"\r\n\r\nDepending on version you'll find it via: " +
+                        $"\r\n1) Edit -> Preferences -> General -> Script Changes While Playing -> Recompile After Finished Playing." +
+                        $"\r\n2) Edit -> Preferences -> Asset Pipeline -> Auto Refresh -> Enabled Outside Playmode",
+                        "Ok, disable asset auto refresh (I'll refresh manually when needed)",
+                        "No, don't change (stop showing this message)",
+                        "No, don't change"
+                    );
+
+                    switch (chosenOption)
+                    {
+                        // change.
+                        case 0:
+                            EditorPrefs.SetInt("kAutoRefreshMode", (int)AssetPipelineAutoRefreshMode.Disabled);
+                            EditorPrefs.SetInt("kAutoRefresh", 0); //older unity versions
+                            break;
+
+                        // don't change and stop showing message.
+                        case 1:
+                            FastScriptReloadPreference.StopShowingAutoReloadEnabledDialogBox.SetEditorPersistedValue(true);
+
+                            break;
+
+                        // don't change
+                        case 2:
+
+                            break;
+
+                        default:
+                            Debug.LogError("Unrecognized option.");
+                            break;
+                    }
+                }
+            }
+        }
+
+        //copied from internal UnityEditor.AssetPipelineAutoRefreshMode
+        internal enum AssetPipelineAutoRefreshMode
+        {
+            Disabled,
+            Enabled,
+            EnabledOutsidePlaymode,
+        }
+
+        private static void DisplayMessageIfLastDetourPotentiallyCrashedEditor()
         {
             const string firstInitSessionKey = "FastScriptReloadWelcomeScreenInitializer_FirstInitDone";
             if (!SessionState.GetBool(firstInitSessionKey, false))
