@@ -301,6 +301,79 @@ public class SimpleTransformMover: MonoBehaviour {
 ### Adding new references
 When you're trying to reference new code in play-mode session that'll fail if assembly is not yet referencing that (most often happens when using AsmDefs that are not yet referencing each other)
 
+### Changing class that uses extension and passes itself as a reference
+Changing class that uses extension method and passes itself as a reference will create compiler error.
+
+Generally that shouldn't be an issue, extension methods are primarily used as a syntatic sugar to extend a class that you do not have access to.
+You shouldn't need to create extension methods for types you own (instead those are generally instance methods or base class methods).
+
+Given example:
+```
+public class ExtensionMethodTest 
+{
+   public string Name; 
+
+   void Update() 
+   {
+      this.PrintName();
+   }
+}
+
+//separate extension file
+public static ExtensionMethodTestExtensions 
+{
+   public static void PrintName(this ExtensionMethodTest obj) 
+   {
+      Debug.Log(obj.Name);
+   }
+}
+```
+
+When changing `ExtensionMethodTest` you'll get compile error. Workaround would be to include method call in your type, eg:
+```
+public class ExtensionMethodTest {
+   public string Name; 
+
+   void Update() {
+      this.PrintName();
+   }
+   
+   private void PrintName() {
+      Debug.Log(Name);
+   }
+}
+```
+*Arguably that's what should be done in the first place.*
+
+Adjusting classes that use extension methods without passing itself as a reference - will work correctly. eg:
+```
+public class ObjectFromExternalAssembly() 
+{ 
+   //included just to illustrate example, that'd be in compiled assembly 
+   //that you can't change and use extension method approach 
+
+   public string Name; 
+}
+
+public class ExtensionMethodTester
+{
+   void Update() 
+   {
+      var t = new ExtensionMethodTest();
+      t.PrintName()
+   }
+}
+
+//separate extension file
+public static ObjectFromExternalAssemblyExtensions 
+{
+   public static void PrintName(this ObjectFromExternalAssembly obj) 
+   {
+      Debug.Log(obj.Name);
+   }
+}
+```
+
 ### No IL2CPP support
 Asset runs based on specific .NET functionality, IL2CPP builds will not be supported. Although as this is development workflow aid you can build your APK with Mono backend (android) and change later.
 
