@@ -85,14 +85,14 @@ namespace FastScriptReload.Editor.Compilation
                 {
                     if (string.IsNullOrEmpty(assembly.Location))
                     {
-                        throw new Exception("Assembly location is null");
+                        throw new Exception("FastScriptReload: Assembly location is null");
                     }
 
                     referencesToAdd.Add(assembly.Location);
                 }
                 catch (Exception)
                 {
-                    Debug.LogWarning($"Unable to add a reference to assembly as unable to get location or null: {assembly.FullName} when hot-reloading, this is likely dynamic assembly and won't cause issues");
+                    Debug.LogWarning($"FastScriptReload: Unable to add a reference to assembly as unable to get location or null: {assembly.FullName} when hot-reloading, this is likely dynamic assembly and won't cause issues");
                 }
             }
 
