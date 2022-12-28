@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -21,6 +20,12 @@ namespace FastScriptReload.Editor
         public static FastScriptReloadManager Instance => _instance ?? (_instance = new FastScriptReloadManager());
         private static string DataPath = Application.dataPath;
 
+        public const string FileWatcherReplacementTokenForApplicationDataPath = "<Application.dataPath>";
+        public Dictionary<string, Func<string>> FileWatcherTokensToResolvePathFn = new Dictionary<string, Func<string>>
+        {
+            [FileWatcherReplacementTokenForApplicationDataPath] = () => DataPath
+        };
+
         private PlayModeStateChange _lastPlayModeStateChange;
         private List<FileSystemWatcher> _fileWatchers = new List<FileSystemWatcher>();
         private IEnumerable<string> _currentFileExclusions;
@@ -31,7 +36,7 @@ namespace FastScriptReload.Editor
         private DateTime _lastTimeChangeBatchRun = default(DateTime);
         private bool _executeOnlyInPlaymode = true; //TODO: potentially later add editor support - needed?
         private bool _assemblyChangesLoaderResolverResolutionAlreadyCalled;
-    
+        
         private void OnWatchedFileChange(object source, FileSystemEventArgs e)
         {
             if (_lastPlayModeStateChange != PlayModeStateChange.EnteredPlayMode)
@@ -75,22 +80,45 @@ Workaround will search in all folders (under project root) and will use first fo
 
             if (_currentFileExclusions != null && _currentFileExclusions.Any(fp => filePathToUse.Replace("\\", "/").EndsWith(fp)))
             {
-                Debug.Log($"File: '{filePathToUse}' changed, but marked as exclusion. Hot-Reload will not be performed. You can manage exclusions via" +
+                Debug.LogWarning($"FastScriptReload: File: '{filePathToUse}' changed, but marked as exclusion. Hot-Reload will not be performed. You can manage exclusions via" +
                           $"\r\nRight click context menu (Fast Script Reload > Add / Remove Hot-Reload exclusion)" +
                           $"\r\nor via Window -> Fast Script Reload -> Start Screen -> Exclusion menu");
             
                 return;
             }
 
+            const int msThresholdToConsiderSameChangeFromDifferentFileWatchers = 500;
+            var isDuplicatedChangesComingFromDifferentFileWatcher = _dynamicFileHotReloadStateEntries
+                .Any(f => f.FullFileName == filePathToUse
+                          && (DateTime.UtcNow - f.FileChangedOn).TotalMilliseconds < msThresholdToConsiderSameChangeFromDifferentFileWatchers);
+            if (isDuplicatedChangesComingFromDifferentFileWatcher)
+            {
+                Debug.LogWarning($"FastScriptReload: Looks like change to: {filePathToUse} have already been added for processing. This can happen if you have multiple file watchers set in a way that they overlap.");
+                return;
+            }
+                
             _dynamicFileHotReloadStateEntries.Add(new DynamicFileHotReloadState(filePathToUse, DateTime.UtcNow));
         }
 
-        public void StartWatchingDirectoryAndSubdirectories(string directoryPath) 
+        public void StartWatchingDirectoryAndSubdirectories(string directoryPath, string filter, bool includeSubdirectories) 
         {
+            foreach (var kv in FileWatcherTokensToResolvePathFn)
+            {
+                directoryPath = directoryPath.Replace(kv.Key, kv.Value());
+            }
+            
+            var directoryInfo = new DirectoryInfo(directoryPath);
+
+            if (!directoryInfo.Exists)
+            {
+                Debug.LogWarning($"FastScriptReload: Directory: '{directoryPath}' does not exist, make sure file-watcher setup is correct. You can access via: Window -> Fast Script Reload -> File Watcher (Advanced Setup)");
+            }
+            
             var fileWatcher = new FileSystemWatcher();
-            fileWatcher.Path = new FileInfo(directoryPath).Directory.FullName;
-            fileWatcher.IncludeSubdirectories = true;
-            fileWatcher.Filter =  "*.cs";
+
+            fileWatcher.Path = directoryInfo.FullName;
+            fileWatcher.IncludeSubdirectories = includeSubdirectories;
+            fileWatcher.Filter =  filter;
             fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
             fileWatcher.Changed += OnWatchedFileChange;
         
@@ -229,8 +257,7 @@ Workaround will search in all folders (under project root) and will use first fo
                                 var msg = new StringBuilder();
                                 foreach (string message in dynamicallyLoadedAssemblyCompilerResult.MessagesFromCompilerProcess)
                                 {
-                                    msg.AppendLine(
-                                        $"Error  when compiling, it's best to check code and make sure it's compilable \r\n {message}\n");
+                                    msg.AppendLine($"Error  when compiling, it's best to check code and make sure it's compilable \r\n {message}\n");
                                 }
 
                                 var errorMessage = msg.ToString();
@@ -247,8 +274,7 @@ Workaround will search in all folders (under project root) and will use first fo
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogError(
-                            $"Error when updating files: '{(sourceCodeFilesWithUniqueChangesAwaitingHotReload != null ? string.Join(",", sourceCodeFilesWithUniqueChangesAwaitingHotReload.Select(fn => new FileInfo(fn).Name)) : "unknown")}', {ex}");
+                        Debug.LogError($"Error when updating files: '{(sourceCodeFilesWithUniqueChangesAwaitingHotReload != null ? string.Join(",", sourceCodeFilesWithUniqueChangesAwaitingHotReload.Select(fn => new FileInfo(fn).Name)) : "unknown")}', {ex}");
                     }
                 });
             }
@@ -279,7 +305,16 @@ Workaround will search in all folders (under project root) and will use first fo
         {
             if (Instance._fileWatchers.Count == 0)
             {
-                Instance.StartWatchingDirectoryAndSubdirectories(Application.dataPath);
+                var fileWatcherSetupEntries = FastScriptReloadPreference.FileWatcherSetupEntries.GetElementsTyped();
+                if (fileWatcherSetupEntries.Count == 0)
+                {
+                    Debug.LogWarning($"FastScriptReload: There are no file watcher setup entries. Tool will not be able to pick changes automatically");
+                }
+                
+                foreach (var fileWatcherSetupEntry in fileWatcherSetupEntries)
+                {
+                    Instance.StartWatchingDirectoryAndSubdirectories(fileWatcherSetupEntry.path, fileWatcherSetupEntry.filter, fileWatcherSetupEntry.includeSubdirectories);
+                }
             }
         }
     }
