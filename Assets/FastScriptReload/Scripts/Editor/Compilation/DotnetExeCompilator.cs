@@ -24,7 +24,6 @@ namespace FastScriptReload.Editor.Compilation
 
         static DotnetExeDynamicCompilation()
         {
-
 #if UNITY_EDITOR_WIN
             const string dotnetExecutablePath = "dotnet.exe";
 #else
