@@ -370,8 +370,7 @@ includeSubdirectories - whether child directories should be watched as well
             EnableExperimentalThisCallLimitationFix,
             LogHowToFixMessageOnCompilationError,
             StopShowingAutoReloadEnabledDialogBox,
-            IsDidFieldsOrPropertyCountChangedCheckDisabled,
-            FileWatcherSetupEntries
+            IsDidFieldsOrPropertyCountChangedCheckDisabled
         };
 
         private static bool PrefsLoaded = false;
