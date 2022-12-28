@@ -147,6 +147,9 @@ Your app performance won't be affected in any meaningful way.
 Biggest bit is additional memory used for your re-compiled code.
 Won't be visible unless you make 100s of changes in same play-session.
 
+### File Watchers Performance Overhead
+In some cases watching for file changes is causing significant performance overhead. This is down to the Unity FileWatcher which I'm unable to change or provide suitable replacement for. If you're experiencing this issue please go to `Window -> Fast Script Reload -> File Watcher (Advanced Setup)` and narrow down watchers to specific path where you're working in. You can watch multiple folders in this manner.
+
 ## LIMITATIONS -please make sure to read those
 There are some limitation due to the approach taken to Hot-Reload your scripts. I've tried to minimise the impact to standard dev-workflow as much as possible.
 
