@@ -4,11 +4,11 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using FastScriptReload.Runtime;
+using ImmersiveVRTools.Editor.Common.Cache;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using UnityEditor;
-using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 namespace FastScriptReload.Editor.Compilation
@@ -27,9 +27,13 @@ namespace FastScriptReload.Editor.Compilation
         {
             //needs to be set from main thread
             ActiveScriptCompilationDefines = EditorUserBuildSettings.activeScriptCompilationDefines;
-            AssemblyCsharpFullPath = AssetDatabase.FindAssets("Microsoft.CSharp")
-	            .Select(g => new System.IO.FileInfo(UnityEngine.Application.dataPath + "/../" + AssetDatabase.GUIDToAssetPath(g)))
-	            .First(fi => fi.Name.ToLower() == "Microsoft.CSharp.dll".ToLower()).FullName;
+            AssemblyCsharpFullPath = SessionStateCache.GetOrCreateString(
+	            $"FSR:AssemblyCsharpFullPath", 
+	            () => AssetDatabase.FindAssets("Microsoft.CSharp")
+					            .Select(g => new System.IO.FileInfo(UnityEngine.Application.dataPath + "/../" + AssetDatabase.GUIDToAssetPath(g)))
+					            .First(fi => fi.Name.ToLower() == "Microsoft.CSharp.dll".ToLower()).FullName
+	        );
+
         }
         
         protected static string CreateSourceCodeCombinedContents(IEnumerable<string> fileSourceCode)

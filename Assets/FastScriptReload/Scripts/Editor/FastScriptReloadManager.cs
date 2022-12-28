@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -80,23 +81,13 @@ Workaround will search in all folders (under project root) and will use first fo
 
             if (_currentFileExclusions != null && _currentFileExclusions.Any(fp => filePathToUse.Replace("\\", "/").EndsWith(fp)))
             {
-                Debug.LogWarning($"FastScriptReload: File: '{filePathToUse}' changed, but marked as exclusion. Hot-Reload will not be performed. You can manage exclusions via" +
+                Debug.Log($"File: '{filePathToUse}' changed, but marked as exclusion. Hot-Reload will not be performed. You can manage exclusions via" +
                           $"\r\nRight click context menu (Fast Script Reload > Add / Remove Hot-Reload exclusion)" +
                           $"\r\nor via Window -> Fast Script Reload -> Start Screen -> Exclusion menu");
             
                 return;
             }
 
-            const int msThresholdToConsiderSameChangeFromDifferentFileWatchers = 500;
-            var isDuplicatedChangesComingFromDifferentFileWatcher = _dynamicFileHotReloadStateEntries
-                .Any(f => f.FullFileName == filePathToUse
-                          && (DateTime.UtcNow - f.FileChangedOn).TotalMilliseconds < msThresholdToConsiderSameChangeFromDifferentFileWatchers);
-            if (isDuplicatedChangesComingFromDifferentFileWatcher)
-            {
-                Debug.LogWarning($"FastScriptReload: Looks like change to: {filePathToUse} have already been added for processing. This can happen if you have multiple file watchers set in a way that they overlap.");
-                return;
-            }
-                
             _dynamicFileHotReloadStateEntries.Add(new DynamicFileHotReloadState(filePathToUse, DateTime.UtcNow));
         }
 

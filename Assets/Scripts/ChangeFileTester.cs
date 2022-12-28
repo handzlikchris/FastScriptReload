@@ -60,7 +60,7 @@ public class ChangeFileTester : MonoBehaviour
                     DestroyImmediate(c);
                     return script;
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     return null;
                 }
