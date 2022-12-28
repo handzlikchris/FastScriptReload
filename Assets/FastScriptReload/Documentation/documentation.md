@@ -403,5 +403,6 @@ It's possible to set auto-refresh to enabled but only outside of playmode. Depen
 - or `Edit -> Preferences -> Asset Pipeline -> Auto Refresh -> Enabled Outside Playmode`
 
 ## Roadmap
+- ~~add Mac/Linux support~~ (added with 1.1)
 - add debugger support for hot-reloaded scripts
 - better compiler support to work around limitations
