@@ -72,6 +72,8 @@ You can also manually manage reload, to do so:
 2) Click Window -> Fast Script Reload -> Force Reload to trigger
 3) or call `FastScriptReloadManager.TriggerReloadForChangedFiles()` method from code
 
+> You can also use Editor -> Hotkeys to bind Force Reload to specific key.
+
 ### [Live-Reload] Hot-Reload over Network
 With on-device build, your code changes will be distributed over the network in real-time.
 
