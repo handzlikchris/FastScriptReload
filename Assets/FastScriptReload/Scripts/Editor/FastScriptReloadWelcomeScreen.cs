@@ -21,7 +21,7 @@ namespace FastScriptReload.Editor
         {
             return $"{BaseUrl}/updates/fast-script-reload/{userId}?CurrentVersion={versionId}";
         }
-        public static string VersionId = "1.0";
+        public static string VersionId = "1.1";
         private static readonly string ProjectIconName = "ProductIcon64";
         public static readonly string ProjectName = "fast-script-reload";
 
