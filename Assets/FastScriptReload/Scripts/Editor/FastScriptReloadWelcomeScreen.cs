@@ -143,14 +143,33 @@ namespace FastScriptReload.Editor
                 
                         ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.FilesExcludedFromHotReload);
                     })),
-                    (new ChangeMainViewButton("Logging", (screen) => 
+                    new ChangeMainViewButton("Logging", (screen) => 
                     {
                         using (LayoutHelper.LabelWidth(350))
                         {
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.LogHowToFixMessageOnCompilationError);
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.StopShowingAutoReloadEnabledDialogBox);
                         }
-                    }))
+                    }),
+                    new ChangeMainViewButton("File Watcher\r\n(Advanced Setup)", (screen) => 
+                    {
+                        EditorGUILayout.HelpBox(
+$@"Asset watches .cs files for changes. Unfortunately Unity's FileWatcher 
+implementation has some performance issues.
+
+By default all project directories can be watched, you can adjust that here.
+
+path - which directory to watch
+filter - narrow down files to match filter, eg all *.cs files (*.cs)
+includeSubdirectories - whether child directories should be watched as well
+
+{FastScriptReloadManager.FileWatcherReplacementTokenForApplicationDataPath} - you can use that token and it'll be replaced with your /Assets folder"
+, MessageType.Info);
+                        
+                        EditorGUILayout.HelpBox("Recompile after making changes for file watchers to re-load.", MessageType.Warning);
+                        
+                        ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.FileWatcherSetupEntries);
+                    })
                 }.Concat(additionalSections).ToList()),
                 new GuiSection("Launch Demo", new List<ClickableElement>
                 {
@@ -298,6 +317,14 @@ namespace FastScriptReload.Editor
             }
         );
         
+        public static readonly JsonObjectListProjectEditorPreferenceDefinition<FileWatcherSetupEntry> FileWatcherSetupEntries = new JsonObjectListProjectEditorPreferenceDefinition<FileWatcherSetupEntry>(
+            "File Watchers Setup", "FileWatcherSetupEntries", new List<string>
+            {
+                JsonUtility.ToJson(new FileWatcherSetupEntry("<Application.dataPath>", "*.cs", true))
+            }, 
+            () => new FileWatcherSetupEntry("<Application.dataPath>", "*.cs", true)
+        );
+        
         public static void SetCommonMaterialsShader(ShadersMode newShaderModeValue)
         {
             var rootToolFolder = AssetPathResolver.GetAssetFolderPathRelativeToScript(ScriptableObject.CreateInstance(typeof(FastScriptReloadWelcomeScreen)), 1);
@@ -342,7 +369,8 @@ namespace FastScriptReload.Editor
             EnableExperimentalThisCallLimitationFix,
             LogHowToFixMessageOnCompilationError,
             StopShowingAutoReloadEnabledDialogBox,
-            IsDidFieldsOrPropertyCountChangedCheckDisabled
+            IsDidFieldsOrPropertyCountChangedCheckDisabled,
+            FileWatcherSetupEntries
         };
 
         private static bool PrefsLoaded = false;
