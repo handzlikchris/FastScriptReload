@@ -21,7 +21,7 @@ namespace FastScriptReload.Editor
         {
             return $"{BaseUrl}/updates/fast-script-reload/{userId}?CurrentVersion={versionId}";
         }
-        public static string VersionId = "1.0";
+        public static string VersionId = "1.1";
         private static readonly string ProjectIconName = "ProductIcon64";
         public static readonly string ProjectName = "fast-script-reload";
 
@@ -182,6 +182,7 @@ includeSubdirectories - whether child directories should be watched as well
         private static readonly GuiSection TopSection = new GuiSection("Support", new List<ClickableElement>
             {
                 new OpenUrlButton("Documentation", $"{RedirectBaseUrl}/documentation"),
+                new OpenUrlButton("Discord", $"{RedirectBaseUrl}/discord"),
                 new OpenUrlButton("Unity Forum", $"{RedirectBaseUrl}/unity-forum"),
                 new OpenUrlButton("Contact", $"{RedirectBaseUrl}/contact")
             }
