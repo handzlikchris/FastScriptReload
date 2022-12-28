@@ -9,7 +9,7 @@ public class PassingSelfTest : MonoBehaviour
     void Pass()
     {
         
-        this.Value = Value;
+        // this.Value = Value;
         Debug.Log(this + "This test test" + Value); 
         PassingSelfManager.Pass(this, "test"); 
          

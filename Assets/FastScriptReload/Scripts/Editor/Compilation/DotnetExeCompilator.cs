@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using ImmersiveVRTools.Editor.Common.Cache;
 using UnityEditor;
 using Debug = UnityEngine.Debug;
 
@@ -23,32 +24,32 @@ namespace FastScriptReload.Editor.Compilation
 
         static DotnetExeDynamicCompilation()
         {
-            System.Threading.Tasks.Task.Run(() =>
-            {
+
 #if UNITY_EDITOR_WIN
-                const string dotnetExecutablePath = "dotnet.exe";
+            const string dotnetExecutablePath = "dotnet.exe";
 #else
-                const string dotnetExecutablePath = "dotnet"; //mac and linux, no extension
+            const string dotnetExecutablePath = "dotnet"; //mac and linux, no extension
 #endif
                 
-                //TODO: save in player prefs so it stays between project opens
-                _dotnetExePath = FindFileOrThrow(dotnetExecutablePath);
-                _cscDll = FindFileOrThrow("csc.dll"); //even on mac/linux need to find dll and use, not no extension one
-                _tempFolder = Path.GetTempPath();
-            });
+            _dotnetExePath = FindFileOrThrow(dotnetExecutablePath);
+            _cscDll = FindFileOrThrow("csc.dll"); //even on mac/linux need to find dll and use, not no extension one
+            _tempFolder = Path.GetTempPath();
         }
 
         private static string FindFileOrThrow(string fileName)
         {
-            var foundFile = Directory
-                .GetFiles(ApplicationContentsPath, fileName, SearchOption.AllDirectories)
-                .FirstOrDefault();
-            if (foundFile == null)
+            return SessionStateCache.GetOrCreateString($"FSR:FilePath_{fileName}", () =>
             {
-                throw new Exception($"Unable to find '{fileName}', make sure Editor version supports it. You can also add preprocessor directive 'FastScriptReload_CompileViaMCS' which will use Mono compiler instead");
-            }
+                var foundFile = Directory
+                    .GetFiles(ApplicationContentsPath, fileName, SearchOption.AllDirectories)
+                    .FirstOrDefault();
+                if (foundFile == null)
+                {
+                    throw new Exception($"Unable to find '{fileName}', make sure Editor version supports it. You can also add preprocessor directive 'FastScriptReload_CompileViaMCS' which will use Mono compiler instead");
+                }
 
-            return foundFile;
+                return foundFile;
+            });
         }
 
         public static CompileResult Compile(List<string> filePathsWithSourceCode)
