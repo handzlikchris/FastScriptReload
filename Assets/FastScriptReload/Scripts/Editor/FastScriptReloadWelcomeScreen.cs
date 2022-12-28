@@ -182,6 +182,7 @@ includeSubdirectories - whether child directories should be watched as well
         private static readonly GuiSection TopSection = new GuiSection("Support", new List<ClickableElement>
             {
                 new OpenUrlButton("Documentation", $"{RedirectBaseUrl}/documentation"),
+                new OpenUrlButton("Discord", $"{RedirectBaseUrl}/discord"),
                 new OpenUrlButton("Unity Forum", $"{RedirectBaseUrl}/unity-forum"),
                 new OpenUrlButton("Contact", $"{RedirectBaseUrl}/contact")
             }
