@@ -34,6 +34,22 @@ namespace FastScriptReload.Editor
         {
             ExclusionsSection.OnClick(this);
         }
+        
+        private static readonly ScrollViewGuiSection MainScrollViewSection = new ScrollViewGuiSection(
+            "", (screen) =>
+            {
+                GenerateCommonWelcomeText(FastScriptReloadPreference.ProductName, screen);
+
+                GUILayout.Label("Quick adjustments:", screen.LabelStyle);
+                using (LayoutHelper.LabelWidth(350))
+                {
+                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.BatchScriptChangesAndReloadEveryNSeconds);
+                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableAutoReloadForChangedFiles);
+                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalThisCallLimitationFix);
+                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.LogHowToFixMessageOnCompilationError);
+                }
+            }
+        );
 
         private static readonly List<GuiSection> LeftSections = CreateLeftSections(new List<ChangeMainViewButton>
             {
@@ -73,15 +89,15 @@ namespace FastScriptReload.Editor
                 
                 GUILayout.Space(10);
                 EditorGUILayout.HelpBox("There are some limitations to what can be Hot-Reloaded, documentation lists them under 'limitations' section.", MessageType.Warning);
-            }));
+            }), MainScrollViewSection);
 
-        protected static List<GuiSection> CreateLeftSections(List<ChangeMainViewButton> additionalSections, LaunchSceneButton launchSceneButton)
+        protected static List<GuiSection> CreateLeftSections(List<ChangeMainViewButton> additionalSections, LaunchSceneButton launchSceneButton, ScrollViewGuiSection mainScrollViewSection)
         {
             return new List<GuiSection>() {
                 new GuiSection("", new List<ClickableElement>
                 {
                     new LastUpdateButton("New Update!", (screen) => LastUpdateUpdateScrollViewSection.RenderMainScrollViewSection(screen)),
-                    new ChangeMainViewButton("Welcome", (screen) => MainScrollViewSection.RenderMainScrollViewSection(screen)),
+                    new ChangeMainViewButton("Welcome", (screen) => mainScrollViewSection.RenderMainScrollViewSection(screen)),
                 }),
                 new GuiSection("Options", new List<ClickableElement>
                 {
@@ -200,22 +216,6 @@ includeSubdirectories - whether child directories should be watched as well
             {
                 new OpenUrlButton(" Unity Forum", $"{RedirectBaseUrl}/unity-forum"),
                 new OpenUrlButton(" or Write a Short Review", $"{RedirectBaseUrl}/asset-store-review"),
-            }
-        );
-
-        private static readonly ScrollViewGuiSection MainScrollViewSection = new ScrollViewGuiSection(
-            "", (screen) =>
-            {
-                GenerateCommonWelcomeText(FastScriptReloadPreference.ProductName, screen);
-
-                GUILayout.Label("Quick adjustments:", screen.LabelStyle);
-                using (LayoutHelper.LabelWidth(350))
-                {
-                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.BatchScriptChangesAndReloadEveryNSeconds);
-                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableAutoReloadForChangedFiles);
-                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalThisCallLimitationFix);
-                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.LogHowToFixMessageOnCompilationError);
-                }
             }
         );
 
