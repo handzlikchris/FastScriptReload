@@ -179,14 +179,19 @@ includeSubdirectories - whether child directories should be watched as well
         }
 
         private static readonly string RedirectBaseUrl = "https://immersivevrtools.com/redirect/fast-script-reload"; 
-        private static readonly GuiSection TopSection = new GuiSection("Support", new List<ClickableElement>
-            {
-                new OpenUrlButton("Documentation", $"{RedirectBaseUrl}/documentation"),
-                new OpenUrlButton("Discord", $"{RedirectBaseUrl}/discord"),
-                new OpenUrlButton("Unity Forum", $"{RedirectBaseUrl}/unity-forum"),
-                new OpenUrlButton("Contact", $"{RedirectBaseUrl}/contact")
-            }
-        );
+        private static readonly GuiSection TopSection = CreateTopSectionButtons(RedirectBaseUrl);
+
+        protected static GuiSection CreateTopSectionButtons(string redirectBaseUrl)
+        {
+            return new GuiSection("Support", new List<ClickableElement>
+                {
+                    new OpenUrlButton("Documentation", $"{redirectBaseUrl}/documentation"),
+                    new OpenUrlButton("Discord", $"{redirectBaseUrl}/discord"),
+                    new OpenUrlButton("Unity Forum", $"{redirectBaseUrl}/unity-forum"),
+                    new OpenUrlButton("Contact", $"{redirectBaseUrl}/contact")
+                }
+            );
+        }
 
         private static readonly GuiSection BottomSection = new GuiSection(
             "I want to make this tool better. And I need your help!",
