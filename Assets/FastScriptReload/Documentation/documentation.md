@@ -386,6 +386,25 @@ public static ObjectFromExternalAssemblyExtensions
 }
 ```
 
+### Changing class that implements internal interface can trigger compilation error
+If class is implementing interface that's defined in different file as internal (default for no access modifier) - then changes to that class will fail to compile.
+
+eg.
+```
+//file IInterface.cs
+interface IInterface { //default interface access-modifier is 'internal'
+   //declaration
+} 
+
+//file ClassImplementingIInterface.cs
+class ClassImplementingIInterface: IInterface {
+   //changing this class will cause CS0122 'IInterface' is inaccessible due to it's protection level
+}
+
+```
+
+> Quick workaround is to declare that interface as public
+
 ### No IL2CPP support
 Asset runs based on specific .NET functionality, IL2CPP builds will not be supported. Although as this is development workflow aid you can build your APK with Mono backend (android) and change later.
 
