@@ -12,7 +12,8 @@ public class InternalMethodTest : MonoBehaviour
 
     internal void Test()
     {
-        Debug.Log("TestInternal 2");
+        //test
+        Debug.Log("TestInternal test - changed?");
     }
 
     internal class InternalClass
