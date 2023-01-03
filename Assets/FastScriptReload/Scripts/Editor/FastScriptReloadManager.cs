@@ -31,6 +31,7 @@ namespace FastScriptReload.Editor
         private List<FileSystemWatcher> _fileWatchers = new List<FileSystemWatcher>();
         private IEnumerable<string> _currentFileExclusions;
         public bool EnableExperimentalThisCallLimitationFix { get; set; }
+        public bool EnableExperimentalNewFieldsAccess { get; set; } = true; //TODO: add config for that
 
         private List<DynamicFileHotReloadState> _dynamicFileHotReloadStateEntries = new List<DynamicFileHotReloadState>();
 
