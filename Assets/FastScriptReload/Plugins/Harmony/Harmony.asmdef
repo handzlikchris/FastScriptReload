@@ -1,0 +1,19 @@
+{
+    "name": "Harmony",
+    "rootNamespace": "",
+    "references": [
+        "GUID:64c08ade9b4c4aa4091159f099c7a4ba",
+        "GUID:9472e338f225ed9439b5983e618874a8"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_EDITOR || LiveScriptReload_IncludeInBuild_Enabled"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": true
+}
