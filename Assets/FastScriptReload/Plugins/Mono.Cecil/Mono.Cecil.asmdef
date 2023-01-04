@@ -1,0 +1,16 @@
+{
+    "name": "Mono.Cecil",
+    "rootNamespace": "",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_EDITOR || LiveScriptReload_IncludeInBuild_Enabled"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

@@ -1,7 +1,9 @@
 {
     "name": "FastScriptReload.Runtime",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "GUID:5e9e19227a46bcd4a82e01e3828bb106"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
