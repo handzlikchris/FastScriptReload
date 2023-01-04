@@ -51,7 +51,7 @@ namespace FastScriptReload.Examples
             Vector3 p;
             p.x = u;
             p.y = Sin(PI * (4f * d - t));
-            p.y /= 1f + 10f * d; 
+            p.y /= 1f + 10f * d * 20 + 50; 
             p.z = v;
             return p;
         }
@@ -63,7 +63,7 @@ namespace FastScriptReload.Examples
             Vector3 p;
             p.x = s * Sin(PI * u);
             p.y = r * Sin(0.5f * PI * v);
-            p.z = s * Cos(PI * u);
+            p.z = s * Cos(PI * u) * 10;
             return p;
         }
 

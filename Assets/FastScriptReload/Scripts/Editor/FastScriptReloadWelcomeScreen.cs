@@ -159,10 +159,31 @@ namespace FastScriptReload.Editor
                 
                         ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.FilesExcludedFromHotReload);
                     })),
-                    new ChangeMainViewButton("Logging", (screen) => 
+                    new ChangeMainViewButton("Debugging", (screen) =>
                     {
+                        EditorGUILayout.HelpBox(
+                            @"To debug you'll need to set breakpoints in dynamically-compiled file. 
+
+BREAKPOINTS IN ORIGINAL FILE WON'T BE HIT!", MessageType.Error);
+
+                        EditorGUILayout.HelpBox(
+@"You can do that via:
+    - clicking link in console-window after change, eg
+      'FSR: Files: FunctionLibrary.cs changed (click here to debug [in bottom details pane]) (...)'
+      (it needs to be clicked in bottom details pane, double click will simply take you to log location)", MessageType.Warning);
+                        GUILayout.Space(10);
+                        
+                        EditorGUILayout.HelpBox(@"Tool can also auto-open generated file on every change, to do so select below option", MessageType.Info);
                         using (LayoutHelper.LabelWidth(350))
                         {
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.IsAutoOpenGeneratedSourceFileOnChangeEnabled);
+                        }
+
+                        GUILayout.Space(20);
+                        using (LayoutHelper.LabelWidth(350))
+                        {
+                            EditorGUILayout.LabelField("Logging", screen.BoldTextStyle);
+                            GUILayout.Space(5);
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.LogHowToFixMessageOnCompilationError);
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.StopShowingAutoReloadEnabledDialogBox);
                         }
@@ -308,6 +329,9 @@ includeSubdirectories - whether child directories should be watched as well
             }
         );
         
+        public static readonly ToggleProjectEditorPreferenceDefinition IsAutoOpenGeneratedSourceFileOnChangeEnabled = new ToggleProjectEditorPreferenceDefinition(
+            "Auto-open generated source file for debugging", "IsAutoOpenGeneratedSourceFileOnChangeEnabled", false);
+        
         public static readonly ToggleProjectEditorPreferenceDefinition StopShowingAutoReloadEnabledDialogBox = new ToggleProjectEditorPreferenceDefinition(
             "Stop showing assets/script auto-reload enabled warning", "StopShowingAutoReloadEnabledDialogBox", false);
         
@@ -376,7 +400,8 @@ includeSubdirectories - whether child directories should be watched as well
             LogHowToFixMessageOnCompilationError,
             StopShowingAutoReloadEnabledDialogBox,
             IsDidFieldsOrPropertyCountChangedCheckDisabled,
-            FileWatcherSetupEntries
+            FileWatcherSetupEntries,
+            IsAutoOpenGeneratedSourceFileOnChangeEnabled
         };
 
         private static bool PrefsLoaded = false;

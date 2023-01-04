@@ -20,6 +20,25 @@ namespace FastScriptReload.Editor.Compilation
     {
 	    public static bool LogHowToFixMessageOnCompilationError;
 	    public static bool EnableExperimentalThisCallLimitationFix;
+
+	    public const string DebuggingInformationComment = 
+@"// DEBUGGING READ-ME 
+//
+// To debug simply add a breakpoint in this file.
+// 
+// With every code change - new file is generated, currently you'll need to re-set breakpoints after each change.
+// You can also:
+//    - step into the function that was changed (and that will get you to correct source file)
+//    - add a function breakpoint in your IDE (this way you won't have to re-add it every time)
+//
+// Tool can automatically open dynamically-compiled code file every time to make setting breakpoints easier.
+// You can adjust that behaviour via 'Window -> FastScriptReload -> Start Screen -> Debugging -> Do not auto-open generated cs file'.
+//
+// You can always open generated file when needed by clicking link in console, eg.
+// 'FSR: Files: FunctionLibrary.cs changed (click here to debug [in bottom details pane]) - compilation (took 240ms)'
+
+
+";
 	    
         protected static readonly string[] ActiveScriptCompilationDefines;
         protected static readonly string DynamicallyCreatedAssemblyAttributeSourceCode = $"[assembly: {typeof(DynamicallyCreatedAssemblyAttribute).FullName}()]";
@@ -72,21 +91,21 @@ namespace FastScriptReload.Editor.Compilation
                 return root.ToFullString();
             }).ToList();
 
-            var sourceCodeCombined = new StringBuilder();
+            var sourceCodeCombinedSb = new StringBuilder();
+            sourceCodeCombinedSb.Append(DebuggingInformationComment);
+            
             foreach (var usingStatement in combinedUsingStatements.Distinct())
             {
-                sourceCodeCombined.Append(usingStatement);
+                sourceCodeCombinedSb.Append(usingStatement);
             }
 
             foreach (var sourceCodeWithAdjustment in sourceCodeWithAdjustments)
             {
-                sourceCodeCombined.AppendLine(sourceCodeWithAdjustment);
+                sourceCodeCombinedSb.AppendLine(sourceCodeWithAdjustment);
             }
-
-#if FastScriptReload_DebugEnabled
-            Debug.Log("Soruce Code Created:\r\n\r\n" + sourceCodeCombined);
-#endif
-            return sourceCodeCombined.ToString();
+            
+            ScopedLogger.LogDebug("Source Code Created:\r\n\r\n" + sourceCodeCombinedSb);
+            return sourceCodeCombinedSb.ToString();
         }
 
         protected static List<string> ResolveReferencesToAdd(List<string> excludeAssyNames)
