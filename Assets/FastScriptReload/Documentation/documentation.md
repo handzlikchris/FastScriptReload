@@ -409,6 +409,16 @@ class ClassImplementingIInterface: IInterface {
 Asset runs based on specific .NET functionality, IL2CPP builds will not be supported. Although as this is development workflow aid you can build your APK with Mono backend (android) and change later.
 
 ## FAQ
+### How is this asset different than Live Script Reload?
+Fast Script Reload
+- hot reload in editor
+
+Live Script Reload 
+- same hot reload in editor as FSR (includes FSR)
++ **AND hot reload directly in builds / on-device**
++ you don't have to download them both separately, LSR is also 1 package import
++ standalone extension priced at $25, or if you've already bought Fast Script Reload it's $5 upgrade
+
 ### Editor makes full reload on any change in playmode
 
 Unity Editor has an option to auto recompile changes. **For tool to work properly you want to have that either disabled or enabled only outside of playmode.**
