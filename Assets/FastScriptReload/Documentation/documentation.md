@@ -133,6 +133,33 @@ This is to ensure there are no issues as that is generally not supported.
 
 Some assets however will use IL weaving to adjust your classes (eg Mirror) as a post compile step. In that case it's quite likely hot-reload will still work.
 
+## Debugging
+Debugging is fully supported although breakpoints in your original file won't be hit.
+
+Once change is compiled, you'll get an option to open generated file [via clickable link in console window] in which you can set breakpoints.
+
+Tool can also auto-open generated files for you on change for simpler access, you can find option via 'Window -> Fast Script Reload -> Start Screen -> Debugging -> Auto open generated source file for debugging'
+
+> Debugging in that manner is enabled in version 1.2 which is not yet in the store, on v1.1 you'll need to make following changes:
+
+in '<your project path>\Assets\FastScriptReload\Scripts\Editor\Compilation\DotnetExeCompilator.cs'
+- on line 76 remove/comment out code that deletes temp files
+```
+foreach (var fileToCleanup in createdFilesToCleanUp)
+{
+   File.Delete(fileToCleanup);
+}
+```
+
+- on line 66 after `CreateFileAndTrackAsCleanup(sourceCodeCombinedFilePath, sourceCodeCombined, createdFilesToCleanUp);` add code that'll auto-open source file for you to set breakpoints in
+```
+#if UNITY_EDITOR
+  UnityMainThreadDispatcher.Instance.Enqueue(() =>
+  {
+      UnityEditorInternal.InternalEditorUtility.OpenFileAtLineExternal(sourceCodeCombinedFilePath, 0);
+  });
+#endif
+```
 
 ## Production Build
 For Fast Script Reload asset code will be excluded from any builds.
@@ -156,11 +183,6 @@ In some cases watching for file changes is causing significant performance overh
 There are some limitation due to the approach taken to Hot-Reload your scripts. I've tried to minimise the impact to standard dev-workflow as much as possible.
 
 In some cases however you may need to use workarounds as described below.
-
-### Breakpoints in hot-reloaded scripts won't be hit, sorry!
-
-- only for the scripts you changed, others will work
-- with how quick it compiles and reloads you may not even need a debugger
 
 ### Generic methods and classes won't be Hot-Reloaded
 Unfortunately generics will not be Hot-Reloaded, to workaround you'd need to move code to non-generic class / method.
@@ -475,5 +497,5 @@ public class VisualStudioProjectGenerationPostProcess : AssetPostprocessor
 
 ## Roadmap
 - ~~add Mac/Linux support~~ (added with 1.1)
-- add debugger support for hot-reloaded scripts
+- ~~add debugger support for hot-reloaded scripts~~ (added with 1.2)
 - better compiler support to work around limitations
