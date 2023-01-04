@@ -1,0 +1,16 @@
+1.2 - Debugger support
+- added debugger support
+
+1.1 - Mac support / bug fixes
+**Added Mac support (only INTEL editor version, SILICON still not supported)**
+Added Linux support
+fixed namespace clash with Unity.Collections package
+common code lib will not be included in builds
+added check for auto-refresh in Editor - will proide guidance and option to adjust as otherwise full editor reload is triggered for changes
+added workaround for Unity file-watcher returning wrong file path on some editor versions
+added option to allow disabling DidFieldCountCheck - allowing to detour methods in those cases (eg for Mirror where it'll adjust IL and cause mismatch)
+added option to configure FileWatcher paths/filters as in some cases watching root directory was causing performance issues
+added minor initial-load optimisations - using session-state for items that do not need to be resolved on every reload
+
+1.0 - First release, included features:
+Fast script reload in editor / play-mode (compiles only changed files and hot-reloads them into current play session)
