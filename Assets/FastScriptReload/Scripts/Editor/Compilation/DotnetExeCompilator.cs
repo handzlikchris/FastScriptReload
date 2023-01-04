@@ -83,7 +83,10 @@ namespace FastScriptReload.Editor.Compilation
 #if UNITY_EDITOR
                 UnityMainThreadDispatcher.Instance.Enqueue(() =>
                 {
-                    UnityEditorInternal.InternalEditorUtility.OpenFileAtLineExternal(sourceCodeCombinedFilePath, 0);
+                    if ((bool)FastScriptReloadPreference.IsAutoOpenGeneratedSourceFileOnChangeEnabled.GetEditorPersistedValueOrDefault())
+                    {
+                        UnityEditorInternal.InternalEditorUtility.OpenFileAtLineExternal(sourceCodeCombinedFilePath, 0);
+                    }
                 });
 #endif
 
