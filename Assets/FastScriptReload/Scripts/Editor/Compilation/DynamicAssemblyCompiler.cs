@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using FastScriptReload.Runtime;
+using ImmersiveVrToolsCommon.Runtime.Logging;
 using Debug = UnityEngine.Debug;
 
 namespace FastScriptReload.Editor.Compilation
@@ -21,7 +22,7 @@ namespace FastScriptReload.Editor.Compilation
             var compileResult = DotnetExeDynamicCompilation.Compile(filePathsWithSourceCode);
 #endif  
         
-            ScopedLogger.Log($"Files: {string.Join(",", filePathsWithSourceCode.Select(fn => new FileInfo(fn).Name))} changed <a href=\"{compileResult.SourceCodeCombinedFileLocation}\" line=\"1\">(click here to debug [in bottom details pane])</a> - compilation (took {sw.ElapsedMilliseconds}ms)");
+            LoggerScoped.Log($"Files: {string.Join(",", filePathsWithSourceCode.Select(fn => new FileInfo(fn).Name))} changed <a href=\"{compileResult.SourceCodeCombinedFileLocation}\" line=\"1\">(click here to debug [in bottom details pane])</a> - compilation (took {sw.ElapsedMilliseconds}ms)");
             
             return compileResult;
         }

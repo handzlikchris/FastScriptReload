@@ -10,6 +10,7 @@ using System.Threading;
 using FastScriptReload.Runtime;
 using ImmersiveVRTools.Editor.Common.Cache;
 using ImmersiveVRTools.Runtime.Common;
+using ImmersiveVrToolsCommon.Runtime.Logging;
 using UnityEditor;
 using Debug = UnityEngine.Debug;
 
@@ -41,7 +42,7 @@ namespace FastScriptReload.Editor.Compilation
             {
                 if (obj == PlayModeStateChange.ExitingPlayMode && _createdFilesToCleanUp.Any())
                 {
-                    ScopedLogger.LogDebug($"Removing temporary files: [{string.Join(",", _createdFilesToCleanUp)}]");
+                    LoggerScoped.LogDebug($"Removing temporary files: [{string.Join(",", _createdFilesToCleanUp)}]");
                     
                     foreach (var fileToCleanup in _createdFilesToCleanUp)
                     {
