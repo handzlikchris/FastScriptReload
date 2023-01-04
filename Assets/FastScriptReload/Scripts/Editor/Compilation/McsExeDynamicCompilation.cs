@@ -56,7 +56,8 @@ public class McsExeDynamicCompilation : DynamicCompilationBase
             errors,
             result.NativeCompilerReturnValue,
             result.CompiledAssembly,
-            sourceCodeCombined
+            sourceCodeCombined,
+            string.Empty
         );
     }
 }

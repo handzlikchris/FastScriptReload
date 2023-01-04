@@ -3,7 +3,7 @@
 namespace FastScriptReload.Runtime
 {
     //TODO: move to common and just set LogPrefix as needed
-    public static class Logger
+    public static class ScopedLogger
     {
         public static string LogPrefix = "FSR: ";
 
