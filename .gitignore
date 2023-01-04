@@ -6,3 +6,7 @@
 *.csproj
 *.sln
 *.apk
+*.DotSettings
+*.vsconfig
+/.vs/*
+/.vsCode
