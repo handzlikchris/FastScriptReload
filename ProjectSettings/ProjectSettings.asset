@@ -709,7 +709,7 @@ PlayerSettings:
   webGLDecompressionFallback: 0
   scriptingDefineSymbols:
     Android: QuickCodeIteration_LoadAssemblyOverNetwork_Enabled1
-    Standalone: FastScriptReload_DebugEnabled
+    Standalone: FastScriptReload_DebugEnabled;LiveScriptReload_Enabled;LiveScriptReload_IncludeInBuild_Enabled
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
