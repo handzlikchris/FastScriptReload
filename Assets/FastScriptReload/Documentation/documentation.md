@@ -421,6 +421,48 @@ It's possible to set auto-refresh to enabled but only outside of playmode. Depen
 - `Edit -> Preferences -> General -> Script Changes While Playing -> Recompile After Finished Playing`
 - or `Edit -> Preferences -> Asset Pipeline -> Auto Refresh -> Enabled Outside Playmode`
 
+### VS Code shows console shows errors
+VS Code proj file (csproj) generate with NetFramework version 4.7.1. One of the plugin DLLs is targeting version 4.8.
+Even though VS Code does not compile that code (Unity does) - it'll still show error as it didn't load the library for code-completion.
+
+It's not a plugin issue as such, other dlls will have same troubles. 
+Best solution I've found is to force csproj files to be generated with 4.8 version instead.
+This can be achieved with following editor script
+```
+using System.IO;
+using System.Text.RegularExpressions;
+using UnityEditor;
+using UnityEngine;
+
+public class VisualStudioProjectGenerationPostProcess : AssetPostprocessor
+{
+    private static void OnGeneratedCSProjectFiles()
+        {
+            Debug.Log("OnGeneratedCSProjectFiles");
+            var dir = Directory.GetCurrentDirectory();
+            var files = Directory.GetFiles(dir, "*.csproj");
+            foreach (var file in files)
+                ChangeTargetFrameworkInfProjectFiles(file);
+        }
+
+    static void ChangeTargetFrameworkInfProjectFiles(string file)
+    {
+        var text = File.ReadAllText(file);
+        var find = "TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion";
+        var replace = "TargetFrameworkVersion>v4.8</TargetFrameworkVersion";
+
+        if (text.IndexOf(find) != -1)
+        {
+            text = Regex.Replace(text, find, replace);
+            File.WriteAllText(file, text);
+        }
+    }
+
+}
+```
+
+> As a one-off you may also need to go to Edit -> Preferences -> External Tools -> click 'Regenerate project files' buttons
+
 ## Roadmap
 - ~~add Mac/Linux support~~ (added with 1.1)
 - add debugger support for hot-reloaded scripts
