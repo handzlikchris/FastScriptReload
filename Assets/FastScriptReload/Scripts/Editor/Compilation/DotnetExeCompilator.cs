@@ -41,7 +41,7 @@ namespace FastScriptReload.Editor.Compilation
             {
                 if (obj == PlayModeStateChange.ExitingPlayMode && _createdFilesToCleanUp.Any())
                 {
-                    Logger.LogDebug($"Removing temporary files: [{string.Join(",", _createdFilesToCleanUp)}]");
+                    ScopedLogger.LogDebug($"Removing temporary files: [{string.Join(",", _createdFilesToCleanUp)}]");
                     
                     foreach (var fileToCleanup in _createdFilesToCleanUp)
                     {
@@ -94,7 +94,7 @@ namespace FastScriptReload.Editor.Compilation
                 var exitCode = ExecuteDotnetExeCompilation(_dotnetExePath, _cscDll, rspFile, outLibraryPath, out var outputMessages);
 
                 var compiledAssembly = Assembly.LoadFrom(outLibraryPath);
-                return new CompileResult(outLibraryPath, outputMessages, exitCode, compiledAssembly, sourceCodeCombined);
+                return new CompileResult(outLibraryPath, outputMessages, exitCode, compiledAssembly, sourceCodeCombined, sourceCodeCombinedFilePath);
             }
             catch (Exception)
             {
