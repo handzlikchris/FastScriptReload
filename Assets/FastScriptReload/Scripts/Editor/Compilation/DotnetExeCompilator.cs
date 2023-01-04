@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using ImmersiveVRTools.Editor.Common.Cache;
+using ImmersiveVRTools.Runtime.Common;
 using UnityEditor;
 using Debug = UnityEngine.Debug;
 
@@ -21,6 +22,7 @@ namespace FastScriptReload.Editor.Compilation
         private static string _tempFolder;
 
         private static string ApplicationContentsPath = EditorApplication.applicationContentsPath;
+        private static readonly List<string> _createdFilesToCleanUp = new List<string>();
 
         static DotnetExeDynamicCompilation()
         {
@@ -33,6 +35,18 @@ namespace FastScriptReload.Editor.Compilation
             _dotnetExePath = FindFileOrThrow(dotnetExecutablePath);
             _cscDll = FindFileOrThrow("csc.dll"); //even on mac/linux need to find dll and use, not no extension one
             _tempFolder = Path.GetTempPath();
+            
+            EditorApplication.playModeStateChanged += obj =>
+            {
+                if (obj == PlayModeStateChange.ExitingPlayMode && _createdFilesToCleanUp.Any())
+                {
+                    foreach (var fileToCleanup in _createdFilesToCleanUp)
+                    {
+                        File.Delete(fileToCleanup);
+                    }
+                    _createdFilesToCleanUp.Clear();
+                }
+            };
         }
 
         private static string FindFileOrThrow(string fileName)
@@ -53,7 +67,6 @@ namespace FastScriptReload.Editor.Compilation
 
         public static CompileResult Compile(List<string> filePathsWithSourceCode)
         {
-            var createdFilesToCleanUp = new List<string>();
             try
             {
                 var asmName = Guid.NewGuid().ToString().Replace("-", "");
@@ -63,26 +76,26 @@ namespace FastScriptReload.Editor.Compilation
                 var outLibraryPath = $"{_tempFolder}{asmName}.dll";
 
                 var sourceCodeCombined = CreateSourceCodeCombinedContents(filePathsWithSourceCode.Select(File.ReadAllText));
-                CreateFileAndTrackAsCleanup(sourceCodeCombinedFilePath, sourceCodeCombined, createdFilesToCleanUp);
+                CreateFileAndTrackAsCleanup(sourceCodeCombinedFilePath, sourceCodeCombined, _createdFilesToCleanUp);
+#if UNITY_EDITOR
+                UnityMainThreadDispatcher.Instance.Enqueue(() =>
+                {
+                    UnityEditorInternal.InternalEditorUtility.OpenFileAtLineExternal(sourceCodeCombinedFilePath, 0);
+                });
+#endif
 
                 var rspFileContent = GenerateCompilerArgsRspFileContents(outLibraryPath, _tempFolder, asmName, sourceCodeCombinedFilePath, assemblyAttributeFilePath);
-                CreateFileAndTrackAsCleanup(rspFile, rspFileContent, createdFilesToCleanUp);
-                CreateFileAndTrackAsCleanup(assemblyAttributeFilePath, DynamicallyCreatedAssemblyAttributeSourceCode, createdFilesToCleanUp);
+                CreateFileAndTrackAsCleanup(rspFile, rspFileContent, _createdFilesToCleanUp);
+                CreateFileAndTrackAsCleanup(assemblyAttributeFilePath, DynamicallyCreatedAssemblyAttributeSourceCode, _createdFilesToCleanUp);
 
                 var exitCode = ExecuteDotnetExeCompilation(_dotnetExePath, _cscDll, rspFile, outLibraryPath, out var outputMessages);
 
                 var compiledAssembly = Assembly.LoadFrom(outLibraryPath);
-                
-                foreach (var fileToCleanup in createdFilesToCleanUp)
-                {
-                    File.Delete(fileToCleanup);
-                }
-                
                 return new CompileResult(outLibraryPath, outputMessages, exitCode, compiledAssembly, sourceCodeCombined);
             }
             catch (Exception)
             {
-                Debug.LogError($"Compilation error: temporary files were not removed so they can be inspected: {string.Join(", ", createdFilesToCleanUp)}");
+                Debug.LogError($"Compilation error: temporary files were not removed so they can be inspected: {string.Join(", ", _createdFilesToCleanUp)}");
                 if (LogHowToFixMessageOnCompilationError)
                 {
                     Debug.LogWarning($@"HOW TO FIX - INSTRUCTIONS:
