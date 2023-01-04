@@ -1,0 +1,1 @@
+Added packages only support 2021+ version of editor. Probably due to NetStandard2.0 and not 2.1 being in previous versions
