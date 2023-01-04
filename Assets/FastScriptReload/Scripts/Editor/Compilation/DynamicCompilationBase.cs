@@ -7,6 +7,7 @@ using FastScriptReload.Editor.NewFields;
 using FastScriptReload.Runtime;
 using ImmersiveVRTools.Editor.Common.Cache;
 using ImmersiveVRTools.Runtime.Common.Utilities;
+using ImmersiveVrToolsCommon.Runtime.Logging;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -104,7 +105,7 @@ namespace FastScriptReload.Editor.Compilation
                 sourceCodeCombinedSb.AppendLine(sourceCodeWithAdjustment);
             }
             
-            ScopedLogger.LogDebug("Source Code Created:\r\n\r\n" + sourceCodeCombinedSb);
+            LoggerScoped.LogDebug("Source Code Created:\r\n\r\n" + sourceCodeCombinedSb);
             return sourceCodeCombinedSb.ToString();
         }
 
