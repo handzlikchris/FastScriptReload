@@ -101,7 +101,7 @@ namespace FastScriptReload.Runtime
                                     continue;
                                 }
                                 
-#if FastScriptReload_DebugEnabled
+#if ImmersiveVrTools_DebugEnabled
                                 Debug.Log($"Trying to detour method, from: '{matchingMethodInExistingType.FullDescription()}' to: '{createdTypeMethodToUpdate.FullDescription()}'");
 #endif
                                 DetourCrashHandler.LogDetour(matchingMethodInExistingType.ResolveFullName());
