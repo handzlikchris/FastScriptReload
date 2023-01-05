@@ -43,7 +43,7 @@ namespace FastScriptReload.Editor
         {
             if (_lastPlayModeStateChange != PlayModeStateChange.EnteredPlayMode)
             {
-#if FastScriptReload_DebugEnabled
+#if ImmersiveVrTools_DebugEnabled
             Debug.Log($"Application not playing, change to: {e.Name} won't be compiled and hot reloaded");
 #endif
                 return;

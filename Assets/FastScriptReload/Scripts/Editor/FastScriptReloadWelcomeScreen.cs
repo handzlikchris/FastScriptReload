@@ -240,13 +240,6 @@ includeSubdirectories - whether child directories should be watched as well
             }
         );
 
-        private static readonly ScrollViewGuiSection LastUpdateUpdateScrollViewSection = new ScrollViewGuiSection(
-            "New Update", (screen) =>
-            {
-                GUILayout.Label(screen.LastUpdateText, screen.BoldTextStyle, GUILayout.ExpandHeight(true));
-            }
-        );
-
         public override string WindowTitle { get; } = _WindowTitle;
         public override Vector2 WindowSizePx { get; } = _WindowSizePx;
 
