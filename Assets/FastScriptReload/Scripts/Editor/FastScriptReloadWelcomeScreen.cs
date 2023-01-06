@@ -208,6 +208,32 @@ includeSubdirectories - whether child directories should be watched as well
                         ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.FileWatcherSetupEntries);
                     })
                 }.Concat(additionalSections).ToList()),
+                new GuiSection("Experimental", new List<ClickableElement>
+                {
+                    new ChangeMainViewButton("New Fields", (screen) =>
+                    {
+                        EditorGUILayout.HelpBox(
+                            @"Adding new fields is still in experimental mode, it will have issues. 
+
+When you encounter them please get in touch and I'll be sure to sort them out. Thanks!", MessageType.Error);
+                        GUILayout.Space(10);
+                        
+                        EditorGUILayout.HelpBox(
+                            @"Adding new fields will affect performance, behind the scenes your code is rewritten to access field via static dictionary.
+
+Once you exit playmode and do a full recompile they'll turn to standard fields as you'd expect.
+
+New fields will also show in editor - you can tweak them as normal variables. 
+
+They render using very simple drawer, if you have custom editors those will not be used until full recompile.", MessageType.Warning);
+                        GUILayout.Space(10);
+
+                        using (LayoutHelper.LabelWidth(250))
+                        {
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalAddedFieldsSupport);
+                        }
+                    })
+                }),
                 new GuiSection("Launch Demo", new List<ClickableElement>
                 {
                     launchSceneButton
@@ -348,6 +374,9 @@ includeSubdirectories - whether child directories should be watched as well
             () => new FileWatcherSetupEntry("<Application.dataPath>", "*.cs", true)
         );
         
+        public static readonly ToggleProjectEditorPreferenceDefinition EnableExperimentalAddedFieldsSupport = new ToggleProjectEditorPreferenceDefinition(
+            "Enable experimental added field support", "EnableExperimentalAddedFieldsSupport", false);
+        
         public static void SetCommonMaterialsShader(ShadersMode newShaderModeValue)
         {
             var rootToolFolder = AssetPathResolver.GetAssetFolderPathRelativeToScript(ScriptableObject.CreateInstance(typeof(FastScriptReloadWelcomeScreen)), 1);
@@ -394,7 +423,8 @@ includeSubdirectories - whether child directories should be watched as well
             StopShowingAutoReloadEnabledDialogBox,
             IsDidFieldsOrPropertyCountChangedCheckDisabled,
             FileWatcherSetupEntries,
-            IsAutoOpenGeneratedSourceFileOnChangeEnabled
+            IsAutoOpenGeneratedSourceFileOnChangeEnabled,
+            EnableExperimentalAddedFieldsSupport
         };
 
         private static bool PrefsLoaded = false;
