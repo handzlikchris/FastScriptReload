@@ -358,11 +358,11 @@ They render using very simple drawer, if you have custom editors those will not 
             "Disable added/removed fields check", "IsDidFieldsOrPropertyCountChangedCheckDisabled", false,
             (object newValue, object oldValue) =>
             {
-                AssemblyChangesLoader.IsDidFieldsOrPropertyCountChangedCheckDisabled = (bool)newValue;
+                FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.IsDidFieldsOrPropertyCountChangedCheckDisabled = (bool)newValue;
             },
             (value) =>
             {
-                AssemblyChangesLoader.IsDidFieldsOrPropertyCountChangedCheckDisabled = (bool)value;
+                FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.IsDidFieldsOrPropertyCountChangedCheckDisabled = (bool)value;
             }
         );
         
@@ -378,11 +378,11 @@ They render using very simple drawer, if you have custom editors those will not 
             "Enable experimental added field support", "EnableExperimentalAddedFieldsSupport", false,
             (object newValue, object oldValue) =>
             {
-                AssemblyChangesLoader.EnableExperimentalAddedFieldsSupport = (bool)newValue;
+                FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.EnableExperimentalAddedFieldsSupport = (bool)newValue;
             },
             (value) =>
             {
-                AssemblyChangesLoader.EnableExperimentalAddedFieldsSupport = (bool)value;
+                FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.EnableExperimentalAddedFieldsSupport = (bool)value;
             });
         
         public static void SetCommonMaterialsShader(ShadersMode newShaderModeValue)
@@ -499,8 +499,10 @@ They render using very simple drawer, if you have custom editors those will not 
             EnsureUserAwareOfAutoRefresh();
 
             DynamicCompilationBase.LogHowToFixMessageOnCompilationError = (bool)FastScriptReloadPreference.LogHowToFixMessageOnCompilationError.GetEditorPersistedValueOrDefault();
-            AssemblyChangesLoader.IsDidFieldsOrPropertyCountChangedCheckDisabled = (bool)FastScriptReloadPreference.IsDidFieldsOrPropertyCountChangedCheckDisabled.GetEditorPersistedValueOrDefault();
-            AssemblyChangesLoader.EnableExperimentalAddedFieldsSupport = (bool)FastScriptReloadPreference.EnableExperimentalAddedFieldsSupport.GetEditorPersistedValueOrDefault();
+            FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.UpdateValues(
+                (bool)FastScriptReloadPreference.IsDidFieldsOrPropertyCountChangedCheckDisabled.GetEditorPersistedValueOrDefault(),
+                (bool)FastScriptReloadPreference.EnableExperimentalAddedFieldsSupport.GetEditorPersistedValueOrDefault()
+            );
         }
 
         private static void EnsureUserAwareOfAutoRefresh()

@@ -43,10 +43,7 @@ namespace FastScriptReload.Runtime
         private static AssemblyChangesLoader _instance;
         public static AssemblyChangesLoader Instance => _instance ?? (_instance = new AssemblyChangesLoader());
 
-        public static bool IsDidFieldsOrPropertyCountChangedCheckDisabled { get; set; } //TODO: set also for LSR when using in build, right now will default to false
-        public static bool EnableExperimentalAddedFieldsSupport { get; set; } //TODO: set also for LSR when using in build, right now will default to false
-
-        public void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates)
+        public void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates, AssemblyChangesLoaderEditorOptionsNeededInBuild editorOptions)
         {
             try
             {
@@ -75,8 +72,8 @@ namespace FastScriptReload.Runtime
                     var matchingTypeInExistingAssemblies = allTypesInNonDynamicGeneratedAssemblies.SingleOrDefault(t => t.FullName == createdTypeNameWithoutPatchedPostfix);
                     if (matchingTypeInExistingAssemblies != null)
                     {
-                        if (!IsDidFieldsOrPropertyCountChangedCheckDisabled 
-                            && !EnableExperimentalAddedFieldsSupport
+                        if (!editorOptions.IsDidFieldsOrPropertyCountChangedCheckDisabled 
+                            && !editorOptions.EnableExperimentalAddedFieldsSupport
                             && DidFieldsOrPropertyCountChanged(createdType,  matchingTypeInExistingAssemblies))
                         {
                             continue;
@@ -202,8 +199,32 @@ namespace FastScriptReload.Runtime
     
     public interface IAssemblyChangesLoader
     {
-        void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates);
+        void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates, AssemblyChangesLoaderEditorOptionsNeededInBuild editorOptions);
+    }
+    
+    [Serializable]
+    public class AssemblyChangesLoaderEditorOptionsNeededInBuild
+    {
+        public bool IsDidFieldsOrPropertyCountChangedCheckDisabled;
+        public bool EnableExperimentalAddedFieldsSupport;
+
+        public AssemblyChangesLoaderEditorOptionsNeededInBuild(bool isDidFieldsOrPropertyCountChangedCheckDisabled, bool enableExperimentalAddedFieldsSupport)
+        {
+            IsDidFieldsOrPropertyCountChangedCheckDisabled = isDidFieldsOrPropertyCountChangedCheckDisabled;
+            EnableExperimentalAddedFieldsSupport = enableExperimentalAddedFieldsSupport;
+        }
+
+        [Obsolete("Needed for network serialization")]
+        public AssemblyChangesLoaderEditorOptionsNeededInBuild()
+        {
+        }
+
+        //WARN: make sure it has same params as ctor
+        public void UpdateValues(bool isDidFieldsOrPropertyCountChangedCheckDisabled, bool enableExperimentalAddedFieldsSupport)
+        {
+            IsDidFieldsOrPropertyCountChangedCheckDisabled = isDidFieldsOrPropertyCountChangedCheckDisabled;
+            EnableExperimentalAddedFieldsSupport = enableExperimentalAddedFieldsSupport;
+        }
     }
 }
-
 #endif
