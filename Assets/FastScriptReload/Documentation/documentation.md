@@ -495,6 +495,9 @@ public class VisualStudioProjectGenerationPostProcess : AssetPostprocessor
 
 > As a one-off you may also need to go to Edit -> Preferences -> External Tools -> click 'Regenerate project files' buttons
 
+### When importing I'm getting error: 'Unable to update following assemblies: (...)/ImmersiveVRTools.Common.Runtime.dll'
+This happens occasionally, especially on upgrade between versions. It's harmless error that'll go away on play mode.
+
 ## Roadmap
 - ~~add Mac/Linux support~~ (added with 1.1)
 - ~~add debugger support for hot-reloaded scripts~~ (added with 1.2)
