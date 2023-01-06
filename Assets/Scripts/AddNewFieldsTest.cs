@@ -1,32 +1,31 @@
 using UnityEngine;
 
-public class AddNewFieldsTest : MonoBehaviour
-{
-    [SerializeField] private int testVal = 10;
-    
-    [SerializeField] private int testVal2 = 20;
-    [SerializeField] private int testVal3 = 30;
-    [SerializeField] private string str = "test string";
-    [SerializeField] private string newString = "test new string";
-    //TODO: will rendering complex classes render?
-    
-    void Update()
+// namespace TestNamespace //readd for testing, doesn't work well with linqpad
+// {
+    public class AddNewFieldsTest : MonoBehaviour
     {
-        // dynamic expando = new ExpandoObject();
-        // expando.test = "123";
+        [SerializeField] private int testVal = 10;
+        [SerializeField] private int testVal2 = 20;
+        [SerializeField] private string newString = "test new string ";
         
-        Debug.Log($"AddNewFields: {testVal} + {testVal2} + str + {testVal3}");  
-        Debug.Log($"Test: {str}");
-        // Debug.Log("Expando test: {expando.test}");
-        
-        // Debug.Log($"Test: {newString} 123");
-        //
-        // newString = "str changed!";
-        Debug.Log(newString);
-    }
+        void Update()
+        {
+            // dynamic expando = new ExpandoObject();
+            // expando.test = "123";
+            
+            // Debug.Log($"AddNewFields: {testVal} + {testVal2} + str + {testVal3}");  
+            // Debug.Log($"Test: {str}");
+            // Debug.Log("Expando test: {expando.test}");
+            
+            // Debug.Log($"Test: {newString} 123");
+            //
+            // newString = "str changed!";
+            Debug.Log(newString);
+        }
 
-    void OnScriptHotReload()
-    {
-        testVal3 = 20; 
+        void OnScriptHotReload()
+        {
+            // testVal3 = 20; 
+        }
     }
-}
+// }

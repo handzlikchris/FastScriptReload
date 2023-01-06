@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using FastScriptReload.Editor.Compilation.CodeRewriting;
 using FastScriptReload.Runtime;
+using FastScriptReload.Scripts.Runtime;
 using ImmersiveVRTools.Editor.Common.Cache;
 using ImmersiveVRTools.Runtime.Common.Utilities;
 using ImmersiveVrToolsCommon.Runtime.Logging;
@@ -81,7 +82,18 @@ namespace FastScriptReload.Editor.Compilation
                             var existingType = allTypes.Single(et => et.FullName == t.Key);
                             var existingTypeMembersToReplace = NewFieldsRewriter.GetReplaceableMembers(existingType).Select(m => m.Name).ToList();
 			
-                            return t.Value.Where(fieldName => !existingTypeMembersToReplace.Contains(fieldName)).ToList();
+                            var newFields = t.Value.Where(fD => !existingTypeMembersToReplace.Contains(fD.FieldName)).ToList();
+                            
+                            //TODO: ideally that registration would happen outside of this class
+                            TemporaryNewFieldValues.RegisterNewFields(
+                                existingType, 
+                                newFields.ToDictionary(
+                                    fD => fD.FieldName,
+                                    fD => (Func<object>) (() => TypeNameToCreateValueFromRawCodeResolver.CreateValue(fD))
+                                )
+                            );
+
+                            return newFields.Select(fD => fD.FieldName).ToList();
                         }
                     );
                 }

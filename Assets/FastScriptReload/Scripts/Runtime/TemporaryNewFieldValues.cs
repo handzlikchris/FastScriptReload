@@ -1,53 +1,53 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Dynamic;
-using System.Reflection;
 
 namespace FastScriptReload.Scripts.Runtime
 {
     public static class TemporaryNewFieldValues
     {
-        //TODO: how to refresh on additional patch, would need to retain previous values...?
+        private static readonly Dictionary<object, ExpandoForType> _existingObjectToFiledNameValueMap = new Dictionary<object, ExpandoForType>();
+        private static readonly Dictionary<Type, Dictionary<string, Func<object>>> _existingObjectTypeToFieldNameToCreateDetaultValueFn = new Dictionary<Type, Dictionary<string, Func<object>>>();
 
-        public static Dictionary<object, ExpandoForType> _existingObjectToFiledNameValueMap = new Dictionary<object, ExpandoForType>();
-
-        //TODO: detect re-patch
-        public static dynamic ResolvePatchedObject<T>(object original)
-            where T: new() //TODO: try to get requirement removed - technically can use roslyn to get default values from file and init ini this manner
+        public static void RegisterNewFields(Type existingType, Dictionary<string, Func<object>> fieldNameToGenerateDefaultValueFn)
         {
-            if (!_existingObjectToFiledNameValueMap.TryGetValue(original, out var val))
+            _existingObjectTypeToFieldNameToCreateDetaultValueFn[existingType] = fieldNameToGenerateDefaultValueFn;
+        }
+            
+        public static dynamic ResolvePatchedObject<T>(object original)
+        {
+            if (!_existingObjectToFiledNameValueMap.TryGetValue(original, out var existingExpandoToObjectTypePair))
             {
                 var patchedObject = new ExpandoObject();
                 var expandoForType = new ExpandoForType { ForType = typeof(T), Object = patchedObject };
-			
-                var instanceOfT = new T();
-                var patchedObjectAsDict = patchedObject as IDictionary<string, Object>;
-                foreach(var fieldInfo in typeof(T).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) //TODO: get other members as well
-                {//TODO: add only new
-                    patchedObjectAsDict[fieldInfo.Name] = fieldInfo.GetValue(instanceOfT);
-                }
-			
+                
+                InitializeAdditionalFieldValues<T>(original, patchedObject);
                 _existingObjectToFiledNameValueMap[original] = expandoForType;
 
                 return patchedObject;
             }
             else
             {
-                if (val.ForType != typeof(T))
+                if (existingExpandoToObjectTypePair.ForType != typeof(T))
                 {
-                    var instanceOfT = new T();
-                    var patchedObjectAsDict = val.Object as IDictionary<string, Object>;
-                    foreach (var fieldInfo in typeof(T).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) //TODO: get other members as well
-                    {
-                        if (!patchedObjectAsDict.ContainsKey(fieldInfo.Name)) { //only init if not yet there
-                            patchedObjectAsDict[fieldInfo.Name] = fieldInfo.GetValue(instanceOfT);
-                        }
-                    }
-
-                    val.ForType = typeof(T);
+                    InitializeAdditionalFieldValues<T>(original, existingExpandoToObjectTypePair.Object);
+                    existingExpandoToObjectTypePair.ForType = typeof(T);
                 }
 
-                return val.Object;
+                return existingExpandoToObjectTypePair.Object;
+            }
+        }
+
+        private static void InitializeAdditionalFieldValues<T>(object original, ExpandoObject patchedObject)
+        {
+            var originalType = original.GetType(); //TODO: PERF: resolve via TOriginal, not getType
+            var patchedObjectAsDict = patchedObject as IDictionary<string, Object>;
+            foreach (var fieldNameToGenerateDefaultValueFn in _existingObjectTypeToFieldNameToCreateDetaultValueFn[originalType])
+            {
+                if (!patchedObjectAsDict.ContainsKey(fieldNameToGenerateDefaultValueFn.Key))
+                {
+                    patchedObjectAsDict[fieldNameToGenerateDefaultValueFn.Key] = fieldNameToGenerateDefaultValueFn.Value();
+                }
             }
         }
     }
