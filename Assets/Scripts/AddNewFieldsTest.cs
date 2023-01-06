@@ -7,8 +7,8 @@ public class AddNewFieldsTest : MonoBehaviour
     [SerializeField] private int testVal2 = 20;
     [SerializeField] private int testVal3 = 30;
     [SerializeField] private string str = "test string";
-    [SerializeField] private string newString = "test new string";
-
+    // [SerializeField] private string newString = "test new string";
+    //TODO: will rendering complex classes render?
     
     void Update()
     {
@@ -19,7 +19,10 @@ public class AddNewFieldsTest : MonoBehaviour
         Debug.Log($"Test: {str}");
         // Debug.Log("Expando test: {expando.test}");
         
-        Debug.Log($"Test: {newString}"); 
+        // Debug.Log($"Test: {newString} 123");
+        //
+        // newString = "str changed!";
+        // Debug.Log(newString);
     }
 
     void OnScriptHotReload()
