@@ -64,6 +64,28 @@ namespace FastScriptReload.Editor.Compilation
             {
                 var tree = CSharpSyntaxTree.ParseText(fileCode);
                 var root = tree.GetRoot();
+                
+                var typeToNewFieldDeclarations = new Dictionary<string, List<string>>();
+                if (FastScriptReloadManager.Instance.EnableExperimentalThisCallLimitationFix)
+                {
+                    //WARN: needs to walk before root class name changes, otherwise it'll resolve wrong name
+                    var allTypes = ReflectionHelper.GetAllTypes(); //TODO: PERF: can't get all in this manner, just needed for classes in file
+                    var fieldsWalker = new FieldsWalker();
+                    fieldsWalker.Visit(root);
+                    
+                    var typeToFieldDeclarations = fieldsWalker.GetTypeToFieldDeclarations();
+                    typeToNewFieldDeclarations = typeToFieldDeclarations.ToDictionary(
+                        t => t.Key,
+                        t =>
+                        {
+                            var existingType = allTypes.Single(et => et.FullName == t.Key);
+                            var existingTypeMembersToReplace = NewFieldsRewriter.GetReplaceableMembers(existingType).Select(m => m.Name).ToList();
+			
+                            return t.Value.Where(fieldName => !existingTypeMembersToReplace.Contains(fieldName)).ToList();
+                        }
+                    );
+                }
+
                 var rewriter = new HotReloadCompliantRewriter();
 
                 //WARN: application order is important, eg ctors need to happen before class names as otherwise ctors will not be recognised as ctors
@@ -75,11 +97,7 @@ namespace FastScriptReload.Editor.Compilation
 
                 if (FastScriptReloadManager.Instance.EnableExperimentalThisCallLimitationFix)
                 {
-	                var allTypes = ReflectionHelper.GetAllTypes(); //TODO: PERF: can't get all in this manner, just needed for classes in file
-	                var fieldsWalker = new FieldsWalker();
-	                fieldsWalker.Visit(root);
-	                var typeToFieldDeclarations = fieldsWalker.GetTypeToFieldDeclarations();
-	                root = new NewFieldsRewriter(typeToFieldDeclarations, allTypes).Visit(root);
+                    root = new NewFieldsRewriter(typeToNewFieldDeclarations).Visit(root);
                 }
                 
                 root = new ConstructorRewriter( adjustCtorOnlyForNonNestedTypes: true).Visit(root);
@@ -130,7 +148,7 @@ namespace FastScriptReload.Editor.Compilation
                 }
             }
 
-            if (EnableExperimentalThisCallLimitationFix)
+            if (EnableExperimentalThisCallLimitationFix || FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.EnableExperimentalAddedFieldsSupport)
             {
 	            IncludeMicrosoftCsharpReferenceToSupportDynamicKeyword(referencesToAdd);
             }
