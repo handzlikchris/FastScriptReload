@@ -37,6 +37,18 @@ namespace FastScriptReload.Scripts.Runtime
                 return existingExpandoToObjectTypePair.Object;
             }
         }
+        
+        public static bool TryGetDynamicallyAddedFieldValues(object forObject, out IDictionary<string, object> addedFieldValues)
+        {
+            if (_existingObjectToFiledNameValueMap.TryGetValue(forObject, out var expandoForType))
+            {
+                addedFieldValues = expandoForType.Object;
+                return true;
+            }
+
+            addedFieldValues = null;
+            return false;
+        }
 
         private static void InitializeAdditionalFieldValues<T>(object original, ExpandoObject patchedObject)
         {
