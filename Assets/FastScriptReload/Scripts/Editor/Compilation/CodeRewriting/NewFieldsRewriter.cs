@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using FastScriptReload.Editor.NewFields;
 using FastScriptReload.Runtime;
+using FastScriptReload.Scripts.Runtime;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -36,8 +36,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
                                     SyntaxFactory.InvocationExpression(
                                             SyntaxFactory.MemberAccessExpression(
                                                 SyntaxKind.SimpleMemberAccessExpression,
-                                                //TODO: resolve with nameof
-                                                SyntaxFactory.IdentifierName("FastScriptReload.Editor.NewFields.TemporaryNewFieldValues"),
+                                                SyntaxFactory.IdentifierName(typeof(TemporaryNewFieldValues).FullName),
                                                 SyntaxFactory.GenericName(
                                                         SyntaxFactory.Identifier(nameof(TemporaryNewFieldValues.ResolvePatchedObject)))
                                                     .WithTypeArgumentList(

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Reflection;
 
-namespace FastScriptReload.Editor.NewFields
+namespace FastScriptReload.Scripts.Runtime
 {
     public static class TemporaryNewFieldValues
     {

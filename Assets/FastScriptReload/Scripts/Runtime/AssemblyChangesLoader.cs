@@ -43,8 +43,8 @@ namespace FastScriptReload.Runtime
         private static AssemblyChangesLoader _instance;
         public static AssemblyChangesLoader Instance => _instance ?? (_instance = new AssemblyChangesLoader());
 
-        public static bool IsDidFieldsOrPropertyCountChangedCheckDisabled { get; set; }
-        public static bool EnableExperimentalAddedFieldsSupport { get; set; }
+        public static bool IsDidFieldsOrPropertyCountChangedCheckDisabled { get; set; } //TODO: set also for LSR when using in build, right now will default to false
+        public static bool EnableExperimentalAddedFieldsSupport { get; set; } //TODO: set also for LSR when using in build, right now will default to false
 
         public void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates)
         {
