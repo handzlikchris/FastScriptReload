@@ -73,7 +73,7 @@ namespace FastScriptReload.Editor.Compilation
 					root = new ThisAssignmentRewriter().Visit(root);
                 }
 
-                if (FastScriptReloadManager.Instance.EnableExperimentalAddedFieldsSupport)
+                if (FastScriptReloadManager.Instance.EnableExperimentalThisCallLimitationFix)
                 {
 	                var allTypes = ReflectionHelper.GetAllTypes(); //TODO: PERF: can't get all in this manner, just needed for classes in file
 	                var fieldsWalker = new FieldsWalker();

@@ -44,6 +44,7 @@ namespace FastScriptReload.Runtime
         public static AssemblyChangesLoader Instance => _instance ?? (_instance = new AssemblyChangesLoader());
 
         public static bool IsDidFieldsOrPropertyCountChangedCheckDisabled { get; set; }
+        public static bool EnableExperimentalAddedFieldsSupport { get; set; }
 
         public void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates)
         {
@@ -74,7 +75,9 @@ namespace FastScriptReload.Runtime
                     var matchingTypeInExistingAssemblies = allTypesInNonDynamicGeneratedAssemblies.SingleOrDefault(t => t.FullName == createdTypeNameWithoutPatchedPostfix);
                     if (matchingTypeInExistingAssemblies != null)
                     {
-                        if (!IsDidFieldsOrPropertyCountChangedCheckDisabled && DidFieldsOrPropertyCountChanged(createdType,  matchingTypeInExistingAssemblies))
+                        if (!IsDidFieldsOrPropertyCountChangedCheckDisabled 
+                            && !EnableExperimentalAddedFieldsSupport
+                            && DidFieldsOrPropertyCountChanged(createdType,  matchingTypeInExistingAssemblies))
                         {
                             continue;
                         }
