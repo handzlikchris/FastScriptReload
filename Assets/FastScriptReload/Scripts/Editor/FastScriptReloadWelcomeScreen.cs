@@ -375,7 +375,15 @@ They render using very simple drawer, if you have custom editors those will not 
         );
         
         public static readonly ToggleProjectEditorPreferenceDefinition EnableExperimentalAddedFieldsSupport = new ToggleProjectEditorPreferenceDefinition(
-            "Enable experimental added field support", "EnableExperimentalAddedFieldsSupport", false);
+            "Enable experimental added field support", "EnableExperimentalAddedFieldsSupport", false,
+            (object newValue, object oldValue) =>
+            {
+                AssemblyChangesLoader.EnableExperimentalAddedFieldsSupport = (bool)newValue;
+            },
+            (value) =>
+            {
+                AssemblyChangesLoader.EnableExperimentalAddedFieldsSupport = (bool)value;
+            });
         
         public static void SetCommonMaterialsShader(ShadersMode newShaderModeValue)
         {
@@ -492,6 +500,7 @@ They render using very simple drawer, if you have custom editors those will not 
 
             DynamicCompilationBase.LogHowToFixMessageOnCompilationError = (bool)FastScriptReloadPreference.LogHowToFixMessageOnCompilationError.GetEditorPersistedValueOrDefault();
             AssemblyChangesLoader.IsDidFieldsOrPropertyCountChangedCheckDisabled = (bool)FastScriptReloadPreference.IsDidFieldsOrPropertyCountChangedCheckDisabled.GetEditorPersistedValueOrDefault();
+            AssemblyChangesLoader.EnableExperimentalAddedFieldsSupport = (bool)FastScriptReloadPreference.EnableExperimentalAddedFieldsSupport.GetEditorPersistedValueOrDefault();
         }
 
         private static void EnsureUserAwareOfAutoRefresh()
