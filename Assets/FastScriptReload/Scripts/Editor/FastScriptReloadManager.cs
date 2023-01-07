@@ -62,6 +62,9 @@ As a workaround asset will try to resolve paths via directory search.
 Workaround will search in all folders (under project root) and will use first found file. This means it's possible it'll pick up wrong file as there's no directory information available.");
                 
                 var changedFileName = new FileInfo(filePathToUse).Name;
+                //TODO: try to look in all file watcher configured paths, some users might have code outside of assets, eg packages
+                // var fileFoundInAssets = FastScriptReloadPreference.FileWatcherSetupEntries.GetElementsTyped().SelectMany(setupEntries => Directory.GetFiles(DataPath, setupEntries.path, SearchOption.AllDirectories)).ToList();
+                    
                 var fileFoundInAssets = Directory.GetFiles(DataPath, changedFileName, SearchOption.AllDirectories);
                 if (fileFoundInAssets.Length == 0)
                 {
