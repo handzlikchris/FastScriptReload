@@ -142,6 +142,8 @@ Tool can also auto-open generated files for you on change for simpler access, yo
 
 > Debugging in that manner is enabled in version 1.2 which is not yet in the store, on v1.1 you'll need to make following changes:
 
+> Debugging with Rider for Unity 2019 and 2020 is having some issues, once breakpoint been hit it'll stop asset from hot-reloading in that session
+
 in '<your project path>\Assets\FastScriptReload\Scripts\Editor\Compilation\DotnetExeCompilator.cs'
 - on line 76 remove/comment out code that deletes temp files
 ```
