@@ -67,7 +67,7 @@ namespace FastScriptReload.Editor.Compilation
                 var root = tree.GetRoot();
                 
                 var typeToNewFieldDeclarations = new Dictionary<string, List<string>>();
-                if (FastScriptReloadManager.Instance.EnableExperimentalThisCallLimitationFix)
+                if (FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.EnableExperimentalAddedFieldsSupport)
                 {
                     //WARN: needs to walk before root class name changes, otherwise it'll resolve wrong name
                     var allTypes = ReflectionHelper.GetAllTypes(); //TODO: PERF: can't get all in this manner, just needed for classes in file
@@ -107,7 +107,7 @@ namespace FastScriptReload.Editor.Compilation
 					root = new ThisAssignmentRewriter().Visit(root);
                 }
 
-                if (FastScriptReloadManager.Instance.EnableExperimentalThisCallLimitationFix)
+                if (FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.EnableExperimentalAddedFieldsSupport)
                 {
                     root = new NewFieldsRewriter(typeToNewFieldDeclarations).Visit(root);
                 }
