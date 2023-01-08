@@ -140,9 +140,9 @@ Once change is compiled, you'll get an option to open generated file [via clicka
 
 Tool can also auto-open generated files for you on change for simpler access, you can find option via 'Window -> Fast Script Reload -> Start Screen -> Debugging -> Auto open generated source file for debugging'
 
-> Debugging in that manner is enabled in version 1.2 which is not yet in the store, on v1.1 you'll need to make following changes:
+> Debugging with Rider for Unity 2019 and 2020 is having some issues, once breakpoint has been hit it'll stop asset from hot-reloading in that play-session.
 
-> Debugging with Rider for Unity 2019 and 2020 is having some issues, once breakpoint has been hit it'll stop asset from hot-reloading in that play-session
+> Debugging in that manner is enabled in version 1.2, on v1.1 you'll need to make following changes:
 
 in '<your project path>\Assets\FastScriptReload\Scripts\Editor\Compilation\DotnetExeCompilator.cs'
 - on line 76 remove/comment out code that deletes temp files
@@ -429,6 +429,9 @@ class ClassImplementingIInterface: IInterface {
 
 > Quick workaround is to declare that interface as public
 
+### Limited debugger support for Rider when using Unity 2019 and 2020
+Once breakpoint has been hit it'll stop asset from hot-reloading in that play-session. Newer Unity versions are supporting debugging.
+
 ### No IL2CPP support
 Asset runs based on specific .NET functionality, IL2CPP builds will not be supported. Although as this is development workflow aid you can build your APK with Mono backend (android) and change later.
 
@@ -500,7 +503,7 @@ public class VisualStudioProjectGenerationPostProcess : AssetPostprocessor
 ### When importing I'm getting error: 'Unable to update following assemblies: (...)/ImmersiveVRTools.Common.Runtime.dll'
 This happens occasionally, especially on upgrade between versions. It's harmless error that'll go away on play mode.
 
-### When upgrading between versions, eg 1.1 to 1.2 example scene gets pink
+### When upgrading between versions, eg 1.1 to 1.2 example scene cubes are pink
 This is down to reimporting 'Point' prefab. Right now plugin will make sure it's using correct shader eg. URP / Built-in but only on initial import.
 
 To fix please go to `FastScripReload\Examples\Point\Point.prefab` and search for 'Point' shader. 
