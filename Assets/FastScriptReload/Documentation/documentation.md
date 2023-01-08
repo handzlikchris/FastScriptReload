@@ -163,6 +163,12 @@ foreach (var fileToCleanup in createdFilesToCleanUp)
 #endif
 ```
 
+### Adding Function Breakpoint
+If for whatever reason debugger breakpoint is not hit you can try setting Function Breakpoint in your IDE.
+
+For type name you want to include `<OriginalTypeName>__Patched_`, the `__Patched_` postfix is auto-added by asset to prevent name clash.
+Function name remains unchanged.
+
 ## Production Build
 For Fast Script Reload asset code will be excluded from any builds.
 
