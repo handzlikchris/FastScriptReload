@@ -498,6 +498,11 @@ public class VisualStudioProjectGenerationPostProcess : AssetPostprocessor
 ### When importing I'm getting error: 'Unable to update following assemblies: (...)/ImmersiveVRTools.Common.Runtime.dll'
 This happens occasionally, especially on upgrade between versions. It's harmless error that'll go away on play mode.
 
+### When upgrading between versions, eg 1.1 to 1.2 example scene gets pink
+This is down to reimporting 'Point' prefab. Right now plugin will make sure it's using correct shader eg. URP / Built-in but only on initial import.
+
+To fix please go to `FastScripReload\Examples\Point\Point.prefab` and search for 'Point' shader. 
+
 ## Roadmap
 - ~~add Mac/Linux support~~ (added with 1.1)
 - ~~add debugger support for hot-reloaded scripts~~ (added with 1.2)
