@@ -79,7 +79,7 @@ namespace FastScriptReload.Editor.Compilation
                 var sourceCodeCombinedFilePath = _tempFolder + $"{asmName}.SourceCodeCombined.cs";
                 var outLibraryPath = $"{_tempFolder}{asmName}.dll";
 
-                var sourceCodeCombined = CreateSourceCodeCombinedContents(filePathsWithSourceCode.Select(File.ReadAllText));
+                var sourceCodeCombined = CreateSourceCodeCombinedContents(filePathsWithSourceCode.Select(File.ReadAllText), ActiveScriptCompilationDefines.ToList());
                 CreateFileAndTrackAsCleanup(sourceCodeCombinedFilePath, sourceCodeCombined, _createdFilesToCleanUp);
 #if UNITY_EDITOR
                 UnityMainThreadDispatcher.Instance.Enqueue(() =>
@@ -165,8 +165,7 @@ In the meantime, you can:
             rspContents.AppendLine("/nowarn:1702");
             rspContents.AppendLine("/utf8output");
             rspContents.AppendLine("/preferreduilang:en-US");
-
-            // rspContents.AppendLine("/additionalfile:\"Library/Bee/artifacts/1300b0aEDbg.dag/Assembly-CSharp.AdditionalFile.txt\""); //TODO: needed?
+            
             var rspContentsString = rspContents.ToString();
             return rspContentsString;
         }

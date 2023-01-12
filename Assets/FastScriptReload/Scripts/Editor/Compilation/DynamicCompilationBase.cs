@@ -57,13 +57,13 @@ namespace FastScriptReload.Editor.Compilation
 
         }
         
-        protected static string CreateSourceCodeCombinedContents(IEnumerable<string> fileSourceCode)
+        protected static string CreateSourceCodeCombinedContents(IEnumerable<string> fileSourceCode, List<string> definedPreprocessorSymbols)
         {
             var combinedUsingStatements = new List<string>();
             
             var sourceCodeWithAdjustments = fileSourceCode.Select(fileCode =>
             {
-                var tree = CSharpSyntaxTree.ParseText(fileCode);
+                var tree = CSharpSyntaxTree.ParseText(fileCode, new CSharpParseOptions(preprocessorSymbols: definedPreprocessorSymbols));
                 var root = tree.GetRoot();
                 
                 var typeToNewFieldDeclarations = new Dictionary<string, List<string>>();
