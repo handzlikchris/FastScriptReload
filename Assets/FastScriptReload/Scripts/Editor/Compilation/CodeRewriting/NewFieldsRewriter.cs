@@ -4,9 +4,11 @@ using System.Linq;
 using System.Reflection;
 using FastScriptReload.Runtime;
 using FastScriptReload.Scripts.Runtime;
+using ImmersiveVrToolsCommon.Runtime.Logging;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using UnityEngine;
 
 namespace FastScriptReload.Editor.Compilation.CodeRewriting
 {
@@ -29,28 +31,34 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 				var fullClassName = RoslynUtils.GetMemberFQDN(classNode, classNode.Identifier.ToString());
 	            if(!string.IsNullOrEmpty(fullClassName)) {
 	                var fieldName = node.Identifier.ToString();
-	                var allNewFieldNamesForClass = _typeToNewFieldDeclarations[fullClassName];
-	                if(allNewFieldNamesForClass.Contains(fieldName)) {
-		                return 
-	                        SyntaxFactory.MemberAccessExpression(
-	                                SyntaxKind.SimpleMemberAccessExpression,
-	                                SyntaxFactory.InvocationExpression(
-	                                        SyntaxFactory.MemberAccessExpression(
-	                                            SyntaxKind.SimpleMemberAccessExpression,
-	                                            SyntaxFactory.IdentifierName(typeof(TemporaryNewFieldValues).FullName),
-	                                            SyntaxFactory.GenericName(
-	                                                    SyntaxFactory.Identifier(nameof(TemporaryNewFieldValues.ResolvePatchedObject)))
-	                                                .WithTypeArgumentList(
-														SyntaxFactory.TypeArgumentList(
-															SyntaxFactory.SingletonSeparatedList<TypeSyntax>(
-																SyntaxFactory.IdentifierName(fullClassName + AssemblyChangesLoader.ClassnamePatchedPostfix))))))
-										.WithArgumentList(
-											SyntaxFactory.ArgumentList(
-												SyntaxFactory.SingletonSeparatedList<ArgumentSyntax>(
-													SyntaxFactory.Argument(
-														SyntaxFactory.ThisExpression())))),
-									SyntaxFactory.IdentifierName(fieldName))
-								.WithTriviaFrom(node);
+	                if(_typeToNewFieldDeclarations.TryGetValue(fullClassName, out var allNewFieldNamesForClass)) {
+		                
+		                if(allNewFieldNamesForClass.Contains(fieldName)) {
+			                return 
+		                        SyntaxFactory.MemberAccessExpression(
+		                                SyntaxKind.SimpleMemberAccessExpression,
+		                                SyntaxFactory.InvocationExpression(
+		                                        SyntaxFactory.MemberAccessExpression(
+		                                            SyntaxKind.SimpleMemberAccessExpression,
+		                                            SyntaxFactory.IdentifierName(typeof(TemporaryNewFieldValues).FullName),
+		                                            SyntaxFactory.GenericName(
+		                                                    SyntaxFactory.Identifier(nameof(TemporaryNewFieldValues.ResolvePatchedObject)))
+		                                                .WithTypeArgumentList(
+															SyntaxFactory.TypeArgumentList(
+																SyntaxFactory.SingletonSeparatedList<TypeSyntax>(
+																	SyntaxFactory.IdentifierName(fullClassName + AssemblyChangesLoader.ClassnamePatchedPostfix))))))
+											.WithArgumentList(
+												SyntaxFactory.ArgumentList(
+													SyntaxFactory.SingletonSeparatedList<ArgumentSyntax>(
+														SyntaxFactory.Argument(
+															SyntaxFactory.ThisExpression())))),
+										SyntaxFactory.IdentifierName(fieldName))
+									.WithTriviaFrom(node);
+		                }
+		            }
+	                else
+	                {
+		                LoggerScoped.LogWarning($"Unable to find type: {fullClassName}");
 	                }
 				}
 			}
@@ -61,7 +69,6 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 		public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node)
 		{
 			var fieldName = node.Declaration.Variables.First().Identifier.ToString();
-			var classNode = node.Ancestors().OfType<ClassDeclarationSyntax>().First();
 			var fullClassName = RoslynUtils.GetMemberFQDNWithoutMemberName(node);
 			
 			if(_typeToNewFieldDeclarations.TryGetValue(fullClassName, out var newFields)) {

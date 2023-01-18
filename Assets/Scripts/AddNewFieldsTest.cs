@@ -7,9 +7,13 @@ using UnityEngine;
         [SerializeField] private int testVal = 10;
         [SerializeField] private int testVal2 = 20;
         [SerializeField] private string newString = "test new string ";
+        [SerializeField] private int testVal3 = 20; 
+
         
         void Update()
         {
+            Debug.Log(newString + "test" + testVal3);
+            
             // dynamic expando = new ExpandoObject();
             // expando.test = "123";
             
@@ -20,7 +24,6 @@ using UnityEngine;
             // Debug.Log($"Test: {newString} 123");
             //
             // newString = "str changed!";
-            Debug.Log(newString);
         }
 
         void OnScriptHotReload()

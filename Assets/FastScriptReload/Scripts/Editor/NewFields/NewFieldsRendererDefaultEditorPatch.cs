@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using FastScriptReload.Scripts.Runtime;
 using HarmonyLib;
@@ -9,6 +10,8 @@ namespace FastScriptReload.Editor.NewFields
     [InitializeOnLoad]
     public class NewFieldsRendererDefaultEditorPatch
     {
+        private static List<string> _cachedKeys = new List<string>();
+        
         static NewFieldsRendererDefaultEditorPatch()
         {
             var harmony = new Harmony(nameof(NewFieldsRendererDefaultEditorPatch));
@@ -37,13 +40,18 @@ namespace FastScriptReload.Editor.NewFields
                 {
                     EditorGUILayout.Space(10);
                     EditorGUILayout.LabelField("FSR: Dynamically Added Fields:");
-                    
-                    foreach (var addedFieldValueKv in addedFieldValues
-                                 // .Where(kv => kv.Key == "newString")
-                             )
+
+                    try
                     {
-                        // EditorGUILayout.TextField("Test", "123");
-                        addedFieldValues[addedFieldValueKv.Key] = EditorGUILayout.TextField(addedFieldValueKv.Key, addedFieldValueKv.Value.ToString());
+                        _cachedKeys.AddRange(addedFieldValues.Keys);
+                        foreach (var addedFieldValueKey in _cachedKeys)
+                        {
+                            addedFieldValues[addedFieldValueKey] = EditorGUILayout.TextField(addedFieldValueKey, addedFieldValues[addedFieldValueKey].ToString());
+                        }
+                    }
+                    finally
+                    {
+                        _cachedKeys.Clear();
                     }
                 }
             }

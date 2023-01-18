@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace FastScriptReload.Editor.Compilation.CodeRewriting
 {
     class FieldsWalker : CSharpSyntaxWalker {
-        private readonly Dictionary<string, List<NewFieldDeclaration>> _typeNameToFieldDeclarations = new(); 
+        private readonly Dictionary<string, List<NewFieldDeclaration>> _typeNameToFieldDeclarations = new Dictionary<string, List<NewFieldDeclaration>>(); 
 	
         public override void VisitFieldDeclaration(FieldDeclarationSyntax node)
         {
