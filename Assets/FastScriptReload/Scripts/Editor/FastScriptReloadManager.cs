@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using FastScriptReload.Editor.Compilation;
 using FastScriptReload.Runtime;
 using ImmersiveVRTools.Runtime.Common;
+using ImmersiveVrToolsCommon.Runtime.Logging;
 using UnityEditor;
 using UnityEngine;
 
@@ -317,6 +318,12 @@ Workaround will search in all folders (under project root) and will use first fo
 
         private static void Init()
         {
+            if (!(bool)FastScriptReloadPreference.EnableAutoReloadForChangedFiles.GetEditorPersistedValueOrDefault())
+            {
+                LoggerScoped.LogDebug("Hot reload disabled, file watchers will not be initialized.");
+                return;
+            }
+            
             if (Instance._fileWatchers.Count == 0)
             {
                 var fileWatcherSetupEntries = FastScriptReloadPreference.FileWatcherSetupEntries.GetElementsTyped();
