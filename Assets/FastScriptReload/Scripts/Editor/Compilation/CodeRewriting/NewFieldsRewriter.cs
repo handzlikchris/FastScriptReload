@@ -21,7 +21,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 		}
 		
 		public static List<MemberInfo> GetReplaceableMembers(Type type) { //TODO: later other might need to be included? props?
-			return type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Cast<MemberInfo>().ToList();
+			return type.GetFields(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic).Cast<MemberInfo>().ToList();
 		}
 
 		public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node)
