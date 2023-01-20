@@ -6,10 +6,12 @@ namespace FastScriptReload.Scripts.Runtime
 {
     public static class TemporaryNewFieldValues
     {
+        public delegate object GetNewFieldInitialValue(Type forNewlyGeneratedType);
+        
         private static readonly Dictionary<object, ExpandoForType> _existingObjectToFiledNameValueMap = new Dictionary<object, ExpandoForType>();
-        private static readonly Dictionary<Type, Dictionary<string, Func<object>>> _existingObjectTypeToFieldNameToCreateDetaultValueFn = new Dictionary<Type, Dictionary<string, Func<object>>>();
+        private static readonly Dictionary<Type, Dictionary<string, GetNewFieldInitialValue>> _existingObjectTypeToFieldNameToCreateDetaultValueFn = new Dictionary<Type, Dictionary<string, GetNewFieldInitialValue>>();
 
-        public static void RegisterNewFields(Type existingType, Dictionary<string, Func<object>> fieldNameToGenerateDefaultValueFn)
+        public static void RegisterNewFields(Type existingType, Dictionary<string, GetNewFieldInitialValue> fieldNameToGenerateDefaultValueFn)
         {
             _existingObjectTypeToFieldNameToCreateDetaultValueFn[existingType] = fieldNameToGenerateDefaultValueFn;
         }
@@ -58,7 +60,7 @@ namespace FastScriptReload.Scripts.Runtime
             {
                 if (!patchedObjectAsDict.ContainsKey(fieldNameToGenerateDefaultValueFn.Key))
                 {
-                    patchedObjectAsDict[fieldNameToGenerateDefaultValueFn.Key] = fieldNameToGenerateDefaultValueFn.Value();
+                    patchedObjectAsDict[fieldNameToGenerateDefaultValueFn.Key] = fieldNameToGenerateDefaultValueFn.Value(typeof(T));
                 }
             }
         }

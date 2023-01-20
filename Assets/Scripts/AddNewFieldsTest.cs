@@ -1,3 +1,4 @@
+
 using UnityEngine;
 
 // namespace TestNamespace //readd for testing, doesn't work well with linqpad
@@ -7,18 +8,18 @@ using UnityEngine;
         [SerializeField] private int testVal = 10;
         [SerializeField] private int testVal2 = 20;
         
-        // [SerializeField] private string newString = "test new string ";
-        // [SerializeField] private int testVal3 = 20; 
+        [SerializeField] private string newString = "test new string ";
+        [SerializeField] private int testVal3 = 20; 
         //
-        // [SerializeField] private bool testBool = true; 
-        // [SerializeField] private float testFloat = 1.5f; 
-        // [SerializeField] private Color testColor; 
+        [SerializeField] private bool testBool = true; 
+        [SerializeField] private float testFloat = 1.5f; 
+        [SerializeField] private Color testColor;
 
         
         void Update()
         {
-            // Debug.Log($"{newString}test{testVal3}bool: {testBool}, float: {testFloat}");
-            // Debug.Log($"color: {testColor}"); //Causes some issues
+            Debug.Log($"{newString}test{testVal3}bool: {testBool}, float: {testFloat}");
+            Debug.Log($"color: {testColor}"); //Causes some issues
 
             // Debug.Log(newString + "test" + testVal3);
             

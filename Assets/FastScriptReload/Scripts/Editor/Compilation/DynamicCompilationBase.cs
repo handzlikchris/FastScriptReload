@@ -89,7 +89,12 @@ namespace FastScriptReload.Editor.Compilation
                                 existingType, 
                                 newFields.ToDictionary(
                                     fD => fD.FieldName,
-                                    fD => (Func<object>) (() => TypeNameToCreateValueFromRawCodeResolver.CreateValue(fD))
+                                    fD => new TemporaryNewFieldValues.GetNewFieldInitialValue((Type forNewlyGeneratedType) =>
+                                    {
+                                        //return TypeNameToCreateValueFromRawCodeResolver.CreateValue(fD);
+                                        //TODO: PERF: could cache those - they run to init every new value (for every instance when accessed)
+                                        return CreateNewFieldInitMethodRewriter.ResolveNewFieldsToCreateValueFn(forNewlyGeneratedType)[fD.FieldName]();
+                                    })
                                 )
                             );
 
@@ -98,7 +103,7 @@ namespace FastScriptReload.Editor.Compilation
                     );
                 }
 
-                var rewriter = new HotReloadCompliantRewriter();
+
 
                 //WARN: application order is important, eg ctors need to happen before class names as otherwise ctors will not be recognised as ctors
                 if (FastScriptReloadManager.Instance.EnableExperimentalThisCallLimitationFix)
@@ -110,12 +115,14 @@ namespace FastScriptReload.Editor.Compilation
                 if (FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.EnableExperimentalAddedFieldsSupport)
                 {
                     root = new NewFieldsRewriter(typeToNewFieldDeclarations).Visit(root);
+                    root = new CreateNewFieldInitMethodRewriter(typeToNewFieldDeclarations).Visit(root);
                 }
                 
-                root = new ConstructorRewriter( adjustCtorOnlyForNonNestedTypes: true).Visit(root);
-                root = rewriter.Visit(root);
+                root = new ConstructorRewriter(adjustCtorOnlyForNonNestedTypes: true).Visit(root);
                 
-                combinedUsingStatements.AddRange(rewriter.StrippedUsingDirectives);
+                var hotReloadCompliantRewriter = new HotReloadCompliantRewriter();
+                root = hotReloadCompliantRewriter.Visit(root);
+                combinedUsingStatements.AddRange(hotReloadCompliantRewriter.StrippedUsingDirectives);
 
                 return root.ToFullString();
             }).ToList();
