@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ImmersiveVrToolsCommon.Runtime.Logging;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -27,7 +28,10 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 		public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
 		{
 			var fullClassName = RoslynUtils.GetMemberFQDN(node, node.Identifier.ToString());
-			var newClassFields = _typeToNewFieldDeclarations[fullClassName];
+			if (!_typeToNewFieldDeclarations.TryGetValue(fullClassName, out var newClassFields))
+			{
+				LoggerScoped.LogWarning($"Unable to find new-fields for type: {fullClassName}, this is not an issue if there are no new fields for that type.");
+			}
 
 			var dictionaryKeyToInitValueNodes = newClassFields.SelectMany(fieldName =>
 			{
