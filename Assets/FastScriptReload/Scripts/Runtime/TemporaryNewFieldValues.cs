@@ -1,41 +1,51 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using UnityEngine;
+using Object = System.Object;
 
 namespace FastScriptReload.Scripts.Runtime
 {
     public static class TemporaryNewFieldValues
     {
         public delegate object GetNewFieldInitialValue(Type forNewlyGeneratedType);
+        public delegate Type GetNewFieldType(Type forNewlyGeneratedType);
 
         private static readonly Dictionary<object, ExpandoForType> _existingObjectToFiledNameValueMap = new Dictionary<object, ExpandoForType>();
         private static readonly Dictionary<Type, Dictionary<string, GetNewFieldInitialValue>> _existingObjectTypeToFieldNameToCreateDetaultValueFn = new Dictionary<Type, Dictionary<string, GetNewFieldInitialValue>>();
+        private static readonly Dictionary<Type, Dictionary<string, GetNewFieldType>> _existingObjectTypeToFieldNameToType = new Dictionary<Type, Dictionary<string, GetNewFieldType>>();
         
-        private static readonly Dictionary<>
-
-        public static void RegisterNewFields(Type existingType, Dictionary<string, GetNewFieldInitialValue> fieldNameToGenerateDefaultValueFn)
+        //Unity by default will auto init some classes, like gradient, but those are not value types so need to be initialized manually
+        private static Dictionary<Type, Func<object>> ReferenceTypeToCreateDefaultValueFn = new Dictionary<Type, Func<object>>()
+        {
+            [typeof(Gradient)] = () => new Gradient(),
+            [typeof(AnimationCurve)] = () => new AnimationCurve(),
+        };
+        
+        public static void RegisterNewFields(Type existingType, Dictionary<string, GetNewFieldInitialValue> fieldNameToGenerateDefaultValueFn, Dictionary<string, GetNewFieldType> fieldNameToGetTypeFn)
         {
             _existingObjectTypeToFieldNameToCreateDetaultValueFn[existingType] = fieldNameToGenerateDefaultValueFn;
+            _existingObjectTypeToFieldNameToType[existingType] = fieldNameToGetTypeFn;
         }
-
-        public static dynamic ResolvePatchedObject<T>(object original)
+        
+        public static dynamic ResolvePatchedObject<TCreatedType>(object original)
         {
             if (!_existingObjectToFiledNameValueMap.TryGetValue(original, out var existingExpandoToObjectTypePair))
             {
                 var patchedObject = new ExpandoObject();
-                var expandoForType = new ExpandoForType { ForType = typeof(T), Object = patchedObject };
+                var expandoForType = new ExpandoForType { ForType = typeof(TCreatedType), Object = patchedObject };
                 
-                InitializeAdditionalFieldValues<T>(original, patchedObject);
+                InitializeAdditionalFieldValues<TCreatedType>(original, patchedObject);
                 _existingObjectToFiledNameValueMap[original] = expandoForType;
 
                 return patchedObject;
             }
             else
             {
-                if (existingExpandoToObjectTypePair.ForType != typeof(T))
+                if (existingExpandoToObjectTypePair.ForType != typeof(TCreatedType))
                 {
-                    InitializeAdditionalFieldValues<T>(original, existingExpandoToObjectTypePair.Object);
-                    existingExpandoToObjectTypePair.ForType = typeof(T);
+                    InitializeAdditionalFieldValues<TCreatedType>(original, existingExpandoToObjectTypePair.Object);
+                    existingExpandoToObjectTypePair.ForType = typeof(TCreatedType);
                 }
 
                 return existingExpandoToObjectTypePair.Object;
@@ -54,7 +64,7 @@ namespace FastScriptReload.Scripts.Runtime
             return false;
         }
 
-        private static void InitializeAdditionalFieldValues<T>(object original, ExpandoObject patchedObject)
+        private static void InitializeAdditionalFieldValues<TCreatedType>(object original, ExpandoObject patchedObject)
         {
             var originalType = original.GetType(); //TODO: PERF: resolve via TOriginal, not getType
             var patchedObjectAsDict = patchedObject as IDictionary<string, Object>;
@@ -62,8 +72,16 @@ namespace FastScriptReload.Scripts.Runtime
             {
                 if (!patchedObjectAsDict.ContainsKey(fieldNameToGenerateDefaultValueFn.Key))
                 {
-                    patchedObjectAsDict[fieldNameToGenerateDefaultValueFn.Key] = fieldNameToGenerateDefaultValueFn.Value(typeof(T));
-                    //TODO: think how reference values should be handled, eg Gradient / AnimationCurve, those will be null by default and need to initialize to default?
+                    patchedObjectAsDict[fieldNameToGenerateDefaultValueFn.Key] = fieldNameToGenerateDefaultValueFn.Value(typeof(TCreatedType));
+
+                    if (patchedObjectAsDict[fieldNameToGenerateDefaultValueFn.Key] == null)
+                    {
+                       var fieldType = _existingObjectTypeToFieldNameToType[originalType][fieldNameToGenerateDefaultValueFn.Key](typeof(TCreatedType));
+                       if (ReferenceTypeToCreateDefaultValueFn.TryGetValue(fieldType, out var createValueFn))
+                       {
+                           patchedObjectAsDict[fieldNameToGenerateDefaultValueFn.Key] = createValueFn();
+                       }
+                    }
                 }
             }
         }
