@@ -102,7 +102,9 @@ namespace FastScriptReload.Editor.Compilation
             }
             catch (Exception)
             {
-                Debug.LogError($"Compilation error: temporary files were not removed so they can be inspected: {string.Join(", ", _createdFilesToCleanUp)}");
+                Debug.LogError($"Compilation error: temporary files were not removed so they can be inspected: " 
+                               + string.Join(", ", _createdFilesToCleanUp
+                                   .Select(f => $"<a href=\"{f}\" line=\"1\">{f}</a>")));
                 if (LogHowToFixMessageOnCompilationError)
                 {
                     Debug.LogWarning($@"HOW TO FIX - INSTRUCTIONS:
