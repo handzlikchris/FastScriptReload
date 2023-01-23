@@ -11,7 +11,6 @@ using ImmersiveVRTools.Runtime.Common.Utilities;
 using ImmersiveVrToolsCommon.Runtime.Logging;
 using Microsoft.CodeAnalysis.CSharp;
 using UnityEditor;
-using Debug = UnityEngine.Debug;
 
 namespace FastScriptReload.Editor.Compilation
 {
@@ -85,6 +84,7 @@ namespace FastScriptReload.Editor.Compilation
                             var newFields = t.Value.Where(fD => !existingTypeMembersToReplace.Contains(fD.FieldName)).ToList();
                             
                             //TODO: ideally that registration would happen outside of this class
+                            //TODO: to work for LSR it needs to be handled in runtime
                             TemporaryNewFieldValues.RegisterNewFields(
                                 existingType, 
                                 newFields.ToDictionary(
@@ -93,6 +93,14 @@ namespace FastScriptReload.Editor.Compilation
                                     {
                                         //TODO: PERF: could cache those - they run to init every new value (for every instance when accessed)
                                         return CreateNewFieldInitMethodRewriter.ResolveNewFieldsToCreateValueFn(forNewlyGeneratedType)[fD.FieldName]();
+                                    })
+                                ),
+                                newFields.ToDictionary(
+                                    fD => fD.FieldName,
+                                    fD => new TemporaryNewFieldValues.GetNewFieldType((Type forNewlyGeneratedType) =>
+                                    {
+                                        //TODO: PERF: could cache those - they run to init every new value (for every instance when accessed)
+                                        return (Type)CreateNewFieldInitMethodRewriter.ResolveNewFieldsToTypeFn(forNewlyGeneratedType)[fD.FieldName]();
                                     })
                                 )
                             );
