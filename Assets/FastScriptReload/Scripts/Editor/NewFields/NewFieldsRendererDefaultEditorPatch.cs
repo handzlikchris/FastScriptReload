@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using FastScriptReload.Editor.Compilation.CodeRewriting;
+using FastScriptReload.Runtime;
 using FastScriptReload.Scripts.Runtime;
 using HarmonyLib;
 using ImmersiveVRTools.Editor.Common.Utilities;
-using ImmersiveVrToolsCommon.Runtime.Logging;
 using UnityEditor;
 using UnityEngine;
 
@@ -43,9 +46,12 @@ namespace FastScriptReload.Editor.NewFields
                     {
                         _cachedKeys.AddRange(addedFieldValues.Keys);
                         
+                        var newFieldNameToGetTypeFn = CreateNewFieldInitMethodRewriter.ResolveNewFieldsToTypeFn(
+                            AssemblyChangesLoader.Instance.GetRedirectedType(__instance.target.GetType())
+                        );
                         foreach (var addedFieldValueKey in _cachedKeys)
                         {
-                            var existingValueType = addedFieldValues[addedFieldValueKey].GetType();
+                            var existingValueType = (Type)newFieldNameToGetTypeFn[addedFieldValueKey]();
 
                             //rendering types come from UnityEditor.EditorGUI.DefaultPropertyField - that should handle all cases that editor can render
                             if (existingValueType == typeof(int)) addedFieldValues[addedFieldValueKey] = EditorGUILayout.IntField(addedFieldValueKey, (int)addedFieldValues[addedFieldValueKey]);

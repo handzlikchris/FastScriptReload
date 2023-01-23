@@ -91,7 +91,6 @@ namespace FastScriptReload.Editor.Compilation
                                     fD => fD.FieldName,
                                     fD => new TemporaryNewFieldValues.GetNewFieldInitialValue((Type forNewlyGeneratedType) =>
                                     {
-                                        //return TypeNameToCreateValueFromRawCodeResolver.CreateValue(fD);
                                         //TODO: PERF: could cache those - they run to init every new value (for every instance when accessed)
                                         return CreateNewFieldInitMethodRewriter.ResolveNewFieldsToCreateValueFn(forNewlyGeneratedType)[fD.FieldName]();
                                     })
@@ -156,14 +155,15 @@ namespace FastScriptReload.Editor.Compilation
                 {
                     if (string.IsNullOrEmpty(assembly.Location))
                     {
-                        throw new Exception("FastScriptReload: Assembly location is null");
+                        LoggerScoped.LogDebug($"FastScriptReload: Assembly location is null, usually dynamic assembly, harmless.");
+                        continue;
                     }
 
                     referencesToAdd.Add(assembly.Location);
                 }
                 catch (Exception)
                 {
-                    Debug.LogWarning($"FastScriptReload: Unable to add a reference to assembly as unable to get location or null: {assembly.FullName} when hot-reloading, this is likely dynamic assembly and won't cause issues");
+                    LoggerScoped.LogDebug($"Unable to add a reference to assembly as unable to get location or null: {assembly.FullName} when hot-reloading, this is likely dynamic assembly and won't cause issues");
                 }
             }
 
