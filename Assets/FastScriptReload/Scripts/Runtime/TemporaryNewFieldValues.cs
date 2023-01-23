@@ -7,15 +7,17 @@ namespace FastScriptReload.Scripts.Runtime
     public static class TemporaryNewFieldValues
     {
         public delegate object GetNewFieldInitialValue(Type forNewlyGeneratedType);
-        
+
         private static readonly Dictionary<object, ExpandoForType> _existingObjectToFiledNameValueMap = new Dictionary<object, ExpandoForType>();
         private static readonly Dictionary<Type, Dictionary<string, GetNewFieldInitialValue>> _existingObjectTypeToFieldNameToCreateDetaultValueFn = new Dictionary<Type, Dictionary<string, GetNewFieldInitialValue>>();
+        
+        private static readonly Dictionary<>
 
         public static void RegisterNewFields(Type existingType, Dictionary<string, GetNewFieldInitialValue> fieldNameToGenerateDefaultValueFn)
         {
             _existingObjectTypeToFieldNameToCreateDetaultValueFn[existingType] = fieldNameToGenerateDefaultValueFn;
         }
-            
+
         public static dynamic ResolvePatchedObject<T>(object original)
         {
             if (!_existingObjectToFiledNameValueMap.TryGetValue(original, out var existingExpandoToObjectTypePair))
@@ -61,6 +63,7 @@ namespace FastScriptReload.Scripts.Runtime
                 if (!patchedObjectAsDict.ContainsKey(fieldNameToGenerateDefaultValueFn.Key))
                 {
                     patchedObjectAsDict[fieldNameToGenerateDefaultValueFn.Key] = fieldNameToGenerateDefaultValueFn.Value(typeof(T));
+                    //TODO: think how reference values should be handled, eg Gradient / AnimationCurve, those will be null by default and need to initialize to default?
                 }
             }
         }

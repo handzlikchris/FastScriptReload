@@ -43,6 +43,8 @@ namespace FastScriptReload.Runtime
         private static AssemblyChangesLoader _instance;
         public static AssemblyChangesLoader Instance => _instance ?? (_instance = new AssemblyChangesLoader());
 
+        private Dictionary<Type, Type> _existingTypeToRedirectedType = new Dictionary<Type, Type>();
+
         public void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates, AssemblyChangesLoaderEditorOptionsNeededInBuild editorOptions)
         {
             try
@@ -72,6 +74,8 @@ namespace FastScriptReload.Runtime
                     var matchingTypeInExistingAssemblies = allTypesInNonDynamicGeneratedAssemblies.SingleOrDefault(t => t.FullName == createdTypeNameWithoutPatchedPostfix);
                     if (matchingTypeInExistingAssemblies != null)
                     {
+                        _existingTypeToRedirectedType[matchingTypeInExistingAssemblies] = createdType;
+                        
                         if (!editorOptions.IsDidFieldsOrPropertyCountChangedCheckDisabled 
                             && !editorOptions.EnableExperimentalAddedFieldsSupport
                             && DidFieldsOrPropertyCountChanged(createdType,  matchingTypeInExistingAssemblies))
@@ -133,6 +137,11 @@ namespace FastScriptReload.Runtime
             {
                 DetourCrashHandler.ClearDetourLog();
             }
+        }
+        
+        public Type GetRedirectedType(Type forExistingType)
+        {
+            return _existingTypeToRedirectedType[forExistingType];
         }
 
         private static bool DidFieldsOrPropertyCountChanged(Type createdType, Type matchingTypeInExistingAssemblies)
