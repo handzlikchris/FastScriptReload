@@ -133,6 +133,21 @@ This is to ensure there are no issues as that is generally not supported.
 
 Some assets however will use IL weaving to adjust your classes (eg Mirror) as a post compile step. In that case it's quite likely hot-reload will still work.
 
+## EXPERIMENTAL Adding New Fields
+Asset has an experimental support for adding new fields at runtime which will also render in Editor and allow you to tweak values - same as with normal fields.
+
+To enable, please:
+`Window -> Fast Script Reload -> Start Window -> New Fields -> Enable experimental added field support`.
+
+> As this is an experimental feature please expect it to break more often! It'd be great help if you could report any issues via Discord / email.
+
+### New Fields specific limitations
+
+- outside classes can not call new fields added at runtime
+- nameof expressions are breaking, eg `Debug.Log($"New field: {nameof(newField)} added.")` would cause compilation error
+- new fields will only show in editor if they were already used at least once
+  - eg if you've added a variable into a method, on first call that variable will be initialized and will start showing in editor
+
 ## Debugging
 Debugging is fully supported although breakpoints in your original file won't be hit.
 
