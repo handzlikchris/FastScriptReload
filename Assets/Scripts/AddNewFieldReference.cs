@@ -1,11 +1,12 @@
 ﻿using System;
+using UnityEngine;
 
-public class AddNewFieldReference
+public class AddNewFieldReference: MonoBehaviour
 {
     public string TestString = "Test1";
 
     public void Test()
     {
-        Console.WriteLine($"AddNewFieldReference: {TestString}");
+        Debug.Log($"AddNewFieldReference: {TestString}");
     }
 }
