@@ -141,12 +141,22 @@ To enable, please:
 
 > As this is an experimental feature please expect it to break more often! It'd be great help if you could report any issues via Discord / email.
 
-### New Fields specific limitations
+### New Fields - specific limitations
 
 - outside classes can not call new fields added at runtime
 - nameof expressions are breaking, eg `Debug.Log($"New field: {nameof(newField)} added.")` would cause compilation error
 - new fields will only show in editor if they were already used at least once
   - eg if you've added a variable into a method, on first call that variable will be initialized and will start showing in editor
+
+### New Fields - performance
+For new fields to work your code will be adjusted. Instead of calling fields directly your code will call into a method that retrieves value from dynamic dictionary.
+
+Due to that there'll be some overhead with:
+- looking up proper object and new-field value in dictionary
+- initializing values
+- use of dynamic type, which will introduce some additional casts
+
+> All that shouldn't really add too much overhead on dev-machine - you may lose few FPS though.
 
 ## Debugging
 Debugging is fully supported although breakpoints in your original file won't be hit.
