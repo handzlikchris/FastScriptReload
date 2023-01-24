@@ -96,12 +96,8 @@ namespace FastScriptReload.Editor.NewFields
                             //TODO: SerializedPropertyType.Hash128
                             else if (existingValueType == typeof(Quaternion))
                             {
-                                //TODO: handled bit differently via EditorGUI.QuaternionEulerField(position, property, label);
-                                EditorGUILayout.BeginHorizontal();
-                                EditorGUILayout.LabelField($"{existingValueType.Name} - Unable to render");
-                                GuiTooltipHelper.AddHelperTooltip(
-                                    $"Unable to handle added-field rendering for type: {existingValueType.Name}, it won't be rendered. Best workaround for now is to use Vector3 instead.");
-                                EditorGUILayout.EndHorizontal();
+                                //Quaternions are rendered as euler angles in editor
+                                addedFieldValues[addedFieldValueKey] = Quaternion.Euler(EditorGUILayout.Vector3Field(addedFieldValueKey, ((Quaternion)addedFieldValues[addedFieldValueKey]).eulerAngles));
                             }
                             else
                             {
