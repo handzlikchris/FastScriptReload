@@ -30,9 +30,10 @@ namespace TestNamespace //readd for testing, doesn't work well with linqpad
         // [SerializeField] private RectInt testRectInt;
         // [SerializeField] private BoundsInt testBoundsInt;
         // [SerializeField] private Quaternion testQuaternion;
-        
-        [SerializeField] private Quaternion angle;
-        public Vector3 Angle => angle.eulerAngles; 
+        // [SerializeField] private AddNewFieldReference newObject;
+        //
+        // [SerializeField] private Quaternion angle;
+        // public Vector3 Angle => angle.eulerAngles; 
 
         void Update()
         {
@@ -55,6 +56,9 @@ namespace TestNamespace //readd for testing, doesn't work well with linqpad
         [ContextMenu(nameof(DebugDynamicValues))]
         public void DebugDynamicValues()
         {
+            // Debug.Log(newObject.TestString);
+            // newObject.Test();
+            
             // Debug.Log($"testInt: {testInt}");
             // Debug.Log($"testBool: {testBool}");
             // Debug.Log($"testFloat: {testFloat}");
@@ -74,7 +78,7 @@ namespace TestNamespace //readd for testing, doesn't work well with linqpad
             // Debug.Log($"testQuaternion: {testQuaternion}");
             
             // Debug.Log(TestConst + TestStatic + 1);
-            Debug.Log(Angle);
+            // Debug.Log(Angle);
         }
 
         void OnScriptHotReload()
