@@ -5,11 +5,14 @@ namespace TestNamespace //readd for testing, doesn't work well with linqpad
 {
     public class AddNewFieldsTest : MonoBehaviour
     {
+        // private const int TestConst = 5;
+        // private static int TestStatic = 5;
+
         [SerializeField] private int testVal = 10;
         [SerializeField] private int testVal2 = 20;
         
         [SerializeField] private string newString = "test new string ";
-        //
+        
         // [SerializeField] private int testInt = 20;
         // [SerializeField] private bool testBool = true; 
         // [SerializeField] private float testFloat = 1.5f; 
@@ -27,6 +30,9 @@ namespace TestNamespace //readd for testing, doesn't work well with linqpad
         // [SerializeField] private RectInt testRectInt;
         // [SerializeField] private BoundsInt testBoundsInt;
         // [SerializeField] private Quaternion testQuaternion;
+        
+        [SerializeField] private Quaternion angle;
+        public Vector3 Angle => angle.eulerAngles; 
 
         void Update()
         {
@@ -66,6 +72,9 @@ namespace TestNamespace //readd for testing, doesn't work well with linqpad
             // Debug.Log($"testRectInt: {testRectInt}");
             // Debug.Log($"testBoundsInt: {testBoundsInt}");
             // Debug.Log($"testQuaternion: {testQuaternion}");
+            
+            // Debug.Log(TestConst + TestStatic + 1);
+            Debug.Log(Angle);
         }
 
         void OnScriptHotReload()

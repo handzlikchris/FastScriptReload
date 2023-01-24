@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using FastScriptReload.Editor.Compilation.CodeRewriting;
 using FastScriptReload.Runtime;
 using FastScriptReload.Scripts.Runtime;
@@ -136,7 +134,7 @@ namespace FastScriptReload.Editor.NewFields
                                 EditorGUILayout.BeginHorizontal();
                                 EditorGUILayout.LabelField($"{existingValueType.Name} - Unable to render");
                                 GuiTooltipHelper.AddHelperTooltip(
-                                    "Unable to handle added-field rendering for type: {existingValueType.Name}, it won't be rendered. Best workaround for now is to use Vector3 instead.");
+                                    $"Unable to handle added-field rendering for type: {existingValueType.Name}, it won't be rendered. Best workaround for now is to use Vector3 instead.");
                                 EditorGUILayout.EndHorizontal();
                             }
                             else
@@ -144,7 +142,7 @@ namespace FastScriptReload.Editor.NewFields
                                 EditorGUILayout.BeginHorizontal();
                                 EditorGUILayout.LabelField($"{existingValueType.Name} - Unable to render");
                                 GuiTooltipHelper.AddHelperTooltip(
-                                    "Unable to handle added-field rendering for type: {existingValueType.Name}, it won't be rendered. Best workaround is to not add this type dynamically in current version.");
+                                    $"Unable to handle added-field rendering for type: {existingValueType.Name}, it won't be rendered. Best workaround is to not add this type dynamically in current version.");
                                 EditorGUILayout.EndHorizontal();
                             }
                         }
