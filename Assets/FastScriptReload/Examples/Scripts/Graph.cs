@@ -16,11 +16,23 @@ namespace FastScriptReload.Examples
 
 		[SerializeField]
 		FunctionLibrary.FunctionName function;
-	
-		[SerializeField] private int _testIterationCounter = 1;
-		[SerializeField] [Range(-3, 3)] private float _testUMove = 0f;
-
+		
 		Transform[] points;
+		
+		/*  EXPERIMENTAL: Add new fields at runtime (editor rendered)
+		 *  To enable feature please go to Fast Script Reload -> Start Screen -> New Fields -> Enable experimental added field support
+		 *  Then:
+		 *  1) hit play
+		 *  2) uncomment '_testUMove' variable
+		 *  3) uncomment usage of experimental variable in Update() method
+		 *
+		 *  Variable will only show in editor when first read.
+		 *
+		 *	PLEASE READ LIMITATIONS AROUND NEW FIELDS FEATURE - this feature is bit more involved and at this stage please expect it to break more often
+		 *  If you could report any issues via Discord that'd be great and will help make the tool better! Thanks!
+		 */
+		
+		// [SerializeField] [Range(-3, 3)] private float _testUMove = 0f; //EXPERIMENTAL: Add new field example
 
 		void Awake ()
 		{
@@ -35,12 +47,7 @@ namespace FastScriptReload.Examples
 				point.SetParent(pointsHolderGo.transform, false);
 			}
 		}
-
-		[ContextMenu(nameof(ResetIterationCounter))]
-		void ResetIterationCounter()
-		{
-			_testIterationCounter = 0; 
-		}
+		
 
 		void Update() 
 		{
@@ -58,15 +65,17 @@ namespace FastScriptReload.Examples
 				}
 
 				var u = (x + 0.5f) * step - 1f;
-				points[i].localPosition = f(u + _testUMove, v, time);
+				
+				points[i].localPosition = f(u, v, time);
+				
+				// EXPERIMENTAL: add new fields flow - uncomment below line to see changes
+				// points[i].localPosition = f(u + _testUMove, v, time); 
 			}
-
-			_testIterationCounter++;
 		}
 
 		void OnScriptHotReload()
 		{
-			Debug.Log($"Script 'Graph.cs' was changed and hot reloaded, you have access to instance via 'this', eg: {nameof(_testIterationCounter)} value is: {_testIterationCounter}"); 
+			Debug.Log($"Script 'Graph.cs' was changed and hot reloaded, you have access to instance via 'this', eg: {nameof(resolution)} value is: {resolution}"); 
 		}
 		
 		static void OnScriptHotReloadNoInstance()
