@@ -52,14 +52,13 @@ namespace FastScriptReload.Editor.NewFields
 
                     EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField("[FSR] Dynamically Added Fields:");
-                    GuiTooltipHelper.AddHelperTooltip(
-                        "Fields were dynamically added for hot-reload, you can adjust their values and on full reload they'll disappear from this section and move back to main one.");
+                    GuiTooltipHelper.AddHelperTooltip("Fields were dynamically added for hot-reload, you can adjust their values and on full reload they'll disappear from this section and move back to main one.");
                     EditorGUILayout.EndHorizontal();
                     EditorGUILayout.Space(5);
 
                     try
                     {
-                        _cachedKeys.AddRange(addedFieldValues.Keys);
+                        _cachedKeys.AddRange(addedFieldValues.Keys); //otherwise collection changed exception can happen
 
                         var newFieldNameToGetTypeFn = CreateNewFieldInitMethodRewriter.ResolveNewFieldsToTypeFn(
                             AssemblyChangesLoader.Instance.GetRedirectedType(__instance.target.GetType())
