@@ -9,24 +9,24 @@ namespace TestNamespace //readd for testing, doesn't work well with linqpad
         [SerializeField] private int testVal2 = 20;
         
         [SerializeField] private string newString = "test new string ";
-        
-        [SerializeField] private int testInt = 20;
-        [SerializeField] private bool testBool = true; 
-        [SerializeField] private float testFloat = 1.5f; 
-        [SerializeField] private Color testColor;
-        [SerializeField] private TestEnum testEnum;
-        [SerializeField] private Vector2 testVector2;
-        [SerializeField] private Vector3 testVector3 = new Vector3(0, 5 , 1);
-        [SerializeField] private Vector4 testVector4;
-        [SerializeField] private Rect testRect;
-        [SerializeField] private AnimationCurve testAnimationCurve;
-        [SerializeField] private Bounds testBounds;
-        [SerializeField] private Gradient testGradient;
-        [SerializeField] private Vector2Int testVector2Int;
-        [SerializeField] private Vector3Int testVector3Int = new Vector3Int(0, 0, 0);
-        [SerializeField] private RectInt testRectInt;
-        [SerializeField] private BoundsInt testBoundsInt;
-        [SerializeField] private Quaternion testQuaternion;
+        //
+        // [SerializeField] private int testInt = 20;
+        // [SerializeField] private bool testBool = true; 
+        // [SerializeField] private float testFloat = 1.5f; 
+        // [SerializeField] private Color testColor;
+        // [SerializeField] private TestEnum testEnum;
+        // [SerializeField] private Vector2 testVector2;
+        // [SerializeField] private Vector3 testVector3 = new Vector3(0, 5 , 1);
+        // [SerializeField] private Vector4 testVector4;
+        // [SerializeField] private Rect testRect;
+        // [SerializeField] private AnimationCurve testAnimationCurve;
+        // [SerializeField] private Bounds testBounds;
+        // [SerializeField] private Gradient testGradient;
+        // [SerializeField] private Vector2Int testVector2Int;
+        // [SerializeField] private Vector3Int testVector3Int = new Vector3Int(0, 0, 0);
+        // [SerializeField] private RectInt testRectInt;
+        // [SerializeField] private BoundsInt testBoundsInt;
+        // [SerializeField] private Quaternion testQuaternion;
 
         void Update()
         {
@@ -49,23 +49,23 @@ namespace TestNamespace //readd for testing, doesn't work well with linqpad
         [ContextMenu(nameof(DebugDynamicValues))]
         public void DebugDynamicValues()
         {
-            Debug.Log($"testInt: {testInt}");
-            Debug.Log($"testBool: {testBool}");
-            Debug.Log($"testFloat: {testFloat}");
-            Debug.Log($"testColor: {testColor}");
-            Debug.Log($"testEnum: {testEnum}");
-            Debug.Log($"testVector2: {testVector2}");
-            Debug.Log($"testVector3: {testVector3}");
-            Debug.Log($"testVector4: {testVector4}");
-            Debug.Log($"testRect: {testRect}");
-            Debug.Log($"testAnimationCurve: {testAnimationCurve}");
-            Debug.Log($"testBounds: {testBounds}");
-            Debug.Log($"testGradient: {testGradient}");
-            Debug.Log($"testVector2Int: {testVector2Int}");
-            Debug.Log($"testVector3Int: {testVector3Int}");
-            Debug.Log($"testRectInt: {testRectInt}");
-            Debug.Log($"testBoundsInt: {testBoundsInt}");
-            Debug.Log($"testQuaternion: {testQuaternion}");
+            // Debug.Log($"testInt: {testInt}");
+            // Debug.Log($"testBool: {testBool}");
+            // Debug.Log($"testFloat: {testFloat}");
+            // Debug.Log($"testColor: {testColor}");
+            // Debug.Log($"testEnum: {testEnum}");
+            // Debug.Log($"testVector2: {testVector2}");
+            // Debug.Log($"testVector3: {testVector3}");
+            // Debug.Log($"testVector4: {testVector4}");
+            // Debug.Log($"testRect: {testRect}");
+            // Debug.Log($"testAnimationCurve: {testAnimationCurve}");
+            // Debug.Log($"testBounds: {testBounds}");
+            // Debug.Log($"testGradient: {testGradient}");
+            // Debug.Log($"testVector2Int: {testVector2Int}");
+            // Debug.Log($"testVector3Int: {testVector3Int}");
+            // Debug.Log($"testRectInt: {testRectInt}");
+            // Debug.Log($"testBoundsInt: {testBoundsInt}");
+            // Debug.Log($"testQuaternion: {testQuaternion}");
         }
 
         void OnScriptHotReload()
@@ -75,19 +75,20 @@ namespace TestNamespace //readd for testing, doesn't work well with linqpad
     }
 
 
-    // [CustomEditor(typeof(AddNewFieldsTest))]
-    // public class AddNewFieldsTestEditor : Editor
-    // {
-    //     public override void OnInspectorGUI()
-    //     {
-    //         base.OnInspectorGUI();
-    //
-    //         if (GUILayout.Button("Debug Values"))
-    //         {
-    //             ((AddNewFieldsTest)target).DebugDynamicValues();
-    //         }
-    //     }
-    // }
+    //TODO: custom editors dont work
+    [CustomEditor(typeof(AddNewFieldsTest))]
+    public class AddNewFieldsTestEditor : Editor
+    {
+        public override void OnInspectorGUI()
+        {
+            base.OnInspectorGUI(); 
+    
+            if (GUILayout.Button("Debug Values"))
+            {
+                ((AddNewFieldsTest)target).DebugDynamicValues();
+            }
+        }
+    }
 
 
     public enum TestEnum
