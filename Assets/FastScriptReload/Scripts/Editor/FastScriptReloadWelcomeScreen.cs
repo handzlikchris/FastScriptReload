@@ -231,7 +231,6 @@ They render using very simple drawer, if you have custom editors those will not 
                         EditorGUILayout.HelpBox(
                             @"LIMITATIONS: (full list and more info in docs)
 - outside classes can not call new fields added at runtime
-- nameof expressions are breaking
 - new fields will only show in editor if they were already used at least once", MessageType.Info);
                         GUILayout.Space(10);
                         
