@@ -144,7 +144,6 @@ To enable, please:
 ### New Fields - specific limitations
 
 - outside classes can not call new fields added at runtime
-- nameof expressions are breaking, eg `Debug.Log($"New field: {nameof(newField)} added.")` would cause compilation error
 - new fields will only show in editor if they were already used at least once
   - eg if you've added a variable into a method, on first call that variable will be initialized and will start showing in editor
 

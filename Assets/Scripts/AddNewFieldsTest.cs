@@ -1,17 +1,17 @@
 using UnityEngine;
 using UnityEditor;
 
-namespace TestNamespace //readd for testing, doesn't work well with linqpad
-{
+// namespace TestNamespace //readd for testing, doesn't work well with linqpad
+// {
     public class AddNewFieldsTest : MonoBehaviour
     {
-        // private const int TestConst = 5;
-        // private static int TestStatic = 5;
+        private const int TestConst = 5;
+        private static int TestStatic = 5;
 
         [SerializeField] private int testVal = 10;
         [SerializeField] private int testVal2 = 20;
         
-        [SerializeField] private string newString = "test new string ";
+        // [SerializeField] private string newString = "test new string ";
         
         // [SerializeField] private int testInt = 20;
         // [SerializeField] private bool testBool = true; 
@@ -30,8 +30,8 @@ namespace TestNamespace //readd for testing, doesn't work well with linqpad
         // [SerializeField] private RectInt testRectInt;
         // [SerializeField] private BoundsInt testBoundsInt;
         // [SerializeField] private Quaternion testQuaternion;
-        
-        [SerializeField] private AddNewFieldReference newObject;
+        //
+        // [SerializeField] private AddNewFieldReference newObject;
         //
         // [SerializeField] private Quaternion angle;
         // public Vector3 Angle => angle.eulerAngles; 
@@ -57,7 +57,7 @@ namespace TestNamespace //readd for testing, doesn't work well with linqpad
         [ContextMenu(nameof(DebugDynamicValues))]
         public void DebugDynamicValues()
         {
-            Debug.Log(newObject.TestString);
+            // Debug.Log(newObject.TestString);
             // newObject.Test();
             
             // Debug.Log($"testInt: {testInt}");
@@ -77,6 +77,11 @@ namespace TestNamespace //readd for testing, doesn't work well with linqpad
             // Debug.Log($"testRectInt: {testRectInt}");
             // Debug.Log($"testBoundsInt: {testBoundsInt}");
             // Debug.Log($"testQuaternion: {testQuaternion}");
+            
+            // Debug.Log(nameof(testInt));
+            // Debug.Log(nameof(TestStatic));
+            // Debug.Log(nameof(newObject));
+
             
             // Debug.Log(TestConst + TestStatic + 1);
             // Debug.Log(Angle);
@@ -111,4 +116,4 @@ namespace TestNamespace //readd for testing, doesn't work well with linqpad
         Value1,
         Value2
     } 
-}
+// }
