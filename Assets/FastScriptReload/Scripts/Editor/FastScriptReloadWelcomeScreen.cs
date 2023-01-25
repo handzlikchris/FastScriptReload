@@ -215,7 +215,7 @@ includeSubdirectories - whether child directories should be watched as well
                         EditorGUILayout.HelpBox(
                             @"Adding new fields is still in experimental mode, it will have issues. 
 
-When you encounter them please get in touch and I'll be sure to sort them out. Thanks!", MessageType.Error);
+When you encounter them please get in touch (via any support links above) and I'll be sure to sort them out. Thanks!", MessageType.Error);
                         GUILayout.Space(10);
                         
                         EditorGUILayout.HelpBox(
@@ -227,11 +227,26 @@ New fields will also show in editor - you can tweak them as normal variables.
 
 They render using very simple drawer, if you have custom editors those will not be used until full recompile.", MessageType.Warning);
                         GUILayout.Space(10);
+                        
+                        EditorGUILayout.HelpBox(
+                            @"LIMITATIONS: (full list and more info in docs)
+- outside classes can not call new fields added at runtime
+- nameof expressions are breaking
+- new fields will only show in editor if they were already used at least once", MessageType.Info);
+                        GUILayout.Space(10);
+                        
+#if LiveScriptReload_Enabled
+                        EditorGUILayout.HelpBox(
+                            @"On Device Reload (in running build) - Not Supported
+If you enable - new fields WILL show in editor and work as expected but link with the device will be broken and changes won't be visible there!", MessageType.Error);
+                        GUILayout.Space(10);
+#endif
 
                         using (LayoutHelper.LabelWidth(250))
                         {
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalAddedFieldsSupport);
                         }
+                        GUILayout.Space(10);
                     })
                 }),
                 new GuiSection("Launch Demo", new List<ClickableElement>
