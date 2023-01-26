@@ -245,38 +245,11 @@ class SingletonBase<T> where T: new() {
 ```
 
 ### Adding new fields
-Adding new fields is not supported in play mode.
-You can however simply create local variable and later quickly refactor that out.
+Experimental support with 1.3, minor limitations remaining:
+- outside classes can not call new fields added at runtime
+- new fields will only show in editor if they were already used at least once
 
-eg. for a simple class that moves position by some vector on every update
-
-*Initial class before play mode entered*
-```
-public class SimpleTransformMover: MonoBehaviour {
-   void Update() {
-        transform.position += new Vector3(1, 0, 0);
-    }
-}
-```
-
-*Changes in playmode*
-```
-public class SimpleTransformMover: MonoBehaviour {
-   //public Vector3 _moveBy = new Vector3(1, 0, 0); //1) do not introduce fields in play mode
-    
-   void Update() {
-        var _moveBy = new Vector3(1, 0, 0); //2) instead declare variable in method scope 
-        // (optionally with instance scope name-convention)
-   
-        // transform.position += new Vector3(1, 0, 0); //original code - now will use variable
-        transform.position += _moveBy; //3) changed code - uses local variable
-        
-        4) iterate as needed and after play mode simply refactor added variables as fields
-    }
-}
-```
-
-*Tool will show error if you try to add/remove fields and won't perform Hot-Reload.*
+> You need to opt in via start screen -> 'Window -> Fast Script Reload -> Start Screen -> New Fields -> enable'!
 
 ### Passing `this` reference to method that expect concrete class implementation
 
