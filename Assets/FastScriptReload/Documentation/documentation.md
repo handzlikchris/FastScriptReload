@@ -244,6 +244,40 @@ class SingletonBase<T> where T: new() {
 
 ```
 
+### Adding new fields
+Adding new fields is not supported in play mode.
+You can however simply create local variable and later quickly refactor that out.
+
+eg. for a simple class that moves position by some vector on every update
+
+*Initial class before play mode entered*
+```
+public class SimpleTransformMover: MonoBehaviour {
+   void Update() {
+        transform.position += new Vector3(1, 0, 0);
+    }
+}
+```
+
+*Changes in playmode*
+```
+public class SimpleTransformMover: MonoBehaviour {
+   //public Vector3 _moveBy = new Vector3(1, 0, 0); //1) do not introduce fields in play mode
+    
+   void Update() {
+        var _moveBy = new Vector3(1, 0, 0); //2) instead declare variable in method scope 
+        // (optionally with instance scope name-convention)
+   
+        // transform.position += new Vector3(1, 0, 0); //original code - now will use variable
+        transform.position += _moveBy; //3) changed code - uses local variable
+        
+        4) iterate as needed and after play mode simply refactor added variables as fields
+    }
+}
+```
+
+*Tool will show error if you try to add/remove fields and won't perform Hot-Reload.*
+
 ### Passing `this` reference to method that expect concrete class implementation
 
 `**By default experimental setting 'Enable method calls with 'this' as argument fix' is turned on in options, and should fix 'this' calls/assignment issue.
@@ -322,6 +356,9 @@ public class MySingleton: MonoBehaviour {
 }
 ```
 
+### Calling internal class members from changed code
+Technically, once your changed code is compiled it'll be in a separate assembly. As a result this changed code won't be able to access internal classes from assembly it originated from.
+
 ### Extensive use of nested classed / structs
 If your code-base contains lots of nested classes - you may see more compilation errors.
 
@@ -329,40 +366,6 @@ Easy workaround is to move those nested classes away so they are top-level.
 
 ### Creating new public methods
 Hot-reload for new methods will only work with private methods (only called by changed code).
-
-### Adding new fields
-Adding new fields is not supported in play mode.
-You can however simply create local variable and later quickly refactor that out.
-
-eg. for a simple class that moves position by some vector on every update
-
-*Initial class before play mode entered*
-```
-public class SimpleTransformMover: MonoBehaviour {
-   void Update() {
-        transform.position += new Vector3(1, 0, 0);
-    }
-}
-```
-
-*Changes in playmode*
-```
-public class SimpleTransformMover: MonoBehaviour {
-   //public Vector3 _moveBy = new Vector3(1, 0, 0); //1) do not introduce fields in play mode
-    
-   void Update() {
-        var _moveBy = new Vector3(1, 0, 0); //2) instead declare variable in method scope 
-        // (optionally with instance scope name-convention)
-   
-        // transform.position += new Vector3(1, 0, 0); //original code - now will use variable
-        transform.position += _moveBy; //3) changed code - uses local variable
-        
-        4) iterate as needed and after play mode simply refactor added variables as fields
-    }
-}
-```
-
-*Tool will show error if you try to add/remove fields and won't perform Hot-Reload.*
 
 ### Adding new references
 When you're trying to reference new code in play-mode session that'll fail if assembly is not yet referencing that (most often happens when using AsmDefs that are not yet referencing each other)
