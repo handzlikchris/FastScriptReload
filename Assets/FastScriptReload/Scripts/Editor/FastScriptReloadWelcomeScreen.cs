@@ -212,6 +212,13 @@ includeSubdirectories - whether child directories should be watched as well
                 {
                     new ChangeMainViewButton("New Fields", (screen) =>
                     {
+#if LiveScriptReload_Enabled
+                        EditorGUILayout.HelpBox(
+                            @"On Device Reload (in running build) - Not Supported
+If you enable - new fields WILL show in editor and work as expected but link with the device will be broken and changes won't be visible there!", MessageType.Error, );
+                        GUILayout.Space(10);
+#endif
+                        
                         EditorGUILayout.HelpBox(
                             @"Adding new fields is still in experimental mode, it will have issues. 
 
@@ -233,13 +240,6 @@ They render using very simple drawer, if you have custom editors those will not 
 - outside classes can not call new fields added at runtime
 - new fields will only show in editor if they were already used at least once", MessageType.Info);
                         GUILayout.Space(10);
-                        
-#if LiveScriptReload_Enabled
-                        EditorGUILayout.HelpBox(
-                            @"On Device Reload (in running build) - Not Supported
-If you enable - new fields WILL show in editor and work as expected but link with the device will be broken and changes won't be visible there!", MessageType.Error);
-                        GUILayout.Space(10);
-#endif
 
                         using (LayoutHelper.LabelWidth(250))
                         {
