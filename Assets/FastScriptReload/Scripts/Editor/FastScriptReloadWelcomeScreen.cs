@@ -246,6 +246,13 @@ They render using very simple drawer, if you have custom editors those will not 
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalAddedFieldsSupport);
                         }
                         GUILayout.Space(10);
+
+                        if (Application.isPlaying)
+                        {
+                            EditorGUILayout.HelpBox(@"You're in playmode, for option to start working you need to restart playmode.", MessageType.Warning);
+                        }
+
+                        GUILayout.Space(10);
                     })
                 }),
                 new GuiSection("Launch Demo", new List<ClickableElement>
@@ -389,7 +396,7 @@ They render using very simple drawer, if you have custom editors those will not 
         );
         
         public static readonly ToggleProjectEditorPreferenceDefinition EnableExperimentalAddedFieldsSupport = new ToggleProjectEditorPreferenceDefinition(
-            "Enable experimental added field support", "EnableExperimentalAddedFieldsSupport", false,
+            "(Experimental) Enable added field support", "EnableExperimentalAddedFieldsSupport", false,
             (object newValue, object oldValue) =>
             {
                 FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.EnableExperimentalAddedFieldsSupport = (bool)newValue;
