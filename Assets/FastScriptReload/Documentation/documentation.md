@@ -517,4 +517,5 @@ To fix please go to `FastScripReload\Examples\Point\Point.prefab` and search for
 ## Roadmap
 - ~~add Mac/Linux support~~ (added with 1.1)
 - ~~add debugger support for hot-reloaded scripts~~ (added with 1.2)
+- ~~allow to add new fields (adjustable in Editor)~~ (added with 1.3)
 - better compiler support to work around limitations
