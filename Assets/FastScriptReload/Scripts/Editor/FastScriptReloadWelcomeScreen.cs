@@ -230,9 +230,7 @@ When you encounter them please get in touch (via any support links above) and I'
 
 Once you exit playmode and do a full recompile they'll turn to standard fields as you'd expect.
 
-New fields will also show in editor - you can tweak them as normal variables. 
-
-They render using very simple drawer, if you have custom editors those will not be used until full recompile.", MessageType.Warning);
+New fields will also show in editor - you can tweak them as normal variables.", MessageType.Warning);
                         GUILayout.Space(10);
                         
                         EditorGUILayout.HelpBox(
