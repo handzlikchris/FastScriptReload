@@ -215,7 +215,7 @@ includeSubdirectories - whether child directories should be watched as well
 #if LiveScriptReload_Enabled
                         EditorGUILayout.HelpBox(
                             @"On Device Reload (in running build) - Not Supported
-If you enable - new fields WILL show in editor and work as expected but link with the device will be broken and changes won't be visible there!", MessageType.Error, );
+If you enable - new fields WILL show in editor and work as expected but link with the device will be broken and changes won't be visible there!", MessageType.Error);
                         GUILayout.Space(10);
 #endif
                         
