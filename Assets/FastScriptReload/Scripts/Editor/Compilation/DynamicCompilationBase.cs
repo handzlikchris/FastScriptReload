@@ -108,6 +108,13 @@ namespace FastScriptReload.Editor.Compilation
                             return newFields.Select(fD => fD.FieldName).ToList();
                         }
                     );
+
+#if LiveScriptReload_Enabled
+                    if (typeToNewFieldDeclarations.Any(kv => kv.Value.Any()))
+                    {
+                        LoggerScoped.LogWarning($"{nameof(FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.EnableExperimentalAddedFieldsSupport)} is enabled. This is not supported in running build. Quite likely it'll crash remote client.");
+                    }
+#endif
                 }
 
 
