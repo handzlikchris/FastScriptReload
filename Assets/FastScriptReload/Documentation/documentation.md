@@ -133,6 +133,12 @@ This is to ensure there are no issues as that is generally not supported.
 
 Some assets however will use IL weaving to adjust your classes (eg Mirror) as a post compile step. In that case it's quite likely hot-reload will still work.
 
+### Managing reference exclusions
+Asset will reference all .dll files that original code is referencing. In some cases that causes compilation error (eg 'Type XYZ is defined in both assembly a.dll and b.dll). 
+You can use those options to exclude specific references from being added.
+
+> 'Start Screen -> Exclude References (Advanced) -> adjust as needed'.
+
 ## EXPERIMENTAL Adding New Fields
 Asset has an experimental support for adding new fields at runtime which will also render in Editor and allow you to tweak values - same as with normal fields.
 
