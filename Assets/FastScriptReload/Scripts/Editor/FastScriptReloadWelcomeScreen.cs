@@ -187,25 +187,6 @@ BREAKPOINTS IN ORIGINAL FILE WON'T BE HIT!", MessageType.Error);
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.LogHowToFixMessageOnCompilationError);
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.StopShowingAutoReloadEnabledDialogBox);
                         }
-                    }),
-                    new ChangeMainViewButton("File Watcher\r\n(Advanced Setup)", (screen) => 
-                    {
-                        EditorGUILayout.HelpBox(
-$@"Asset watches .cs files for changes. Unfortunately Unity's FileWatcher 
-implementation has some performance issues.
-
-By default all project directories can be watched, you can adjust that here.
-
-path - which directory to watch
-filter - narrow down files to match filter, eg all *.cs files (*.cs)
-includeSubdirectories - whether child directories should be watched as well
-
-{FastScriptReloadManager.FileWatcherReplacementTokenForApplicationDataPath} - you can use that token and it'll be replaced with your /Assets folder"
-, MessageType.Info);
-                        
-                        EditorGUILayout.HelpBox("Recompile after making changes for file watchers to re-load.", MessageType.Warning);
-                        
-                        ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.FileWatcherSetupEntries);
                     })
                 }.Concat(additionalSections).ToList()),
                 new GuiSection("Experimental", new List<ClickableElement>
@@ -251,6 +232,38 @@ New fields will also show in editor - you can tweak them as normal variables.", 
                         }
 
                         GUILayout.Space(10);
+                    })
+                }),
+                new GuiSection("Advanced", new List<ClickableElement>
+                {
+                    new ChangeMainViewButton("File Watchers", (screen) => 
+                    {
+                        EditorGUILayout.HelpBox(
+                            $@"Asset watches .cs files for changes. Unfortunately Unity's FileWatcher 
+implementation has some performance issues.
+
+By default all project directories can be watched, you can adjust that here.
+
+path - which directory to watch
+filter - narrow down files to match filter, eg all *.cs files (*.cs)
+includeSubdirectories - whether child directories should be watched as well
+
+{FastScriptReloadManager.FileWatcherReplacementTokenForApplicationDataPath} - you can use that token and it'll be replaced with your /Assets folder"
+                            , MessageType.Info);
+                        
+                        EditorGUILayout.HelpBox("Recompile after making changes for file watchers to re-load.", MessageType.Warning);
+                        
+                        ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.FileWatcherSetupEntries);
+                    }),
+                    new ChangeMainViewButton("Exclude References", (screen) =>
+                    {
+                        EditorGUILayout.HelpBox(
+                            $@"Asset pulls in all the references from changed assembly. If you're encountering some compilation errors relating to those - please use list below to exclude specific ones."
+                            , MessageType.Info);
+                        
+                        EditorGUILayout.HelpBox($@"By default asset removes ExCSS.Unity as it collides with the Tuple type. If you need that library in changed code - please remove from the list", MessageType.Warning);
+                         
+                        ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.ReferencesExcludedFromHotReload);
                     })
                 }),
                 new GuiSection("Launch Demo", new List<ClickableElement>
@@ -356,6 +369,19 @@ New fields will also show in editor - you can tweak them as normal variables.", 
         public static readonly StringListProjectEditorPreferenceDefinition FilesExcludedFromHotReload = new StringListProjectEditorPreferenceDefinition(
             "Files excluded from Hot-Reload", "FilesExcludedFromHotReload", new List<string> {}, isReadonly: true);
         
+        public static readonly StringListProjectEditorPreferenceDefinition ReferencesExcludedFromHotReload = new StringListProjectEditorPreferenceDefinition(
+            "References to exclude from Hot-Reload", "ReferencesExcludedFromHotReload", new List<string>
+            {
+                "ExCSS.Unity.dll"
+            }, (newValue, oldValue) =>
+            {
+                DynamicCompilationBase.ReferencesExcludedFromHotReload = (List<string>)newValue;
+            },
+            (value) =>
+            {
+                DynamicCompilationBase.ReferencesExcludedFromHotReload = (List<string>)value;
+            });
+        
         public static readonly ToggleProjectEditorPreferenceDefinition LogHowToFixMessageOnCompilationError = new ToggleProjectEditorPreferenceDefinition(
             "Log how to fix message on compilation error", "LogHowToFixMessageOnCompilationError", true, (object newValue, object oldValue) =>
             {
@@ -451,7 +477,8 @@ New fields will also show in editor - you can tweak them as normal variables.", 
             IsDidFieldsOrPropertyCountChangedCheckDisabled,
             FileWatcherSetupEntries,
             IsAutoOpenGeneratedSourceFileOnChangeEnabled,
-            EnableExperimentalAddedFieldsSupport
+            EnableExperimentalAddedFieldsSupport,
+            ReferencesExcludedFromHotReload
         };
 
         private static bool PrefsLoaded = false;
@@ -518,6 +545,7 @@ New fields will also show in editor - you can tweak them as normal variables.", 
             EnsureUserAwareOfAutoRefresh();
 
             DynamicCompilationBase.LogHowToFixMessageOnCompilationError = (bool)FastScriptReloadPreference.LogHowToFixMessageOnCompilationError.GetEditorPersistedValueOrDefault();
+            DynamicCompilationBase.ReferencesExcludedFromHotReload = (List<string>)FastScriptReloadPreference.ReferencesExcludedFromHotReload.GetElements();
             FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.UpdateValues(
                 (bool)FastScriptReloadPreference.IsDidFieldsOrPropertyCountChangedCheckDisabled.GetEditorPersistedValueOrDefault(),
                 (bool)FastScriptReloadPreference.EnableExperimentalAddedFieldsSupport.GetEditorPersistedValueOrDefault()

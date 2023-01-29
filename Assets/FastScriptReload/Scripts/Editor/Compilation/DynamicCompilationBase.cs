@@ -19,6 +19,7 @@ namespace FastScriptReload.Editor.Compilation
     {
 	    public static bool LogHowToFixMessageOnCompilationError;
 	    public static bool EnableExperimentalThisCallLimitationFix;
+        public static List<string> ReferencesExcludedFromHotReload = new List<string>();
 
 	    public const string DebuggingInformationComment = 
 @"// DEBUGGING READ-ME 
@@ -181,6 +182,8 @@ namespace FastScriptReload.Editor.Compilation
                     LoggerScoped.LogDebug($"Unable to add a reference to assembly as unable to get location or null: {assembly.FullName} when hot-reloading, this is likely dynamic assembly and won't cause issues");
                 }
             }
+            
+            referencesToAdd = referencesToAdd.Where(r => !ReferencesExcludedFromHotReload.Any(rTe => r.EndsWith(rTe))).ToList();
 
             if (EnableExperimentalThisCallLimitationFix || FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.EnableExperimentalAddedFieldsSupport)
             {
