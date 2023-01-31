@@ -35,8 +35,22 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 
 	        private static SyntaxNode AdjustCtorNameForTypeAdjustment(ConstructorDeclarationSyntax node)
 	        {
-		        var typeName = (node.Ancestors().First(n => n is TypeDeclarationSyntax) as TypeDeclarationSyntax).Identifier
-			        .ToString();
+		        var typeName = (node.Ancestors().First(n => n is TypeDeclarationSyntax) as TypeDeclarationSyntax).Identifier.ToString();
+		        if (!node.Identifier.ToFullString().Contains(typeName))
+		        {
+			        //Used Roslyn version bug, methods are also interpreted as ctors, eg
+			        // public static void Method()
+			        // {
+			        //    Bar(); //treated as Ctor declaration...
+			        // }
+			        //
+			        // private static void Bar() 
+			        // {
+			        //  
+			        // }
+			        return node;
+		        }
+		        
 		        if (!typeName.EndsWith(AssemblyChangesLoader.ClassnamePatchedPostfix))
 		        {
 			        typeName += AssemblyChangesLoader.ClassnamePatchedPostfix;
