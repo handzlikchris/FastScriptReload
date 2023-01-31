@@ -1,28 +1,46 @@
 using System.Collections;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
 public class AsyncTester : MonoBehaviour
 {
+    private string TestNewField1;
+    private string TestProp { get; set; } 
+    
     // Start is called before the first frame update
     async Task Start()
     {
-        await LogMessage();
+        LogMessage();
+        StartCoroutine(TestCor());
     }
 
-    async Task LogMessage()
+    void Update()
     {
-        while(true)
-        {
-            Debug.Log("Async changes 12311");
+        // LogMessage();
+    }
 
-            await Task.Delay(1000);
-        
-            Debug.Log("Async after delay 12311");
+    async void LogMessage()
+    {
 
-            await Task.Yield();
-        }
+        Debug.Log("Async changes - changed"); 
 
+        await Task.Delay(1000);
+    
+        Debug.Log("Async after delay 12311");
+
+        await Task.Yield();
+    }
+
+    void OnScriptHotReload()
+    {
+        LogMessage();
+        StartCoroutine(TestCor());
+    }
+
+    IEnumerator TestCor()
+    {
+        Debug.Log("Coroutine - changed");
+        yield return new WaitForSeconds(1);
+        Debug.Log("Coroutine after wait");
     }
 }
