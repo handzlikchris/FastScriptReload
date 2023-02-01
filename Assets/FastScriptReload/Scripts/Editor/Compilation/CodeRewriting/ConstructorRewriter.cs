@@ -38,7 +38,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 		        var typeName = (node.Ancestors().First(n => n is TypeDeclarationSyntax) as TypeDeclarationSyntax).Identifier.ToString();
 		        if (!node.Identifier.ToFullString().Contains(typeName))
 		        {
-			        //Used Roslyn version bug, methods are also interpreted as ctors, eg
+			        //Used Roslyn version bug, some static methods are also interpreted as ctors, eg
 			        // public static void Method()
 			        // {
 			        //    Bar(); //treated as Ctor declaration...
