@@ -22,7 +22,7 @@ public class AsyncTester : MonoBehaviour
     async void LogMessage()
     {
 
-        Debug.Log("Async changes - changed"); 
+        Debug.Log("Async changes - changed1"); 
 
         await Task.Delay(1000);
     
@@ -39,7 +39,7 @@ public class AsyncTester : MonoBehaviour
 
     IEnumerator TestCor()
     {
-        Debug.Log("Coroutine - changed");
+        Debug.Log("Coroutine - changed1");
         yield return new WaitForSeconds(1);
         Debug.Log("Coroutine after wait");
     }
