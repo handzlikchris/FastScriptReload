@@ -25,7 +25,7 @@ public class McsExeDynamicCompilation : DynamicCompilationBase
         var referencePathCharLenght = referencesToAdd.Sum(r => r.Length);
         if (referencePathCharLenght > ReferenceLenghtCountWarningThreshold)
         {
-            Debug.LogWarning(
+            LoggerScoped.LogWarning(
                 "Windows can accept up to 32767 chars as args, then it starts throwing exceptions. Dynamic compilation will use MCS.exe and will add references via command /r:<full path>, " +
                 $"currently your assembly have {referencesToAdd.Count} references which full paths amount to: {referencePathCharLenght} chars." +
                 $"\r\nIf you see this warning likely compilation will fail, you can:" +

@@ -49,7 +49,7 @@ namespace FastScriptReload.Editor
             if (!_isEditorModeHotReloadEnabled && _lastPlayModeStateChange != PlayModeStateChange.EnteredPlayMode)
             {
 #if ImmersiveVrTools_DebugEnabled
-            Debug.Log($"Application not playing, change to: {e.Name} won't be compiled and hot reloaded");
+            LoggerScoped.Log($"Application not playing, change to: {e.Name} won't be compiled and hot reloaded");
 #endif
                 return;
             }
@@ -57,7 +57,7 @@ namespace FastScriptReload.Editor
             var filePathToUse = e.FullPath;
             if (!File.Exists(filePathToUse))
             {
-                Debug.LogWarning(@"Fast Script Reload - Unity File Path Bug - Warning!
+                LoggerScoped.LogWarning(@"Fast Script Reload - Unity File Path Bug - Warning!
 Path for changed file passed by Unity does not exist. This is a known editor bug, more info: https://issuetracker.unity3d.com/issues/filesystemwatcher-returns-bad-file-path
                     
 Best course of action is to update editor as issue is already fixed in newer (minor and major) versions.
@@ -73,24 +73,24 @@ Workaround will search in all folders (under project root) and will use first fo
                 var fileFoundInAssets = Directory.GetFiles(DataPath, changedFileName, SearchOption.AllDirectories);
                 if (fileFoundInAssets.Length == 0)
                 {
-                    Debug.LogError($"FileWatcherBugWorkaround: Unable to find file '{changedFileName}', changes will not be reloaded. Please update unity editor.");
+                    LoggerScoped.LogError($"FileWatcherBugWorkaround: Unable to find file '{changedFileName}', changes will not be reloaded. Please update unity editor.");
                     return;
                 }
                 else if(fileFoundInAssets.Length  == 1)
                 {
-                    Debug.Log($"FileWatcherBugWorkaround: Original Unity passed file path: '{e.FullPath}' adjusted to found: '{fileFoundInAssets[0]}'");
+                    LoggerScoped.Log($"FileWatcherBugWorkaround: Original Unity passed file path: '{e.FullPath}' adjusted to found: '{fileFoundInAssets[0]}'");
                     filePathToUse = fileFoundInAssets[0];
                 }
                 else
                 {
-                    Debug.LogWarning($"FileWatcherBugWorkaround: Multiple files found. Original Unity passed file path: '{e.FullPath}' adjusted to found: '{fileFoundInAssets[0]}'");
+                    LoggerScoped.LogWarning($"FileWatcherBugWorkaround: Multiple files found. Original Unity passed file path: '{e.FullPath}' adjusted to found: '{fileFoundInAssets[0]}'");
                     filePathToUse = fileFoundInAssets[0];
                 }
             }
 
             if (_currentFileExclusions != null && _currentFileExclusions.Any(fp => filePathToUse.Replace("\\", "/").EndsWith(fp)))
             {
-                Debug.LogWarning($"FastScriptReload: File: '{filePathToUse}' changed, but marked as exclusion. Hot-Reload will not be performed. You can manage exclusions via" +
+                LoggerScoped.LogWarning($"FastScriptReload: File: '{filePathToUse}' changed, but marked as exclusion. Hot-Reload will not be performed. You can manage exclusions via" +
                                  $"\r\nRight click context menu (Fast Script Reload > Add / Remove Hot-Reload exclusion)" +
                                  $"\r\nor via Window -> Fast Script Reload -> Start Screen -> Exclusion menu");
             
@@ -103,7 +103,7 @@ Workaround will search in all folders (under project root) and will use first fo
                           && (DateTime.UtcNow - f.FileChangedOn).TotalMilliseconds < msThresholdToConsiderSameChangeFromDifferentFileWatchers);
             if (isDuplicatedChangesComingFromDifferentFileWatcher)
             {
-                Debug.LogWarning($"FastScriptReload: Looks like change to: {filePathToUse} have already been added for processing. This can happen if you have multiple file watchers set in a way that they overlap.");
+                LoggerScoped.LogWarning($"FastScriptReload: Looks like change to: {filePathToUse} have already been added for processing. This can happen if you have multiple file watchers set in a way that they overlap.");
                 return;
             }
 
@@ -121,7 +121,7 @@ Workaround will search in all folders (under project root) and will use first fo
 
             if (!directoryInfo.Exists)
             {
-                Debug.LogWarning($"FastScriptReload: Directory: '{directoryPath}' does not exist, make sure file-watcher setup is correct. You can access via: Window -> Fast Script Reload -> File Watcher (Advanced Setup)");
+                LoggerScoped.LogWarning($"FastScriptReload: Directory: '{directoryPath}' does not exist, make sure file-watcher setup is correct. You can access via: Window -> Fast Script Reload -> File Watcher (Advanced Setup)");
             }
             
             var fileWatcher = new FileSystemWatcher();
@@ -328,7 +328,7 @@ Workaround will search in all folders (under project root) and will use first fo
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogError($"Error when updating files: '{(sourceCodeFilesWithUniqueChangesAwaitingHotReload != null ? string.Join(",", sourceCodeFilesWithUniqueChangesAwaitingHotReload.Select(fn => new FileInfo(fn).Name)) : "unknown")}', {ex}");
+                        LoggerScoped.LogError($"Error when updating files: '{(sourceCodeFilesWithUniqueChangesAwaitingHotReload != null ? string.Join(",", sourceCodeFilesWithUniqueChangesAwaitingHotReload.Select(fn => new FileInfo(fn).Name)) : "unknown")}', {ex}");
                     }
                 });
             }
@@ -353,7 +353,7 @@ Workaround will search in all folders (under project root) and will use first fo
                 var fileWatcherSetupEntries = FastScriptReloadPreference.FileWatcherSetupEntries.GetElementsTyped();
                 if (fileWatcherSetupEntries.Count == 0)
                 {
-                    Debug.LogWarning($"FastScriptReload: There are no file watcher setup entries. Tool will not be able to pick changes automatically");
+                    LoggerScoped.LogWarning($"FastScriptReload: There are no file watcher setup entries. Tool will not be able to pick changes automatically");
                 }
                 
                 foreach (var fileWatcherSetupEntry in fileWatcherSetupEntries)

@@ -8,6 +8,7 @@ using ImmersiveVRTools.Editor.Common.WelcomeScreen;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen.GuiElements;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen.PreferenceDefinition;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen.Utilities;
+using ImmersiveVrToolsCommon.Runtime.Logging;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -498,7 +499,7 @@ includeSubdirectories - whether child directories should be watched as well
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"Shader does not exist: {ex.Message}");
+                LoggerScoped.LogWarning($"Shader does not exist: {ex.Message}");
             }
         }
 
@@ -593,7 +594,7 @@ includeSubdirectories - whether child directories should be watched as well
             var autoRefreshMode = (AssetPipelineAutoRefreshMode)EditorPrefs.GetInt("kAutoRefreshMode", EditorPrefs.GetBool("kAutoRefresh") ? 1 : 0);
             if (autoRefreshMode == AssetPipelineAutoRefreshMode.Enabled)
             {
-                Debug.LogWarning("Fast Script Reload - asset auto refresh enabled - full reload will be triggered unless editor preference adjusted - see documentation for more details.");
+                LoggerScoped.LogWarning("Fast Script Reload - asset auto refresh enabled - full reload will be triggered unless editor preference adjusted - see documentation for more details.");
 
                 if (!(bool)FastScriptReloadPreference.StopShowingAutoReloadEnabledDialogBox.GetEditorPersistedValueOrDefault())
                 {
@@ -631,7 +632,7 @@ includeSubdirectories - whether child directories should be watched as well
                             break;
 
                         default:
-                            Debug.LogError("Unrecognized option.");
+                            LoggerScoped.LogError("Unrecognized option.");
                             break;
                     }
                 }

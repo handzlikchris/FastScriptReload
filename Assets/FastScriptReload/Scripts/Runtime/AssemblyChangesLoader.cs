@@ -80,7 +80,7 @@ namespace FastScriptReload.Runtime
                     if (createdType.GetCustomAttribute<PreventHotReload>() != null)
                     {
                         //TODO: ideally type would be excluded from compilation not just from detour
-                        Debug.Log($"Type: {createdType.Name} marked as {nameof(PreventHotReload)} - ignoring change.");
+                        LoggerScoped.Log($"Type: {createdType.Name} marked as {nameof(PreventHotReload)} - ignoring change.");
                         continue;
                     }
                     
@@ -108,25 +108,23 @@ namespace FastScriptReload.Runtime
                             {
                                 if (matchingMethodInExistingType.IsGenericMethod)
                                 {
-                                    Debug.LogWarning($"Method: '{matchingMethodInExistingType.FullDescription()}' is generic. Hot-Reload for generic methods is not supported yet, you won't see changes for that method.");
+                                    LoggerScoped.LogWarning($"Method: '{matchingMethodInExistingType.FullDescription()}' is generic. Hot-Reload for generic methods is not supported yet, you won't see changes for that method.");
                                     continue;
                                 }
 
                                 if (matchingMethodInExistingType.DeclaringType != null && matchingMethodInExistingType.DeclaringType.IsGenericType)
                                 {
-                                    Debug.LogWarning($"Type for method: '{matchingMethodInExistingType.FullDescription()}' is generic. Hot-Reload for generic types is not supported yet, you won't see changes for that type.");
+                                    LoggerScoped.LogWarning($"Type for method: '{matchingMethodInExistingType.FullDescription()}' is generic. Hot-Reload for generic types is not supported yet, you won't see changes for that type.");
                                     continue;
                                 }
-                                
-#if ImmersiveVrTools_DebugEnabled
-                                Debug.Log($"Trying to detour method, from: '{matchingMethodInExistingType.FullDescription()}' to: '{createdTypeMethodToUpdate.FullDescription()}'");
-#endif
+
+                                LoggerScoped.LogDebug($"Trying to detour method, from: '{matchingMethodInExistingType.FullDescription()}' to: '{createdTypeMethodToUpdate.FullDescription()}'");
                                 DetourCrashHandler.LogDetour(matchingMethodInExistingType.ResolveFullName());
                                 Memory.DetourMethod(matchingMethodInExistingType, createdTypeMethodToUpdate);
                             }
-                            else
+                            else 
                             {
-                                Debug.LogWarning($"Method: {createdTypeMethodToUpdate.FullDescription()} does not exist in initially compiled type: {matchingTypeInExistingAssemblies.FullName}. " +
+                                LoggerScoped.LogWarning($"Method: {createdTypeMethodToUpdate.FullDescription()} does not exist in initially compiled type: {matchingTypeInExistingAssemblies.FullName}. " +
                                                  $"Adding new methods at runtime is not fully supported. \r\n" +
                                                  $"It'll only work new method is only used by declaring class (eg private method)\r\n" +
                                                  $"Make sure to add method before initial compilation.");
@@ -138,13 +136,13 @@ namespace FastScriptReload.Runtime
                     }
                     else
                     {
-                        Debug.LogWarning($"FSR: Unable to find existing type for: '{createdType.FullName}', this is not an issue if you added new type. <color=orange>If it's an existing type please do a full domain-reload - one of optimisations is to cache existing types for later lookup on first call.</color>");
+                        LoggerScoped.LogWarning($"FSR: Unable to find existing type for: '{createdType.FullName}', this is not an issue if you added new type. <color=orange>If it's an existing type please do a full domain-reload - one of optimisations is to cache existing types for later lookup on first call.</color>");
                         FindAndExecuteStaticOnScriptHotReloadNoInstance(createdType);
                         FindAndExecuteOnScriptHotReload(createdType);
                     }
                 }
                 
-                Debug.Log($"Hot-reload completed (took {sw.ElapsedMilliseconds}ms)");
+                LoggerScoped.Log($"Hot-reload completed (took {sw.ElapsedMilliseconds}ms)");
             }
             finally
             {
@@ -164,10 +162,10 @@ namespace FastScriptReload.Runtime
             if (createdTypeFieldAndProperties.Count != matchingTypeFieldAndProperties.Count)
             {
                 var addedMemberNames = createdTypeFieldAndProperties.Select(m => m.Name).Except(matchingTypeFieldAndProperties.Select(m => m.Name)).ToList();
-                Debug.LogError($"It seems you've added/removed field to changed script. This is not supported and will result in undefined behaviour. Hot-reload will not be performed for type: {matchingTypeInExistingAssemblies.Name}" +
+                LoggerScoped.LogError($"It seems you've added/removed field to changed script. This is not supported and will result in undefined behaviour. Hot-reload will not be performed for type: {matchingTypeInExistingAssemblies.Name}" +
                                $"\r\n\r\nYou can skip the check and force reload anyway if needed, to do so go to: 'Window -> Fast Script Reload -> Start Screen -> Reload -> tick 'Disable added/removed fields check'" +
                                (addedMemberNames.Any() ? $"\r\nAdded: {string.Join(", ", addedMemberNames)}" : ""));
-                Debug.Log(
+                LoggerScoped.Log(
                     $"<color=orange>There's an experimental feature that allows to add new fields (which are adjustable in editor), to enable please:</color>" +
                     $"\r\n - Open Settings 'Window -> Fast Script Reload -> Start Screen -> New Fields -> tick 'Enable experimental added field support'");
                 return true;
