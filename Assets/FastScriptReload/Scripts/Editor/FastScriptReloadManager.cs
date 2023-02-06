@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,7 +7,6 @@ using System.Threading.Tasks;
 using FastScriptReload.Editor.Compilation;
 using FastScriptReload.Runtime;
 using ImmersiveVRTools.Runtime.Common;
-using ImmersiveVrToolsCommon.Runtime.Logging;
 using UnityEditor;
 using UnityEngine;
 
@@ -37,12 +35,12 @@ namespace FastScriptReload.Editor
         private List<DynamicFileHotReloadState> _dynamicFileHotReloadStateEntries = new List<DynamicFileHotReloadState>();
 
         private DateTime _lastTimeChangeBatchRun = default(DateTime);
-        private bool _executeOnlyInPlaymode = true; //TODO: potentially later add editor support - needed?
         private bool _assemblyChangesLoaderResolverResolutionAlreadyCalled;
-        
+        private bool _isEditorModeHotReloadEnabled;
+
         private void OnWatchedFileChange(object source, FileSystemEventArgs e)
         {
-            if (_lastPlayModeStateChange != PlayModeStateChange.EnteredPlayMode)
+            if (!_isEditorModeHotReloadEnabled && _lastPlayModeStateChange != PlayModeStateChange.EnteredPlayMode)
             {
 #if ImmersiveVrTools_DebugEnabled
             Debug.Log($"Application not playing, change to: {e.Name} won't be compiled and hot reloaded");
@@ -196,11 +194,30 @@ Workaround will search in all folders (under project root) and will use first fo
 
         private void Update()
         {
-            if (_executeOnlyInPlaymode && !EditorApplication.isPlaying)
+            _isEditorModeHotReloadEnabled = (bool)FastScriptReloadPreference.EnableExperimentalEditorHotReloadSupport.GetEditorPersistedValueOrDefault();
+            if (_lastPlayModeStateChange == PlayModeStateChange.ExitingPlayMode && Instance._fileWatchers.Any())
+            {
+                foreach (var fileWatcher in Instance._fileWatchers)
+                {
+                    fileWatcher.Dispose();
+                }
+                Instance._fileWatchers.Clear();
+            }
+            
+            if (!_isEditorModeHotReloadEnabled  && !EditorApplication.isPlaying)
             {
                 return;
             }
 
+            if (_isEditorModeHotReloadEnabled)
+            {
+                EnsureInitialized();
+            }
+            else if (_lastPlayModeStateChange == PlayModeStateChange.EnteredPlayMode)
+            {
+                EnsureInitialized();
+            }
+            
             AssignConfigValuesThatCanNotBeAccessedOutsideOfMainThread();
 
             if (!_assemblyChangesLoaderResolverResolutionAlreadyCalled)
@@ -300,27 +317,12 @@ Workaround will search in all folders (under project root) and will use first fo
         private void OnEditorApplicationOnplayModeStateChanged(PlayModeStateChange obj)
         {
             Instance._lastPlayModeStateChange = obj;
-
-            if (obj == PlayModeStateChange.ExitingPlayMode && Instance._fileWatchers.Any())
-            {
-                foreach (var fileWatcher in Instance._fileWatchers)
-                {
-                    fileWatcher.Dispose();
-                }
-                Instance._fileWatchers.Clear();
-            }
-
-            if (obj == PlayModeStateChange.EnteredPlayMode)
-            {
-                Init();
-            }
         }
 
-        private static void Init()
+        private static void EnsureInitialized()
         {
             if (!(bool)FastScriptReloadPreference.EnableAutoReloadForChangedFiles.GetEditorPersistedValueOrDefault())
             {
-                LoggerScoped.LogDebug("Hot reload disabled, file watchers will not be initialized.");
                 return;
             }
             

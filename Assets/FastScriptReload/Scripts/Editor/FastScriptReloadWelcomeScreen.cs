@@ -232,6 +232,35 @@ New fields will also show in editor - you can tweak them as normal variables.", 
                         }
 
                         GUILayout.Space(10);
+                    }),
+                    new ChangeMainViewButton("Editor Hot-Reload", (screen) =>
+                    {
+                        EditorGUILayout.HelpBox(@"Currently asset hot-reloads only in play-mode, you can enable experimental editor mode support here.
+
+Please make sure to read limitation section as not all changes can be performed, where possible asset will detect those changes and offer full reload instead:
+- new fields / methods can not be accessed from outside of changed file
+- you can not change methods signature
+
+TODO: add more
+", MessageType.Warning);
+                        GUILayout.Space(10);
+                        
+                        using (LayoutHelper.LabelWidth(250))
+                        {
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalEditorHotReloadSupport);
+                        }
+                        
+                        GUILayout.Space(10);
+                        
+                        EditorGUILayout.HelpBox(@"Tool will automatically trigger full domain reload after number of hot-reloads specified below has been reached. 
+This is to ensure dynamically created and loaded assembles are cleared out properly", MessageType.Info);
+                        GUILayout.Space(10);
+                        
+                        using (LayoutHelper.LabelWidth(250))
+                        {
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.TriggerDomainReloadIfOverNDynamicallyLoadedAssembles);
+                        }
+                        GUILayout.Space(10);
                     })
                 }),
                 new GuiSection("Advanced", new List<ClickableElement>
@@ -429,6 +458,12 @@ includeSubdirectories - whether child directories should be watched as well
             {
                 FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.EnableExperimentalAddedFieldsSupport = (bool)value;
             });
+        
+        public static readonly ToggleProjectEditorPreferenceDefinition EnableExperimentalEditorHotReloadSupport = new ToggleProjectEditorPreferenceDefinition(
+            "(Experimental) Enable hot reload in editor", "EnableExperimentalEditorHotReloadSupport", false);
+        
+        public static readonly IntProjectEditorPreferenceDefinition TriggerDomainReloadIfOverNDynamicallyLoadedAssembles = new IntProjectEditorPreferenceDefinition(
+            "Trigger full domain reload after N hot-reloads", "TriggerDomainReloadIfOverNDynamicallyLoadedAssembles", 100);
         
         public static void SetCommonMaterialsShader(ShadersMode newShaderModeValue)
         {
