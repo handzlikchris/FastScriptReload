@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 using FastScriptReload.Editor.Compilation;
 using FastScriptReload.Runtime;
 using ImmersiveVRTools.Runtime.Common;
+using ImmersiveVrToolsCommon.Runtime.Logging;
 using UnityEditor;
+using UnityEditor.Compilation;
 using UnityEngine;
 
 namespace FastScriptReload.Editor
@@ -29,14 +31,18 @@ namespace FastScriptReload.Editor
         private PlayModeStateChange _lastPlayModeStateChange;
         private List<FileSystemWatcher> _fileWatchers = new List<FileSystemWatcher>();
         private IEnumerable<string> _currentFileExclusions;
-        public bool EnableExperimentalThisCallLimitationFix { get; set; }
+        private int _triggerDomainReloadIfOverNDynamicallyLoadedAssembles = 100;
+        public bool EnableExperimentalThisCallLimitationFix { get; private set; }
+#pragma warning disable 0618
         public AssemblyChangesLoaderEditorOptionsNeededInBuild AssemblyChangesLoaderEditorOptionsNeededInBuild { get; private set; } = new AssemblyChangesLoaderEditorOptionsNeededInBuild();
+#pragma warning restore 0618
 
         private List<DynamicFileHotReloadState> _dynamicFileHotReloadStateEntries = new List<DynamicFileHotReloadState>();
 
         private DateTime _lastTimeChangeBatchRun = default(DateTime);
         private bool _assemblyChangesLoaderResolverResolutionAlreadyCalled;
         private bool _isEditorModeHotReloadEnabled;
+        private int _hotReloadPerformedCount = 0;
 
         private void OnWatchedFileChange(object source, FileSystemEventArgs e)
         {
@@ -237,6 +243,7 @@ Workaround will search in all folders (under project root) and will use first fo
         {
             //TODO: PERF: needed in file watcher but when run on non-main thread causes exception. 
             _currentFileExclusions = FastScriptReloadPreference.FilesExcludedFromHotReload.GetElements();
+            _triggerDomainReloadIfOverNDynamicallyLoadedAssembles = (int)FastScriptReloadPreference.TriggerDomainReloadIfOverNDynamicallyLoadedAssembles.GetEditorPersistedValueOrDefault();
             EnableExperimentalThisCallLimitationFix = (bool)FastScriptReloadPreference.EnableExperimentalThisCallLimitationFix.GetEditorPersistedValueOrDefault();
             AssemblyChangesLoaderEditorOptionsNeededInBuild.UpdateValues(
                 (bool)FastScriptReloadPreference.IsDidFieldsOrPropertyCountChangedCheckDisabled.GetEditorPersistedValueOrDefault(),
@@ -246,6 +253,19 @@ Workaround will search in all folders (under project root) and will use first fo
 
         public void TriggerReloadForChangedFiles()
         {
+            if (_hotReloadPerformedCount > _triggerDomainReloadIfOverNDynamicallyLoadedAssembles) 
+            {
+                LoggerScoped.LogWarning($"Dynamically created assembles reached over: {_triggerDomainReloadIfOverNDynamicallyLoadedAssembles} - triggering full domain reload to clean up. You can adjust that value in settings.");
+#if UNITY_2019_3_OR_NEWER
+                CompilationPipeline.RequestScriptCompilation(); //TODO: add some timer to ensure this does not go into some kind of loop
+#elif UNITY_2017_1_OR_NEWER
+                 var editorAssembly = Assembly.GetAssembly(typeof(Editor));
+                 var editorCompilationInterfaceType = editorAssembly.GetType("UnityEditor.Scripting.ScriptCompilation.EditorCompilationInterface");
+                 var dirtyAllScriptsMethod = editorCompilationInterfaceType.GetMethod("DirtyAllScripts", BindingFlags.Static | BindingFlags.Public);
+                 dirtyAllScriptsMethod.Invoke(editorCompilationInterfaceType, null);
+#endif
+            }
+            
             var assemblyChangesLoader = AssemblyChangesLoaderResolver.Instance.Resolve();
             var changesAwaitingHotReload = _dynamicFileHotReloadStateEntries
                 .Where(e => e.IsAwaitingCompilation)
@@ -281,6 +301,8 @@ Workaround will search in all folders (under project root) and will use first fo
                                 c.HotSwappedOn = DateTime.UtcNow;
                                 c.IsBeingProcessed = false;
                             }); //TODO: technically not all were hot swapped at same time
+
+                            _hotReloadPerformedCount++;
                         }
                         else
                         {

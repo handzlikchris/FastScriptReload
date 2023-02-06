@@ -9,7 +9,7 @@ public class RecompileTest : MonoBehaviour
     [MenuItem("DEBUG/TestRecompile #F1")]
     static void TestRecompile_Remove()  //TODO: remove 
     {
-        FastScriptReloadManager.Instance.EnableExperimentalThisCallLimitationFix = true;
+        // FastScriptReloadManager.Instance.EnableExperimentalThisCallLimitationFix = true;
         var result = DynamicAssemblyCompiler.Compile(new List<string>()
         {
         //     @"E:\_src-unity\FastScriptReload\Assets\Scripts\CompilationTestClass.cs",
