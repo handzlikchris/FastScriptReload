@@ -603,7 +603,7 @@ includeSubdirectories - whether child directories should be watched as well
                         $"\n\nThis means any change made in playmode will likely trigger full recompile." +
                         $"\r\n\r\nIt's an editor setting and can be adjusted at any time via Edit -> Preferences -> Asset Pipeline -> Auto Refresh" +
                         $"\r\n\r\nI can also adjust that for you now - that means you'll need to manually load changes (outside of playmode) via Assets -> Refresh (CTRL + R)." +
-                        $"\r\n\r\nIn some editor versions you can also set script compilation to happen only outside of playmode. " +
+                        $"\r\n\r\nIn some editor versions you can also set script compilation to happen outside of playmode and don't have to manually refresh. " +
                         $"\r\n\r\nDepending on version you'll find it via: " +
                         $"\r\n1) Edit -> Preferences -> General -> Script Changes While Playing -> Recompile After Finished Playing." +
                         $"\r\n2) Edit -> Preferences -> Asset Pipeline -> Auto Refresh -> Enabled Outside Playmode",
