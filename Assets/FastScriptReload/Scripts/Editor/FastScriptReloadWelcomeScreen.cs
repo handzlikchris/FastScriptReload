@@ -460,7 +460,7 @@ includeSubdirectories - whether child directories should be watched as well
             });
         
         public static readonly ToggleProjectEditorPreferenceDefinition EnableExperimentalEditorHotReloadSupport = new ToggleProjectEditorPreferenceDefinition(
-            "(Experimental) Enable hot reload in editor", "EnableExperimentalEditorHotReloadSupport", false);
+            "(Experimental) Enable hot reload outside of play mode", "EnableExperimentalEditorHotReloadSupport", false);
         
         //TODO: potentially that's just a normal settings (also in playmode) - but in playmode user is unlikely to make this many changes
         public static readonly IntProjectEditorPreferenceDefinition TriggerDomainReloadIfOverNDynamicallyLoadedAssembles = new IntProjectEditorPreferenceDefinition(
