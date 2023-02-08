@@ -404,7 +404,7 @@ includeSubdirectories - whether child directories should be watched as well
         private static string[] ProductKeywords = new[] { "productivity", "tools" };
 
         public static readonly IntProjectEditorPreferenceDefinition BatchScriptChangesAndReloadEveryNSeconds = new IntProjectEditorPreferenceDefinition(
-            "Batch script changes and reload every N seconds", "BatchScriptChangesAndReloadEveryNSeconds", 3);
+            "Batch script changes and reload every N seconds", "BatchScriptChangesAndReloadEveryNSeconds", 1);
 
         public static readonly ToggleProjectEditorPreferenceDefinition EnableAutoReloadForChangedFiles = new ToggleProjectEditorPreferenceDefinition(
             "Enable auto Hot-Reload for changed files (in play mode)", "EnableAutoReloadForChangedFiles", true);
