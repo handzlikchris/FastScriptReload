@@ -30,10 +30,16 @@ namespace FastScriptReload.Editor
         private static string _WindowTitle = "Fast Script Reload";
 
         public static ChangeMainViewButton ExclusionsSection { get; private set; }
+        public static ChangeMainViewButton EditorHotReloadSection { get; private set; }
 
         public void OpenExclusionsSection()
         {
             ExclusionsSection.OnClick(this);
+        }
+        
+        public void OpenEditorHotReloadSection()
+        {
+            EditorHotReloadSection.OnClick(this);
         }
         
         private static readonly ScrollViewGuiSection MainScrollViewSection = new ScrollViewGuiSection(
@@ -45,7 +51,15 @@ namespace FastScriptReload.Editor
                 using (LayoutHelper.LabelWidth(350))
                 {
                     ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableAutoReloadForChangedFiles);
+
+                    EditorGUILayout.BeginHorizontal();
                     ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalEditorHotReloadSupport);
+                    if (GUILayout.Button("Check limitations"))
+                    {
+                        ((FastScriptReloadWelcomeScreen) screen).OpenEditorHotReloadSection();
+                    }
+                    EditorGUILayout.EndHorizontal();
+
                     ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalThisCallLimitationFix);
                 }
             }
@@ -233,7 +247,7 @@ New fields will also show in editor - you can tweak them as normal variables.", 
 
                         GUILayout.Space(10);
                     }),
-                    new ChangeMainViewButton("Editor Hot-Reload", (screen) =>
+                    (EditorHotReloadSection = new ChangeMainViewButton("Editor Hot-Reload", (screen) =>
                     {
                         EditorGUILayout.HelpBox(@"Currently asset hot-reloads only in play-mode, you can enable experimental editor mode support here.
 
@@ -245,7 +259,7 @@ TODO: add more
 ", MessageType.Warning);
                         GUILayout.Space(10);
                         
-                        using (LayoutHelper.LabelWidth(250))
+                        using (LayoutHelper.LabelWidth(320))
                         {
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalEditorHotReloadSupport);
                         }
@@ -256,12 +270,12 @@ TODO: add more
 This is to ensure dynamically created and loaded assembles are cleared out properly", MessageType.Info);
                         GUILayout.Space(10);
                         
-                        using (LayoutHelper.LabelWidth(280))
+                        using (LayoutHelper.LabelWidth(420))
                         {
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.TriggerDomainReloadIfOverNDynamicallyLoadedAssembles);
                         }
                         GUILayout.Space(10);
-                    })
+                    }))
                 }),
                 new GuiSection("Advanced", new List<ClickableElement>
                 {
