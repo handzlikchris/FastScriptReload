@@ -208,6 +208,7 @@ BREAKPOINTS IN ORIGINAL FILE WON'T BE HIT!", MessageType.Error);
                         {
                             EditorGUILayout.LabelField("Logging", screen.BoldTextStyle);
                             GUILayout.Space(5);
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableDetailedDebugLogging);
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.LogHowToFixMessageOnCompilationError);
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.StopShowingAutoReloadEnabledDialogBox);
                         }
@@ -400,6 +401,8 @@ includeSubdirectories - whether child directories should be watched as well
 
     public class FastScriptReloadPreference : ProductPreferenceBase
     {
+        public const string BuildSymbol_DetailedDebugLogging = "ImmersiveVrTools_DebugEnabled";
+        
         public const string ProductName = "Fast Script Reload";
         private static string[] ProductKeywords = new[] { "productivity", "tools" };
 
@@ -451,6 +454,17 @@ includeSubdirectories - whether child directories should be watched as well
         
         public static readonly ToggleProjectEditorPreferenceDefinition StopShowingAutoReloadEnabledDialogBox = new ToggleProjectEditorPreferenceDefinition(
             "Stop showing assets/script auto-reload enabled warning", "StopShowingAutoReloadEnabledDialogBox", false);
+        public static readonly ToggleProjectEditorPreferenceDefinition EnableDetailedDebugLogging = new ToggleProjectEditorPreferenceDefinition(
+            "Enable detailed debug logging", "EnableDetailedDebugLogging", false,
+            (object newValue, object oldValue) =>
+            {
+                BuildDefineSymbolManager.SetBuildDefineSymbolState(BuildSymbol_DetailedDebugLogging, (bool)newValue);
+            },
+            (value) =>
+            {
+                BuildDefineSymbolManager.SetBuildDefineSymbolState(BuildSymbol_DetailedDebugLogging, (bool)value);
+            }
+        );
         
         public static readonly ToggleProjectEditorPreferenceDefinition IsDidFieldsOrPropertyCountChangedCheckDisabled = new ToggleProjectEditorPreferenceDefinition(
             "Disable added/removed fields check", "IsDidFieldsOrPropertyCountChangedCheckDisabled", false,
@@ -611,6 +625,10 @@ includeSubdirectories - whether child directories should be watched as well
             FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.UpdateValues(
                 (bool)FastScriptReloadPreference.IsDidFieldsOrPropertyCountChangedCheckDisabled.GetEditorPersistedValueOrDefault(),
                 (bool)FastScriptReloadPreference.EnableExperimentalAddedFieldsSupport.GetEditorPersistedValueOrDefault()
+            );
+            
+            BuildDefineSymbolManager.SetBuildDefineSymbolState(FastScriptReloadPreference.BuildSymbol_DetailedDebugLogging,
+                (bool)FastScriptReloadPreference.EnableDetailedDebugLogging.GetEditorPersistedValueOrDefault()
             );
         }
 
