@@ -44,10 +44,9 @@ namespace FastScriptReload.Editor
                 GUILayout.Label("Quick adjustments:", screen.LabelStyle);
                 using (LayoutHelper.LabelWidth(350))
                 {
-                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.BatchScriptChangesAndReloadEveryNSeconds);
                     ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableAutoReloadForChangedFiles);
+                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalEditorHotReloadSupport);
                     ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalThisCallLimitationFix);
-                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.LogHowToFixMessageOnCompilationError);
                 }
             }
         );
@@ -465,7 +464,7 @@ includeSubdirectories - whether child directories should be watched as well
         
         //TODO: potentially that's just a normal settings (also in playmode) - but in playmode user is unlikely to make this many changes
         public static readonly IntProjectEditorPreferenceDefinition TriggerDomainReloadIfOverNDynamicallyLoadedAssembles = new IntProjectEditorPreferenceDefinition(
-            "Trigger full domain reload after N hot-reloads", "TriggerDomainReloadIfOverNDynamicallyLoadedAssembles", 100);
+            "Trigger full domain reload after N hot-reloads (when not in play mode)", "TriggerDomainReloadIfOverNDynamicallyLoadedAssembles", 50);
         
         public static void SetCommonMaterialsShader(ShadersMode newShaderModeValue)
         {
@@ -515,7 +514,9 @@ includeSubdirectories - whether child directories should be watched as well
             FileWatcherSetupEntries,
             IsAutoOpenGeneratedSourceFileOnChangeEnabled,
             EnableExperimentalAddedFieldsSupport,
-            ReferencesExcludedFromHotReload
+            ReferencesExcludedFromHotReload,
+            EnableExperimentalEditorHotReloadSupport,
+            TriggerDomainReloadIfOverNDynamicallyLoadedAssembles
         };
 
         private static bool PrefsLoaded = false;

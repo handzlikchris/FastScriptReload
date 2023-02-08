@@ -198,7 +198,7 @@ Workaround will search in all folders (under project root) and will use first fo
             return AssetDatabase.GetAssetPath(obj.GetInstanceID());
         }
 
-        private void Update()
+        public void Update()
         {
             _isEditorModeHotReloadEnabled = (bool)FastScriptReloadPreference.EnableExperimentalEditorHotReloadSupport.GetEditorPersistedValueOrDefault();
             if (_lastPlayModeStateChange == PlayModeStateChange.ExitingPlayMode && Instance._fileWatchers.Any())
@@ -253,7 +253,7 @@ Workaround will search in all folders (under project root) and will use first fo
 
         public void TriggerReloadForChangedFiles()
         {
-            if (_hotReloadPerformedCount > _triggerDomainReloadIfOverNDynamicallyLoadedAssembles) 
+            if (!Application.isPlaying && _hotReloadPerformedCount > _triggerDomainReloadIfOverNDynamicallyLoadedAssembles) 
             {
                 LoggerScoped.LogWarning($"Dynamically created assembles reached over: {_triggerDomainReloadIfOverNDynamicallyLoadedAssembles} - triggering full domain reload to clean up. You can adjust that value in settings.");
 #if UNITY_2019_3_OR_NEWER
