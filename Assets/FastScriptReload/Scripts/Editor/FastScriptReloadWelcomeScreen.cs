@@ -31,6 +31,7 @@ namespace FastScriptReload.Editor
 
         public static ChangeMainViewButton ExclusionsSection { get; private set; }
         public static ChangeMainViewButton EditorHotReloadSection { get; private set; }
+        public static ChangeMainViewButton NewFieldsSection { get; private set; }
 
         public void OpenExclusionsSection()
         {
@@ -41,29 +42,38 @@ namespace FastScriptReload.Editor
         {
             EditorHotReloadSection.OnClick(this);
         }
+
+        public void OpenNewFieldsSection()
+        {
+            NewFieldsSection.OnClick(this);
+        }
         
         private static readonly ScrollViewGuiSection MainScrollViewSection = new ScrollViewGuiSection(
             "", (screen) =>
             {
                 GenerateCommonWelcomeText(FastScriptReloadPreference.ProductName, screen);
 
-                GUILayout.Label("Quick adjustments:", screen.LabelStyle);
+                GUILayout.Label("Enabled Features:", screen.LabelStyle);
                 using (LayoutHelper.LabelWidth(350))
                 {
                     ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableAutoReloadForChangedFiles);
-
-                    EditorGUILayout.BeginHorizontal();
-                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalEditorHotReloadSupport);
-                    if (GUILayout.Button("Check limitations"))
-                    {
-                        ((FastScriptReloadWelcomeScreen) screen).OpenEditorHotReloadSection();
-                    }
-                    EditorGUILayout.EndHorizontal();
-
-                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalThisCallLimitationFix);
+                    RenderSettingsWithCheckLimitationsButton(FastScriptReloadPreference.EnableExperimentalAddedFieldsSupport, () => ((FastScriptReloadWelcomeScreen)screen).OpenNewFieldsSection());
+                    RenderSettingsWithCheckLimitationsButton(FastScriptReloadPreference.EnableExperimentalEditorHotReloadSupport, () => ((FastScriptReloadWelcomeScreen)screen).OpenEditorHotReloadSection());
                 }
             }
         );
+
+        private static void RenderSettingsWithCheckLimitationsButton(ToggleProjectEditorPreferenceDefinition preferenceDefinition, Action onCheckLimitationsClick)
+        {
+            EditorGUILayout.BeginHorizontal();
+            ProductPreferenceBase.RenderGuiAndPersistInput(preferenceDefinition);
+            if (GUILayout.Button("Check limitations"))
+            {
+                onCheckLimitationsClick();
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
 
         private static readonly List<GuiSection> LeftSections = CreateLeftSections(new List<ChangeMainViewButton>
             {
@@ -205,7 +215,7 @@ BREAKPOINTS IN ORIGINAL FILE WON'T BE HIT!", MessageType.Error);
                 }.Concat(additionalSections).ToList()),
                 new GuiSection("Experimental", new List<ClickableElement>
                 {
-                    new ChangeMainViewButton("New Fields", (screen) =>
+                    (NewFieldsSection = new ChangeMainViewButton("New Fields", (screen) =>
                     {
 #if LiveScriptReload_Enabled
                         EditorGUILayout.HelpBox(
@@ -234,7 +244,7 @@ New fields will also show in editor - you can tweak them as normal variables.", 
 - new fields will only show in editor if they were already used at least once", MessageType.Info);
                         GUILayout.Space(10);
 
-                        using (LayoutHelper.LabelWidth(250))
+                        using (LayoutHelper.LabelWidth(300))
                         {
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalAddedFieldsSupport);
                         }
@@ -246,7 +256,7 @@ New fields will also show in editor - you can tweak them as normal variables.", 
                         }
 
                         GUILayout.Space(10);
-                    }),
+                    })),
                     (EditorHotReloadSection = new ChangeMainViewButton("Editor Hot-Reload", (screen) =>
                     {
                         EditorGUILayout.HelpBox(@"Currently asset hot-reloads only in play-mode, you can enable experimental editor mode support here.
@@ -397,7 +407,7 @@ includeSubdirectories - whether child directories should be watched as well
             "Batch script changes and reload every N seconds", "BatchScriptChangesAndReloadEveryNSeconds", 3);
 
         public static readonly ToggleProjectEditorPreferenceDefinition EnableAutoReloadForChangedFiles = new ToggleProjectEditorPreferenceDefinition(
-            "Enable auto Hot-Reload for changed files", "EnableAutoReloadForChangedFiles", true);
+            "Enable auto Hot-Reload for changed files (in play mode)", "EnableAutoReloadForChangedFiles", true);
         
         public static readonly ToggleProjectEditorPreferenceDefinition EnableExperimentalThisCallLimitationFix = new ToggleProjectEditorPreferenceDefinition(
             "(Experimental) Enable method calls with 'this' as argument fix", "EnableExperimentalThisCallLimitationFix", true, (object newValue, object oldValue) =>
@@ -463,7 +473,7 @@ includeSubdirectories - whether child directories should be watched as well
         );
         
         public static readonly ToggleProjectEditorPreferenceDefinition EnableExperimentalAddedFieldsSupport = new ToggleProjectEditorPreferenceDefinition(
-            "(Experimental) Enable added field support", "EnableExperimentalAddedFieldsSupport", false,
+            "(Experimental) Enable runtime added field support", "EnableExperimentalAddedFieldsSupport", false,
             (object newValue, object oldValue) =>
             {
                 FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.EnableExperimentalAddedFieldsSupport = (bool)newValue;
@@ -474,7 +484,7 @@ includeSubdirectories - whether child directories should be watched as well
             });
         
         public static readonly ToggleProjectEditorPreferenceDefinition EnableExperimentalEditorHotReloadSupport = new ToggleProjectEditorPreferenceDefinition(
-            "(Experimental) Enable hot reload outside of play mode", "EnableExperimentalEditorHotReloadSupport", false);
+            "(Experimental) Enable Hot-Reload outside of play mode", "EnableExperimentalEditorHotReloadSupport", false);
         
         //TODO: potentially that's just a normal settings (also in playmode) - but in playmode user is unlikely to make this many changes
         public static readonly IntProjectEditorPreferenceDefinition TriggerDomainReloadIfOverNDynamicallyLoadedAssembles = new IntProjectEditorPreferenceDefinition(
