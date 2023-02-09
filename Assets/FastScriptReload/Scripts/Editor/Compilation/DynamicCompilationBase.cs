@@ -11,6 +11,7 @@ using ImmersiveVRTools.Runtime.Common.Utilities;
 using ImmersiveVrToolsCommon.Runtime.Logging;
 using Microsoft.CodeAnalysis.CSharp;
 using UnityEditor;
+using UnityEngine.Rendering;
 
 namespace FastScriptReload.Editor.Compilation
 {
@@ -79,7 +80,13 @@ namespace FastScriptReload.Editor.Compilation
                         t => t.Key,
                         t =>
                         {
-                            var existingType = allTypes.Single(et => et.FullName == t.Key);
+                            var existingType = allTypes.SingleOrDefault(et => et.FullName == t.Key);
+                            if (existingType == null)
+                            {
+                                LoggerScoped.LogDebug($"Unable to find type: {t.Key} in loaded assemblies. If that's the class you've added field to then it may not be properly working. It's possible the class was not yet loaded / used and you can ignore that warning. If it's causing any issues please contact support");
+                                return new List<string>();
+                            }
+
                             var existingTypeMembersToReplace = NewFieldsRewriter.GetReplaceableMembers(existingType).Select(m => m.Name).ToList();
 			
                             var newFields = t.Value.Where(fD => !existingTypeMembersToReplace.Contains(fD.FieldName)).ToList();
