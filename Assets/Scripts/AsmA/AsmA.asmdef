@@ -1,0 +1,16 @@
+{
+    "name": "AsmA",
+    "rootNamespace": "",
+    "references": [
+        "GUID:5862778d00844a144908f47007d46b4b"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

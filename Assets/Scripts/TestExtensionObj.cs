@@ -4,6 +4,6 @@ public class TestExtensionObj
 {
     public void TestCall()
     {
-        Debug.Log("TestCall 1");
+        Debug.Log("TestCall 1z");
     }
 }
