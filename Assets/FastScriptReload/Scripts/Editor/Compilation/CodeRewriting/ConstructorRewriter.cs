@@ -22,21 +22,39 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 			        var typeNestedLevel = node.Ancestors().Count(a => a is TypeDeclarationSyntax);
 			        if (typeNestedLevel == 1)
 			        {
-				        return AdjustCtorNameForTypeAdjustment(node);
+				        return AdjustCtorOrDestructorNameForTypeAdjustment(node, node.Identifier);
 			        }
 		        }
 		        else
 		        {
-			        return AdjustCtorNameForTypeAdjustment(node);
+			        return AdjustCtorOrDestructorNameForTypeAdjustment(node, node.Identifier);
 		        }
 
 		        return base.VisitConstructorDeclaration(node);
 	        }
 
-	        private static SyntaxNode AdjustCtorNameForTypeAdjustment(ConstructorDeclarationSyntax node)
+	        public override SyntaxNode VisitDestructorDeclaration(DestructorDeclarationSyntax node)
+	        {
+		        if (_adjustCtorOnlyForNonNestedTypes)
+		        {
+			        var typeNestedLevel = node.Ancestors().Count(a => a is TypeDeclarationSyntax);
+			        if (typeNestedLevel == 1)
+			        {
+				        return AdjustCtorOrDestructorNameForTypeAdjustment(node, node.Identifier);
+			        }
+		        }
+		        else
+		        {
+			        return AdjustCtorOrDestructorNameForTypeAdjustment(node, node.Identifier);
+		        }
+		        
+		        return base.VisitDestructorDeclaration(node);
+	        }
+
+	        private static SyntaxNode AdjustCtorOrDestructorNameForTypeAdjustment(BaseMethodDeclarationSyntax node, SyntaxToken nodeIdentifier)
 	        {
 		        var typeName = (node.Ancestors().First(n => n is TypeDeclarationSyntax) as TypeDeclarationSyntax).Identifier.ToString();
-		        if (!node.Identifier.ToFullString().Contains(typeName))
+		        if (!nodeIdentifier.ToFullString().Contains(typeName))
 		        {
 			        //Used Roslyn version bug, some static methods are also interpreted as ctors, eg
 			        // public static void Method()
@@ -56,7 +74,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 			        typeName += AssemblyChangesLoader.ClassnamePatchedPostfix;
 		        }
 
-		        return node.ReplaceToken(node.Identifier, SyntaxFactory.Identifier(typeName));
+		        return node.ReplaceToken(nodeIdentifier, SyntaxFactory.Identifier(typeName));
 	        }
         }
 }
