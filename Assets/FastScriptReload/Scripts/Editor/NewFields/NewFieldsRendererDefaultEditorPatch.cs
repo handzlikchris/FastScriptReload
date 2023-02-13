@@ -63,6 +63,10 @@ namespace FastScriptReload.Editor.NewFields
                         var newFieldNameToGetTypeFn = CreateNewFieldInitMethodRewriter.ResolveNewFieldsToTypeFn(
                             AssemblyChangesLoader.Instance.GetRedirectedType(__instance.target.GetType())
                         );
+                        
+                        if(newFieldNameToGetTypeFn.Count == 0)
+                            return;
+                        
                         foreach (var addedFieldValueKey in _cachedKeys)
                         {
                             var newFieldType = (Type)newFieldNameToGetTypeFn[addedFieldValueKey]();
