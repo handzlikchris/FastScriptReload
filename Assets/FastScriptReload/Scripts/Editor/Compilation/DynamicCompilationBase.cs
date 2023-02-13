@@ -71,7 +71,6 @@ namespace FastScriptReload.Editor.Compilation
                 if (FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.EnableExperimentalAddedFieldsSupport)
                 {
                     //WARN: needs to walk before root class name changes, otherwise it'll resolve wrong name
-                    var allTypes = ReflectionHelper.GetAllTypes(); //TODO: PERF: can't get all in this manner, just needed for classes in file
                     var fieldsWalker = new FieldsWalker();
                     fieldsWalker.Visit(root);
                     
@@ -80,8 +79,7 @@ namespace FastScriptReload.Editor.Compilation
                         t => t.Key,
                         t =>
                         {
-                            var existingType = allTypes.SingleOrDefault(et => et.FullName == t.Key);
-                            if (existingType == null)
+                            if (!ProjectTypeCache.AllTypesInNonDynamicGeneratedAssemblies.TryGetValue(t.Key, out var existingType))
                             {
                                 LoggerScoped.LogDebug($"Unable to find type: {t.Key} in loaded assemblies. If that's the class you've added field to then it may not be properly working. It's possible the class was not yet loaded / used and you can ignore that warning. If it's causing any issues please contact support");
                                 return new List<string>();

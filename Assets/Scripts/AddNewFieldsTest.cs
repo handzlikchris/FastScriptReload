@@ -38,6 +38,8 @@ using UnityEditor;
 
         void Update()
         {
+            // Debug.Log("test");
+            
             // Debug.Log($"{newString}test{tesInt}bool: {testBool}, float: {testFloat}");
             
             // Debug.Log(newString + "test" + testVal3);
