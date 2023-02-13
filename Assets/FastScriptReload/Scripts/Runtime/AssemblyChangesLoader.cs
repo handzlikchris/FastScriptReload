@@ -10,7 +10,6 @@ using ImmersiveVRTools.Runtime.Common;
 using ImmersiveVRTools.Runtime.Common.Extensions;
 using ImmersiveVrToolsCommon.Runtime.Logging;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
 
 namespace FastScriptReload.Runtime
 {
@@ -45,7 +44,6 @@ namespace FastScriptReload.Runtime
         public static AssemblyChangesLoader Instance => _instance ?? (_instance = new AssemblyChangesLoader());
 
         private Dictionary<Type, Type> _existingTypeToRedirectedType = new Dictionary<Type, Type>();
-        private static Dictionary<string, Type> _allTypesInNonDynamicGeneratedAssemblies;
 
         public void DynamicallyUpdateMethodsForCreatedAssembly(Assembly dynamicallyLoadedAssemblyWithUpdates, AssemblyChangesLoaderEditorOptionsNeededInBuild editorOptions)
         {
@@ -53,23 +51,6 @@ namespace FastScriptReload.Runtime
             {
                 var sw = new Stopwatch();
                 sw.Start();
-
-                if (_allTypesInNonDynamicGeneratedAssemblies == null)
-                {
-                    var typeLookupSw = new Stopwatch();
-                    typeLookupSw.Start();
-
-                    _allTypesInNonDynamicGeneratedAssemblies = AppDomain.CurrentDomain.GetAssemblies()
-                        .Where(a => !a.GetCustomAttributes<DynamicallyCreatedAssemblyAttribute>().Any())
-                        .SelectMany(a => a.GetTypes())
-                        .GroupBy(t => t.FullName)
-                        .Select(g => g.First()) //TODO: quite odd that same type full name can be defined multiple times? eg Microsoft.CodeAnalysis.EmbeddedAttribute throws 'An item with the same key has already been added' 
-                        .ToDictionary(t => t.FullName, t => t);
-                    
-#if ImmersiveVrTools_DebugEnabled
-                    LoggerScoped.Log($"Initialized type-lookup dictionary, took: {typeLookupSw.ElapsedMilliseconds}ms - cached");
-#endif
-                }
 
                 foreach (var createdType in dynamicallyLoadedAssemblyWithUpdates.GetTypes()
                              .Where(t => t.IsClass
@@ -85,7 +66,7 @@ namespace FastScriptReload.Runtime
                     }
                     
                     var createdTypeNameWithoutPatchedPostfix = RemoveClassPostfix(createdType.FullName);
-                    if (_allTypesInNonDynamicGeneratedAssemblies.TryGetValue(createdTypeNameWithoutPatchedPostfix, out var matchingTypeInExistingAssemblies))
+                    if (ProjectTypeCache.AllTypesInNonDynamicGeneratedAssemblies.TryGetValue(createdTypeNameWithoutPatchedPostfix, out var matchingTypeInExistingAssemblies))
                     {
                         _existingTypeToRedirectedType[matchingTypeInExistingAssemblies] = createdType;
                         
