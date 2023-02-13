@@ -339,6 +339,16 @@ Workaround will search in all folders (under project root) and will use first fo
         private void OnEditorApplicationOnplayModeStateChanged(PlayModeStateChange obj)
         {
             Instance._lastPlayModeStateChange = obj;
+
+            //TODO: add an option as on some older editor versions AutoUpdate.OutsideOfPlaymode does not exist
+            // if (obj == PlayModeStateChange.EnteredPlayMode)
+            // {
+            //     EditorApplication.LockReloadAssemblies();
+            // }
+            // else if(obj == PlayModeStateChange.EnteredEditMode)
+            // {
+            //     EditorApplication.UnlockReloadAssemblies();
+            // }
         }
 
         private static void EnsureInitialized()
