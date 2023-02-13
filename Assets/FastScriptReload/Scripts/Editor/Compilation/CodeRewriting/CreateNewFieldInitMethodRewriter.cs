@@ -134,11 +134,14 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 																													.ObjectKeyword))))))
 																		}))))
 													.WithInitializer(dictionaryInitializer))))))
+					.WithTriviaFrom(node)
 					.WithModifiers(
 						SyntaxFactory.TokenList(
 							SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
 							SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
 					.NormalizeWhitespace()
+					.WithLeadingTrivia(SyntaxFactory.TriviaList(SyntaxFactory.ElasticCarriageReturnLineFeed))
+					.WithTrailingTrivia(SyntaxFactory.TriviaList(SyntaxFactory.ElasticCarriageReturnLineFeed, SyntaxFactory.ElasticCarriageReturnLineFeed))
 			);
 			return withDictionaryFieldNameToInitFieldValue;
 		}
