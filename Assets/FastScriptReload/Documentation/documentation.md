@@ -25,6 +25,12 @@ There's an addon to this tool - Live Script Reload - that'll allow you to use sa
 
 **Live Script Reload is using Fast Script Reload as a base asset - documentation is combined, if you don't use Live Script Reload you can skip any sections in this document prefixed with [Live-Reload]**
 
+## How Unity Hot Reload functionality is made? Technical Approach Breakdown
+If you'd like to know how tool works from technical point of view - have a look at blog series which gets deeper into the subject:
+
+[1) How to build Hot Reload For Unity](https://immersivevrtools.com/Blog/how-to-build-hot-reload-functionality-for-unity)
+
+
 ## Reporting Compilation Errors
 I've put lots of effort to test various code patterns in various codebases. Still - it's possible you'll find some instances where code would not compile, it's easiest to:
 1) Look at compiler error and compare with generated source code, usually it'll be very obvious why issue is occuring
