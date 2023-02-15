@@ -446,6 +446,13 @@ class ClassImplementingIInterface: IInterface {
 ```
 
 > Quick workaround is to declare that interface as public
+> 
+
+### Changing class that accesses `private protected` members
+With C# 7.2 `private protected` access modifier was introduced. It works as `protected` access modifier in a sense that inherited classes can access it but. 
+Addition of `private` also limits it to same assembly. Your changes are technically compiled into separate assembly and at the moment trying to access `private protected` in changed code will produce compiler error.
+
+> Easiest workaround for now is to declare those `private protected` members as `protected`.
 
 ### Limited debugger support for Rider when using Unity 2019 and 2020
 Once breakpoint has been hit it'll stop asset from hot-reloading in that play-session. Newer Unity versions are supporting debugging.
