@@ -353,7 +353,7 @@ Workaround will search in all folders (under project root) and will use first fo
 
         private static void EnsureInitialized()
         {
-            if (!(bool)FastScriptReloadPreference.EnableAutoReloadForChangedFiles.GetEditorPersistedValueOrDefault())
+            if (!(bool)FastScriptReloadPreference.EnableAutoReloadForChangedFiles.GetEditorPersistedValueOrDefault()) //TODO: this stops ForceReload from working as there's no file-watching
             {
                 return;
             }
