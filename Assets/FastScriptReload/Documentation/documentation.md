@@ -9,6 +9,8 @@ Tool will allow you to iterate quicker on your code. You simply go into play mod
 3) Go to Launch Demo -> Basic Example window
 4) Follow instructions listed there
 
+> During startup asset will check if Unity Auto Refresh is enabled and offer to adjust it in order to work properly. Depending on your workflow you want it in 'EnabledOutsidePlaymode' or 'Disabled' - this is to ensure Unity will not trigger script compilation on changes and will let Fast Script Reload to work.
+
 ```
 Example scene 'Point' material should automatically detect URP or surface shader
 If it shows pink, please adjust by picking shader manually:
