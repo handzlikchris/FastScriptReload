@@ -460,6 +460,9 @@ Once breakpoint has been hit it'll stop asset from hot-reloading in that play-se
 ### No IL2CPP support
 Asset runs based on specific .NET functionality, IL2CPP builds will not be supported. Although as this is development workflow aid you can build your APK with Mono backend (android) and change later.
 
+### Partial classes
+Partial classes are not yet supported
+
 ## FAQ
 ### How is this asset different than Live Script Reload?
 Fast Script Reload
@@ -469,7 +472,7 @@ Live Script Reload
 - same hot reload in editor as FSR (includes FSR)
 + **AND hot reload directly in builds / on-device**
 + you don't have to download them both separately, LSR is also 1 package import
-+ standalone extension priced at $25, or if you've already bought Fast Script Reload it's $5 upgrade
++ standalone extension priced at $35, or if you've already bought Fast Script Reload it's $5 upgrade
 
 ### Editor makes full reload on any change in playmode
 
