@@ -167,7 +167,7 @@ namespace FastScriptReload.Editor
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.IsDidFieldsOrPropertyCountChangedCheckDisabled);
                         }
                         EditorGUILayout.HelpBox("By default if you add / remove fields, tool will not redirect method calls for recompiled class." +
-                                                "\r\nThis is to ensure there are no issues as that is generally not supported." +
+                                                "\r\nYou can also enable added-fields support (experimental)." +
                                                 "\r\n\r\nSome assets however will use IL weaving to adjust your classes (eg Mirror) as a post compile step. In that case it's quite likely hot-reload will still work. " +
                                                 "\r\n\r\nTick this box for tool to try and reload changes when that happens."
                             
