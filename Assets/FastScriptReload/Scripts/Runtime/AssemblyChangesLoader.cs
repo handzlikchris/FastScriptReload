@@ -175,6 +175,10 @@ namespace FastScriptReload.Runtime
             {
                 UnityMainThreadDispatcher.Instance.Enqueue(() =>
                 {
+                    if (!typeof(MonoBehaviour).IsAssignableFrom(type)) {
+                        LoggerScoped.LogWarning($"Type: {type.Name} is not {nameof(MonoBehaviour)}, {ON_HOT_RELOAD_METHOD_NAME} method can't be executed. You can still use static version: {ON_HOT_RELOAD_NO_INSTANCE_STATIC_METHOD_NAME}");
+                        return;
+                    }
                     foreach (var instanceOfType in GameObject.FindObjectsOfType(type)) //TODO: perf - could find them in different way?
                     {
                         onScriptHotReloadFnForType.Invoke(instanceOfType, null);
