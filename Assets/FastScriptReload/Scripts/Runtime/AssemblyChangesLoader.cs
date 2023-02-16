@@ -53,8 +53,9 @@ namespace FastScriptReload.Runtime
                 sw.Start();
 
                 foreach (var createdType in dynamicallyLoadedAssemblyWithUpdates.GetTypes()
-                             .Where(t => t.IsClass
-                                         && !typeof(Delegate).IsAssignableFrom(t) //don't redirect delegates
+                             .Where(t => (t.IsClass
+                                         && !typeof(Delegate).IsAssignableFrom(t)) //don't redirect delegates
+                                         // || (t.IsValueType && !t.IsPrimitive) //struct check, ensure works
                              )
                         )
                 {
