@@ -180,27 +180,6 @@ Tool can also auto-open generated files for you on change for simpler access, yo
 
 > Debugging with Rider for Unity 2019 and 2020 is having some issues, once breakpoint has been hit it'll stop asset from hot-reloading in that play-session.
 
-> Debugging in that manner is enabled in version 1.2, on v1.1 you'll need to make following changes:
-
-in '<your project path>\Assets\FastScriptReload\Scripts\Editor\Compilation\DotnetExeCompilator.cs'
-- on line 76 remove/comment out code that deletes temp files
-```
-foreach (var fileToCleanup in createdFilesToCleanUp)
-{
-   File.Delete(fileToCleanup);
-}
-```
-
-- on line 66 after `CreateFileAndTrackAsCleanup(sourceCodeCombinedFilePath, sourceCodeCombined, createdFilesToCleanUp);` add code that'll auto-open source file for you to set breakpoints in
-```
-#if UNITY_EDITOR
-  UnityMainThreadDispatcher.Instance.Enqueue(() =>
-  {
-      UnityEditorInternal.InternalEditorUtility.OpenFileAtLineExternal(sourceCodeCombinedFilePath, 0);
-  });
-#endif
-```
-
 ### Adding Function Breakpoint
 If for whatever reason debugger breakpoint is not hit you can try setting Function Breakpoint in your IDE.
 
