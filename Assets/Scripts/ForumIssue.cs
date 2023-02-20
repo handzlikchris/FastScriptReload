@@ -2,26 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// SoundMgr.cs
-public class SoundMgr : Test.Singleton<SoundMgr>
+//IWithGenMethod.cs
+public interface IWithGenMethod
 {
-} 
+    public T Dummy<T>();
+}
 
-// Singleton.cs
-namespace Test
+//WithGenTypeReturn.cs
+public class WithGenTypeReturn 
 {
-    public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
+    public List<IWithGenMethod> GetEmptyList()
     {
-        private static T sInst;
-
-        public static T Inst
-        {
-            get
-            {
-                if (sInst == null)
-                    sInst = FindObjectOfType(typeof(T)) as T;
-                return sInst; 
-            }
-        }
+      // Editing here
+        return new List<IWithGenMethod>(); 
     }
 }
