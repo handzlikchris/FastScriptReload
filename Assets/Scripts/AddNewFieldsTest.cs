@@ -64,7 +64,7 @@ using UnityEditor;
             
             // Debug.Log($"testInt: {testInt}");
             // Debug.Log($"testBool: {testBool}");
-            // Debug.Log($"testFloat: {testFloat}");
+            // Debug.Log($"testFloat: {testFloat}"); 
             // Debug.Log($"testColor: {testColor}");
             // Debug.Log($"testEnum: {testEnum}");
             // Debug.Log($"testVector2: {testVector2}");
