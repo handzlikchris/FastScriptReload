@@ -133,15 +133,21 @@ namespace FastScriptReload.Editor
                             screen.TextStyle
                         );
                 
-                        using (LayoutHelper.LabelWidth(300))
+                        using (LayoutHelper.LabelWidth(320))
                         {
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableAutoReloadForChangedFiles);
                         }
                         GUILayout.Space(sectionBreakHeight);
                 
-                        EditorGUILayout.HelpBox("On demand reload:\r\nvia Window -> Fast Script Reload -> Force Reload, \r\nor by calling 'FastScriptIterationManager.Instance.TriggerReloadForChangedFiles()'", MessageType.Info);
+                        EditorGUILayout.HelpBox("(only works if you opted in below, this is to avoid unnecessary file watching)\r\nOn demand reload :\r\nvia Window -> Fast Script Reload -> Force Reload, \r\nor by calling 'FastScriptIterationManager.Instance.TriggerReloadForChangedFiles()'", MessageType.Info);
+                        
+                        using (LayoutHelper.LabelWidth(320))
+                        {
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableOnDemandReload);
+                        }
+                        
                         GUILayout.Space(sectionBreakHeight);
-                
+
                         GUILayout.Label(
                             @"For performance reasons script changes are batched are reloaded every N seconds",
                             screen.TextStyle
@@ -368,7 +374,7 @@ includeSubdirectories - whether child directories should be watched as well
 #endif
         public static bool ForceReloadValidate()
         {
-            return EditorApplication.isPlaying;
+            return EditorApplication.isPlaying && (bool)FastScriptReloadPreference.EnableOnDemandReload.GetEditorPersistedValueOrDefault();
         }
     
 #if !LiveScriptReload_Enabled
@@ -411,6 +417,9 @@ includeSubdirectories - whether child directories should be watched as well
 
         public static readonly ToggleProjectEditorPreferenceDefinition EnableAutoReloadForChangedFiles = new ToggleProjectEditorPreferenceDefinition(
             "Enable auto Hot-Reload for changed files (in play mode)", "EnableAutoReloadForChangedFiles", true);
+        
+        public static readonly ToggleProjectEditorPreferenceDefinition EnableOnDemandReload = new ToggleProjectEditorPreferenceDefinition(
+            "Enable on demand hot reload", "EnableOnDemandReload", false);
         
         public static readonly ToggleProjectEditorPreferenceDefinition EnableExperimentalThisCallLimitationFix = new ToggleProjectEditorPreferenceDefinition(
             "(Experimental) Enable method calls with 'this' as argument fix", "EnableExperimentalThisCallLimitationFix", true, (object newValue, object oldValue) =>

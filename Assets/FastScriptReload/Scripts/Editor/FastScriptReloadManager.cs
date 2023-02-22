@@ -43,6 +43,7 @@ namespace FastScriptReload.Editor
         private bool _assemblyChangesLoaderResolverResolutionAlreadyCalled;
         private bool _isEditorModeHotReloadEnabled;
         private int _hotReloadPerformedCount = 0;
+        private bool _isOnDemandHotReloadEnabled;
 
         private void OnWatchedFileChange(object source, FileSystemEventArgs e)
         {
@@ -129,20 +130,6 @@ Workaround will search in all folders (under project root) and will use first fo
             fileWatcher.Path = directoryInfo.FullName;
             fileWatcher.IncludeSubdirectories = includeSubdirectories;
             fileWatcher.Filter =  filter;
-            fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
-            fileWatcher.Changed += OnWatchedFileChange;
-        
-            fileWatcher.EnableRaisingEvents = true;
-        
-            _fileWatchers.Add(fileWatcher);
-        }
-    
-        public void StartWatchingSingleFile(string fullFilePath) 
-        {
-            var fileWatcher = new FileSystemWatcher();
-            var fileToWatch = new FileInfo(fullFilePath);
-            fileWatcher.Path = fileToWatch.Directory.FullName;
-            fileWatcher.Filter = fileToWatch.Name;
             fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
             fileWatcher.Changed += OnWatchedFileChange;
         
@@ -244,6 +231,7 @@ Workaround will search in all folders (under project root) and will use first fo
             //TODO: PERF: needed in file watcher but when run on non-main thread causes exception. 
             _currentFileExclusions = FastScriptReloadPreference.FilesExcludedFromHotReload.GetElements();
             _triggerDomainReloadIfOverNDynamicallyLoadedAssembles = (int)FastScriptReloadPreference.TriggerDomainReloadIfOverNDynamicallyLoadedAssembles.GetEditorPersistedValueOrDefault();
+            _isOnDemandHotReloadEnabled = (bool)FastScriptReloadPreference.EnableOnDemandReload.GetEditorPersistedValueOrDefault();
             EnableExperimentalThisCallLimitationFix = (bool)FastScriptReloadPreference.EnableExperimentalThisCallLimitationFix.GetEditorPersistedValueOrDefault();
             AssemblyChangesLoaderEditorOptionsNeededInBuild.UpdateValues(
                 (bool)FastScriptReloadPreference.IsDidFieldsOrPropertyCountChangedCheckDisabled.GetEditorPersistedValueOrDefault(),
@@ -253,6 +241,12 @@ Workaround will search in all folders (under project root) and will use first fo
 
         public void TriggerReloadForChangedFiles()
         {
+            if (!_isOnDemandHotReloadEnabled)
+            {
+                LoggerScoped.LogWarning("On demand hot reload is disabled, can't perform. You can enable it via 'Window -> Fast Script Reload -> Start Screen -> Reload -> Enable on demand reload'");
+                return;
+            }
+            
             if (!Application.isPlaying && _hotReloadPerformedCount > _triggerDomainReloadIfOverNDynamicallyLoadedAssembles) 
             {
                 LoggerScoped.LogWarning($"Dynamically created assembles reached over: {_triggerDomainReloadIfOverNDynamicallyLoadedAssembles} - triggering full domain reload to clean up. You can adjust that value in settings.");
@@ -351,10 +345,18 @@ Workaround will search in all folders (under project root) and will use first fo
             // }
         }
 
+        private static bool HotReloadDisabled_WarningMessageShownAlready;
+
         private static void EnsureInitialized()
         {
-            if (!(bool)FastScriptReloadPreference.EnableAutoReloadForChangedFiles.GetEditorPersistedValueOrDefault()) //TODO: this stops ForceReload from working as there's no file-watching
+            if (!(bool)FastScriptReloadPreference.EnableAutoReloadForChangedFiles.GetEditorPersistedValueOrDefault()
+                && !(bool)FastScriptReloadPreference.EnableOnDemandReload.GetEditorPersistedValueOrDefault())
             {
+                if (!HotReloadDisabled_WarningMessageShownAlready)
+                {
+                    LoggerScoped.Log($"Both auto hot reload and on-demand reload are disabled, file watchers will not be initialized. Please adjust settings and restart if you want hot reload to work.");
+                    HotReloadDisabled_WarningMessageShownAlready = true;
+                }
                 return;
             }
             
@@ -363,7 +365,7 @@ Workaround will search in all folders (under project root) and will use first fo
                 var fileWatcherSetupEntries = FastScriptReloadPreference.FileWatcherSetupEntries.GetElementsTyped();
                 if (fileWatcherSetupEntries.Count == 0)
                 {
-                    LoggerScoped.LogWarning($"FastScriptReload: There are no file watcher setup entries. Tool will not be able to pick changes automatically");
+                    LoggerScoped.LogWarning($"There are no file watcher setup entries. Tool will not be able to pick changes automatically");
                 }
                 
                 foreach (var fileWatcherSetupEntry in fileWatcherSetupEntries)
