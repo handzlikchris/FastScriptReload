@@ -382,6 +382,12 @@ includeSubdirectories - whether child directories should be watched as well
 #endif
         public static void ForceReload()
         {
+            if (!(bool)FastScriptReloadPreference.EnableOnDemandReload.GetEditorPersistedValueOrDefault())
+            {
+                LoggerScoped.LogWarning("On demand hot reload is disabled, can't perform. You can enable it via 'Window -> Fast Script Reload -> Start Screen -> Reload -> Enable on demand reload'");
+                return;
+            }
+            
             FastScriptReloadManager.Instance.TriggerReloadForChangedFiles();
         }
 
