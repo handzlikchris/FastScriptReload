@@ -28,6 +28,10 @@ namespace FastScriptReload.Runtime
         {
 #if UNITY_EDITOR
             LastDetourFilePath = Path.GetTempPath() + Application.productName + "-last-detour.txt";
+            foreach (var c in Path.GetInvalidFileNameChars()) 
+            { 
+                LastDetourFilePath = LastDetourFilePath.Replace(c, '-'); 
+            }
 #else
             LoggerScoped.Log($"{nameof(DetourCrashHandler)}: currently only supported in Editor");
 #endif
