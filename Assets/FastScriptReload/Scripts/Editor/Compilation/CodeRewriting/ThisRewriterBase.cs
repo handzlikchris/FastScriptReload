@@ -7,9 +7,14 @@ using UnityEngine;
 
 namespace FastScriptReload.Editor.Compilation.CodeRewriting
 {
-    abstract class ThisRewriterBase : CSharpSyntaxRewriter
+    abstract class ThisRewriterBase : FastScriptReloadCodeRewriterBase
     {
-        protected static SyntaxNode CreateCastedThisExpression(ThisExpressionSyntax node)
+        protected ThisRewriterBase(bool writeRewriteReasonAsComment, bool visitIntoStructuredTrivia = false) 
+            : base(writeRewriteReasonAsComment, visitIntoStructuredTrivia)
+        {
+        }
+        
+        protected SyntaxNode CreateCastedThisExpression(ThisExpressionSyntax node)
         {
             var ancestors = node.Ancestors().Where(n => n is TypeDeclarationSyntax).Cast<TypeDeclarationSyntax>().ToList();
             if (ancestors.Count() > 1)
@@ -26,13 +31,15 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
             }
 
             var methodInType = ancestors.First().Identifier.ToString();
-            return SyntaxFactory.CastExpression(
+            var resultNode = SyntaxFactory.CastExpression(
                 SyntaxFactory.ParseTypeName(methodInType),
                 SyntaxFactory.CastExpression(
                     SyntaxFactory.ParseTypeName(typeof(object).FullName),
                     node
                 )
             );
+
+            return AddRewriteCommentIfNeeded(resultNode, $"{nameof(ThisRewriterBase)}:{nameof(CreateCastedThisExpression)}");
         }
     }
 }

@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace FastScriptReload.Editor.Compilation.CodeRewriting
 {
-	class CreateNewFieldInitMethodRewriter: CSharpSyntaxRewriter {
+	class CreateNewFieldInitMethodRewriter: FastScriptReloadCodeRewriterBase {
 		private readonly Dictionary<string, List<string>> _typeToNewFieldDeclarations;
 		private static readonly string NewFieldsToCreateValueFnDictionaryFieldName = "__Patched_NewFieldNameToInitialValueFn";
 		private static readonly string NewFieldsToGetTypeFnDictionaryFieldName = "__Patched_NewFieldsToGetTypeFnDictionaryFieldName";
@@ -25,7 +25,8 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 			return (Dictionary<string, Func<object>>) forType.GetField(NewFieldsToGetTypeFnDictionaryFieldName, BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
 		}
 
-		public CreateNewFieldInitMethodRewriter(Dictionary<string, List<string>> typeToNewFieldDeclarations)
+		public CreateNewFieldInitMethodRewriter(Dictionary<string, List<string>> typeToNewFieldDeclarations, bool writeRewriteReasonAsComment)
+			:base(writeRewriteReasonAsComment)
 		{
 			_typeToNewFieldDeclarations = typeToNewFieldDeclarations;
 		}
@@ -46,7 +47,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 			return CreateNewFieldNameToGetObjectFnDictionary(withDictionaryFieldNameToInitFieldValue, newClassFields, getObjectTypeFnSyntax, NewFieldsToGetTypeFnDictionaryFieldName);
 		}
 
-		private static ClassDeclarationSyntax CreateNewFieldNameToGetObjectFnDictionary(ClassDeclarationSyntax node,
+		private ClassDeclarationSyntax CreateNewFieldNameToGetObjectFnDictionary(ClassDeclarationSyntax node,
 			List<string> newClassFields, Func<FieldDeclarationSyntax, ExpressionSyntax> getObjectFnSyntax, string dictionaryFieldName)
 		{
 			var dictionaryKeyToInitValueNodes = newClassFields.SelectMany(fieldName =>
@@ -143,7 +144,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 					.WithLeadingTrivia(SyntaxFactory.TriviaList(SyntaxFactory.ElasticCarriageReturnLineFeed))
 					.WithTrailingTrivia(SyntaxFactory.TriviaList(SyntaxFactory.ElasticCarriageReturnLineFeed, SyntaxFactory.ElasticCarriageReturnLineFeed))
 			);
-			return withDictionaryFieldNameToInitFieldValue;
+			return AddRewriteCommentIfNeeded(withDictionaryFieldNameToInitFieldValue, $"{nameof(CreateNewFieldInitMethodRewriter)}");
 		}
 	}
 }

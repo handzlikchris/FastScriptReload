@@ -22,11 +22,11 @@ public class AsyncTester : MonoBehaviour
     async void LogMessage()
     {
 
-        Debug.Log("Async changes - changed1"); 
+        Debug.Log("Async changes - changed2"); 
 
         await Task.Delay(1000);
     
-        Debug.Log("Async after delay 12311");
+        Debug.Log("Async after delay 1");
 
         await Task.Yield();
     }

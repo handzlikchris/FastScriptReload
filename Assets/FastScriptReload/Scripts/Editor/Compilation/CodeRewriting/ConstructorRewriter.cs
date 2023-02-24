@@ -6,11 +6,12 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace FastScriptReload.Editor.Compilation.CodeRewriting
 {
-        class ConstructorRewriter : CSharpSyntaxRewriter
+        class ConstructorRewriter : FastScriptReloadCodeRewriterBase
         {
 	        private readonly bool _adjustCtorOnlyForNonNestedTypes;
 	        
-	        public ConstructorRewriter(bool adjustCtorOnlyForNonNestedTypes)
+	        public ConstructorRewriter(bool adjustCtorOnlyForNonNestedTypes, bool writeRewriteReasonAsComment)
+				: base(writeRewriteReasonAsComment)
 	        {
 		        _adjustCtorOnlyForNonNestedTypes = adjustCtorOnlyForNonNestedTypes;
 	        }
@@ -51,7 +52,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 		        return base.VisitDestructorDeclaration(node);
 	        }
 
-	        private static SyntaxNode AdjustCtorOrDestructorNameForTypeAdjustment(BaseMethodDeclarationSyntax node, SyntaxToken nodeIdentifier)
+	        private SyntaxNode AdjustCtorOrDestructorNameForTypeAdjustment(BaseMethodDeclarationSyntax node, SyntaxToken nodeIdentifier)
 	        {
 		        var typeName = (node.Ancestors().First(n => n is TypeDeclarationSyntax) as TypeDeclarationSyntax).Identifier.ToString();
 		        if (!nodeIdentifier.ToFullString().Contains(typeName))
@@ -74,7 +75,10 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 			        typeName += AssemblyChangesLoader.ClassnamePatchedPostfix;
 		        }
 
-		        return node.ReplaceToken(nodeIdentifier, SyntaxFactory.Identifier(typeName));
+		        return AddRewriteCommentIfNeeded(
+			        node.ReplaceToken(nodeIdentifier, SyntaxFactory.Identifier(typeName)), 
+			        $"{nameof(ConstructorRewriter)}:{nameof(AdjustCtorOrDestructorNameForTypeAdjustment)}"
+			    );
 	        }
         }
 }

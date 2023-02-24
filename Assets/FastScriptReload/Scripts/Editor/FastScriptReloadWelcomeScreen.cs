@@ -217,6 +217,7 @@ BREAKPOINTS IN ORIGINAL FILE WON'T BE HIT!", MessageType.Error);
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableDetailedDebugLogging);
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.LogHowToFixMessageOnCompilationError);
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.StopShowingAutoReloadEnabledDialogBox);
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.DebugWriteRewriteReasonAsComment);
                         }
                     })
                 }.Concat(additionalSections).ToList()),
@@ -464,6 +465,16 @@ includeSubdirectories - whether child directories should be watched as well
             }
         );
         
+        public static readonly ToggleProjectEditorPreferenceDefinition DebugWriteRewriteReasonAsComment = new ToggleProjectEditorPreferenceDefinition(
+            "Write rewrite reason as comment in changed file", "DebugWriteRewriteReasonAsComment", false, (object newValue, object oldValue) =>
+            {
+                DynamicCompilationBase.DebugWriteRewriteReasonAsComment = (bool)newValue;
+            },
+            (value) =>
+            {
+                DynamicCompilationBase.DebugWriteRewriteReasonAsComment = (bool)value;
+            });
+        
         public static readonly ToggleProjectEditorPreferenceDefinition IsAutoOpenGeneratedSourceFileOnChangeEnabled = new ToggleProjectEditorPreferenceDefinition(
             "Auto-open generated source file for debugging", "IsAutoOpenGeneratedSourceFileOnChangeEnabled", false);
         
@@ -636,6 +647,7 @@ includeSubdirectories - whether child directories should be watched as well
             EnsureUserAwareOfAutoRefresh();
 
             DynamicCompilationBase.LogHowToFixMessageOnCompilationError = (bool)FastScriptReloadPreference.LogHowToFixMessageOnCompilationError.GetEditorPersistedValueOrDefault();
+            DynamicCompilationBase.DebugWriteRewriteReasonAsComment = (bool)FastScriptReloadPreference.DebugWriteRewriteReasonAsComment.GetEditorPersistedValueOrDefault();
             DynamicCompilationBase.ReferencesExcludedFromHotReload = (List<string>)FastScriptReloadPreference.ReferencesExcludedFromHotReload.GetElements();
             FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.UpdateValues(
                 (bool)FastScriptReloadPreference.IsDidFieldsOrPropertyCountChangedCheckDisabled.GetEditorPersistedValueOrDefault(),

@@ -11,11 +11,12 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace FastScriptReload.Editor.Compilation.CodeRewriting
 {
-	class NewFieldsRewriter : CSharpSyntaxRewriter
+	class NewFieldsRewriter : FastScriptReloadCodeRewriterBase
 	{
 		private readonly Dictionary<string, List<string>> _typeToNewFieldDeclarations;
 
-		public NewFieldsRewriter(Dictionary<string, List<string>> typeToNewFieldDeclarations)
+		public NewFieldsRewriter(Dictionary<string, List<string>> typeToNewFieldDeclarations, bool writeRewriteReasonAsComment) 
+			:base(writeRewriteReasonAsComment)
 		{
 			_typeToNewFieldDeclarations = typeToNewFieldDeclarations;
 		}
@@ -42,8 +43,11 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 						{
 							if (allNewFieldNamesForClass.Contains(fieldName))
 							{
-								return SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(nameofExpressionParts.Last())); // should take last part only to for actual string eg. 'FieldInThatClass'
+								return AddRewriteCommentIfNeeded(
+									SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(nameofExpressionParts.Last())), // should take last part only to for actual string eg. 'FieldInThatClass'
+									$"{nameof(NewFieldsRewriter)}:{nameof(VisitInvocationExpression)}");
 							}
+							
 						}
 					}
 				}
@@ -69,25 +73,28 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 							if (!isNameOfExpression) //nameof expression will be rewritten via VisitInvocationExpression
 							{
 								return
-								SyntaxFactory.MemberAccessExpression(
-										SyntaxKind.SimpleMemberAccessExpression,
-										SyntaxFactory.InvocationExpression(
-												SyntaxFactory.MemberAccessExpression(
-													SyntaxKind.SimpleMemberAccessExpression,
-													SyntaxFactory.IdentifierName(typeof(TemporaryNewFieldValues).FullName),
-													SyntaxFactory.GenericName(
-															SyntaxFactory.Identifier(nameof(TemporaryNewFieldValues.ResolvePatchedObject)))
-														.WithTypeArgumentList(
-															SyntaxFactory.TypeArgumentList(
-																SyntaxFactory.SingletonSeparatedList<TypeSyntax>(
-																	SyntaxFactory.IdentifierName(fullClassName + AssemblyChangesLoader.ClassnamePatchedPostfix))))))
-											.WithArgumentList(
-												SyntaxFactory.ArgumentList(
-													SyntaxFactory.SingletonSeparatedList<ArgumentSyntax>(
-														SyntaxFactory.Argument(
-															SyntaxFactory.ThisExpression())))),
-										SyntaxFactory.IdentifierName(fieldName))
-									.WithTriviaFrom(node);
+								AddRewriteCommentIfNeeded(
+									SyntaxFactory.MemberAccessExpression(
+											SyntaxKind.SimpleMemberAccessExpression,
+											SyntaxFactory.InvocationExpression(
+													SyntaxFactory.MemberAccessExpression(
+														SyntaxKind.SimpleMemberAccessExpression,
+														SyntaxFactory.IdentifierName(typeof(TemporaryNewFieldValues).FullName),
+														SyntaxFactory.GenericName(
+																SyntaxFactory.Identifier(nameof(TemporaryNewFieldValues.ResolvePatchedObject)))
+															.WithTypeArgumentList(
+																SyntaxFactory.TypeArgumentList(
+																	SyntaxFactory.SingletonSeparatedList<TypeSyntax>(
+																		SyntaxFactory.IdentifierName(fullClassName + AssemblyChangesLoader.ClassnamePatchedPostfix))))))
+												.WithArgumentList(
+													SyntaxFactory.ArgumentList(
+														SyntaxFactory.SingletonSeparatedList<ArgumentSyntax>(
+															SyntaxFactory.Argument(
+																SyntaxFactory.ThisExpression())))),
+											SyntaxFactory.IdentifierName(fieldName))
+										.WithTriviaFrom(node),
+									$"{nameof(NewFieldsRewriter)}:{nameof(VisitIdentifierName)}"
+								);
 							}
 						}
 					}
@@ -113,9 +120,12 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 					var existingLeading = node.GetLeadingTrivia();
 					var existingTrailing = node.GetTrailingTrivia();
 
-					return node
-						.WithLeadingTrivia(existingLeading.Add(SyntaxFactory.Comment("/* ")))
-						.WithTrailingTrivia(existingTrailing.Insert(0, SyntaxFactory.Comment(" */ //Auto-excluded to prevent exceptions - see docs")));
+					return AddRewriteCommentIfNeeded(
+						node
+							.WithLeadingTrivia(existingLeading.Add(SyntaxFactory.Comment("/* ")))
+							.WithTrailingTrivia(existingTrailing.Insert(0, SyntaxFactory.Comment(" */ //Auto-excluded to prevent exceptions - see docs"))),
+						$"{nameof(NewFieldsRewriter)}:{nameof(VisitFieldDeclaration)}"
+					);
 				}
 			}
 

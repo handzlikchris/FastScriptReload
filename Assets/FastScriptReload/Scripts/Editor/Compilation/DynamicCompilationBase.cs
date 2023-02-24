@@ -18,6 +18,7 @@ namespace FastScriptReload.Editor.Compilation
     [InitializeOnLoad]
     public class DynamicCompilationBase
     {
+        public static bool DebugWriteRewriteReasonAsComment;
 	    public static bool LogHowToFixMessageOnCompilationError;
 	    public static bool EnableExperimentalThisCallLimitationFix;
         public static List<string> ReferencesExcludedFromHotReload = new List<string>();
@@ -128,19 +129,19 @@ namespace FastScriptReload.Editor.Compilation
                 //WARN: application order is important, eg ctors need to happen before class names as otherwise ctors will not be recognised as ctors
                 if (FastScriptReloadManager.Instance.EnableExperimentalThisCallLimitationFix)
                 {
-					root = new ThisCallRewriter().Visit(root);
-					root = new ThisAssignmentRewriter().Visit(root);
+					root = new ThisCallRewriter(DebugWriteRewriteReasonAsComment).Visit(root);
+					root = new ThisAssignmentRewriter(DebugWriteRewriteReasonAsComment).Visit(root);
                 }
 
                 if (FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.EnableExperimentalAddedFieldsSupport)
                 {
-                    root = new NewFieldsRewriter(typeToNewFieldDeclarations).Visit(root);
-                    root = new CreateNewFieldInitMethodRewriter(typeToNewFieldDeclarations).Visit(root);
+                    root = new NewFieldsRewriter(typeToNewFieldDeclarations, DebugWriteRewriteReasonAsComment).Visit(root);
+                    root = new CreateNewFieldInitMethodRewriter(typeToNewFieldDeclarations, DebugWriteRewriteReasonAsComment).Visit(root);
                 }
                 
-                root = new ConstructorRewriter(adjustCtorOnlyForNonNestedTypes: true).Visit(root);
+                root = new ConstructorRewriter(adjustCtorOnlyForNonNestedTypes: true, DebugWriteRewriteReasonAsComment).Visit(root);
                 
-                var hotReloadCompliantRewriter = new HotReloadCompliantRewriter();
+                var hotReloadCompliantRewriter = new HotReloadCompliantRewriter(DebugWriteRewriteReasonAsComment);
                 root = hotReloadCompliantRewriter.Visit(root);
                 combinedUsingStatements.AddRange(hotReloadCompliantRewriter.StrippedUsingDirectives);
 
