@@ -20,6 +20,7 @@ namespace FastScriptReload.Editor
         public static string BaseUrl = "https://immersivevrtools.com";
         public static string GenerateGetUpdatesUrl(string userId, string versionId)
         {
+            //WARN: the URL can sometimes be adjusted, make sure updated correctly
             return $"{BaseUrl}/updates/fast-script-reload/{userId}?CurrentVersion={versionId}";
         }
         public static string VersionId = "1.3";
