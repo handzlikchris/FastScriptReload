@@ -13,6 +13,7 @@ using ImmersiveVRTools.Runtime.Common.Utilities;
 using ImmersiveVrToolsCommon.Runtime.Logging;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -46,7 +47,7 @@ namespace FastScriptReload.Editor.Compilation
 
 ";
 	    
-        protected static readonly string[] ActiveScriptCompilationDefines;
+        public static readonly string[] ActiveScriptCompilationDefines;
         protected static readonly string DynamicallyCreatedAssemblyAttributeSourceCode = $"[assembly: {typeof(DynamicallyCreatedAssemblyAttribute).FullName}()]";
         private static readonly string AssemblyCsharpFullPath;
         
@@ -72,9 +73,6 @@ namespace FastScriptReload.Editor.Compilation
                 var fileCode = File.ReadAllText(sourceCodeFile);
                 var tree = CSharpSyntaxTree.ParseText(fileCode, new CSharpParseOptions(preprocessorSymbols: definedPreprocessorSymbols));
                 var root = tree.GetRoot();
-                
-                //processed before everything else
-                root = PerformSaveUserDefinedOverridesReplacements(definedPreprocessorSymbols, sourceCodeFile, root);
                 
                 var typeToNewFieldDeclarations = new Dictionary<string, List<string>>();
                 if (FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.EnableExperimentalAddedFieldsSupport)
@@ -132,8 +130,6 @@ namespace FastScriptReload.Editor.Compilation
 #endif
                 }
 
-
-
                 //WARN: application order is important, eg ctors need to happen before class names as otherwise ctors will not be recognised as ctors
                 if (FastScriptReloadManager.Instance.EnableExperimentalThisCallLimitationFix)
                 {
@@ -152,6 +148,13 @@ namespace FastScriptReload.Editor.Compilation
                 var hotReloadCompliantRewriter = new HotReloadCompliantRewriter(DebugWriteRewriteReasonAsComment);
                 root = hotReloadCompliantRewriter.Visit(root);
                 combinedUsingStatements.AddRange(hotReloadCompliantRewriter.StrippedUsingDirectives);
+
+                //processed as last step to simply rewrite all changes made before
+                if (TryResolveUserDefinedOverridesRoot(sourceCodeFile, definedPreprocessorSymbols, out var userDefinedOverridesRoot))
+                {
+                    root = ProcessUserDefinedOverridesReplacements(sourceCodeFile, root, userDefinedOverridesRoot);
+                    root = AddUserDefinedOverridenTypes(userDefinedOverridesRoot, root);
+                }
 
                 return root.ToFullString();
             }).ToList();
@@ -173,20 +176,86 @@ namespace FastScriptReload.Editor.Compilation
             return sourceCodeCombinedSb.ToString();
         }
 
-        private static SyntaxNode PerformSaveUserDefinedOverridesReplacements(List<string> definedPreprocessorSymbols, string sourceCodeFile, SyntaxNode root)
+        private static SyntaxNode AddUserDefinedOverridenTypes(SyntaxNode userDefinedOverridesRoot, SyntaxNode root)
+        {
+            try
+            {
+                var userDefinedOverrideTypes = userDefinedOverridesRoot.DescendantNodes().OfType<TypeDeclarationSyntax>()
+                    .ToDictionary(n => RoslynUtils.GetMemberFQDN(n, n.Identifier.ToString()));
+                var allDefinedTypesInRecompiledFile = root.DescendantNodes().OfType<TypeDeclarationSyntax>()
+                    .ToDictionary(n => RoslynUtils.GetMemberFQDN(n, n.Identifier.ToString())); //what about nested types?
+
+                var userDefinedOverrideTypesWithoutMatchnigInRecompiledFile = userDefinedOverrideTypes.Select(overridenType =>
+                    {
+                        if (!allDefinedTypesInRecompiledFile.ContainsKey(overridenType.Key))
+                        {
+                            return overridenType;
+                        }
+
+                        return default(KeyValuePair<string, TypeDeclarationSyntax>);
+                    })
+                    .Where(kv => kv.Key != default(string))
+                    .ToList();
+
+                //types should be added either to root namespace or root of document
+                var rootNamespace = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+                foreach (var overridenTypeToAdd in userDefinedOverrideTypesWithoutMatchnigInRecompiledFile)
+                {
+                    var newMember = FastScriptReloadCodeRewriterBase.AddRewriteCommentIfNeeded(overridenTypeToAdd.Value,
+                        "New type defined in override file", DebugWriteRewriteReasonAsComment, true);
+                    if (rootNamespace != null)
+                    {
+                        rootNamespace =
+                            root.DescendantNodes().OfType<NamespaceDeclarationSyntax>()
+                                .FirstOrDefault(); //need to search again to make sure it didn't change
+                        var newRootNamespace = rootNamespace.AddMembers(newMember);
+                        root = root.ReplaceNode(rootNamespace, newRootNamespace);
+                    }
+                    else
+                    {
+                        root = ((CompilationUnitSyntax)root).AddMembers(newMember);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Unable to add user defined override types. {e}");
+            }
+
+            return root;
+        }
+
+        private static bool TryResolveUserDefinedOverridesRoot(string sourceCodeFile, List<string> definedPreprocessorSymbols, out SyntaxNode userDefinedOverridesRoot)
         {
             if (ScriptGenerationOverridesManager.TryGetScriptOverride(new FileInfo(sourceCodeFile), out var userDefinedOverridesFile))
             {
                 try
                 {
-                    var userDefinedOverridesTree = CSharpSyntaxTree.ParseText(File.ReadAllText(userDefinedOverridesFile.FullName), new CSharpParseOptions(preprocessorSymbols: definedPreprocessorSymbols)); 
-                    var userDefinedScriptOverridesRewriter = new ManualUserDefinedScriptOverridesRewriter(userDefinedOverridesTree.GetRoot(), DebugWriteRewriteReasonAsComment);
+                    userDefinedOverridesRoot = CSharpSyntaxTree.ParseText(File.ReadAllText(userDefinedOverridesFile.FullName), new CSharpParseOptions(preprocessorSymbols: definedPreprocessorSymbols)).GetRoot();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"Unable to resolve user defined overrides for file: '{userDefinedOverridesFile.FullName}' - please make sure it's compilable. Error: '{ex}'");
+                }
+            }
+
+            userDefinedOverridesRoot = null;
+            return false;
+        }
+
+        private static SyntaxNode ProcessUserDefinedOverridesReplacements(string sourceCodeFile, SyntaxNode root, SyntaxNode userDefinedOverridesRoot)
+        {
+            if (ScriptGenerationOverridesManager.TryGetScriptOverride(new FileInfo(sourceCodeFile), out var userDefinedOverridesFile))
+            {
+                try
+                {
+                    var userDefinedScriptOverridesRewriter = new ManualUserDefinedScriptOverridesRewriter(userDefinedOverridesRoot, DebugWriteRewriteReasonAsComment);
                     root = userDefinedScriptOverridesRewriter.Visit(root);
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError(
-                        $"Unable to resolve user defined overrides for file: '{userDefinedOverridesFile.FullName}' - please make sure it's compilable. Error: '{ex}'");
+                    Debug.LogError($"Unable to resolve user defined overrides for file: '{userDefinedOverridesFile.FullName}' - please make sure it's compilable. Error: '{ex}'");
                 }
             }
 

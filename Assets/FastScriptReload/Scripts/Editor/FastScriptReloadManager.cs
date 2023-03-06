@@ -177,7 +177,7 @@ Workaround will search in all folders (under project root) and will use first fo
             if (Selection.activeObject is MonoScript script)
             {
                 return ScriptGenerationOverridesManager.TryGetScriptOverride(  
-                    new FileInfo( Path.Combine(Application.dataPath, AssetDatabase.GetAssetPath(script))),
+                    new FileInfo(Path.Combine(Path.Combine(Application.dataPath + "//..", AssetDatabase.GetAssetPath(script)))),
                     out var _
                 );
             }

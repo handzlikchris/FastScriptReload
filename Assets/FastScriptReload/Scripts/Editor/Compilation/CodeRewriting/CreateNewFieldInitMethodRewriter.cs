@@ -144,7 +144,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 					.WithLeadingTrivia(SyntaxFactory.TriviaList(SyntaxFactory.ElasticCarriageReturnLineFeed))
 					.WithTrailingTrivia(SyntaxFactory.TriviaList(SyntaxFactory.ElasticCarriageReturnLineFeed, SyntaxFactory.ElasticCarriageReturnLineFeed))
 			);
-			return AddRewriteCommentIfNeeded(withDictionaryFieldNameToInitFieldValue, $"{nameof(CreateNewFieldInitMethodRewriter)}");
+			return AddRewriteCommentIfNeeded(withDictionaryFieldNameToInitFieldValue, $"{nameof(CreateNewFieldInitMethodRewriter)}", true);
 		}
 	}
 }
