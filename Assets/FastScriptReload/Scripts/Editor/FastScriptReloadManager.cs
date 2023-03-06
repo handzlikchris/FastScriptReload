@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FastScriptReload.Editor.Compilation;
+using FastScriptReload.Editor.Compilation.ScriptGenerationOverrides;
 using FastScriptReload.Runtime;
 using ImmersiveVRTools.Runtime.Common;
 using ImmersiveVrToolsCommon.Runtime.Logging;
@@ -144,13 +145,30 @@ Workaround will search in all folders (under project root) and will use first fo
             EditorApplication.update += Instance.Update;
             EditorApplication.playModeStateChanged += Instance.OnEditorApplicationOnplayModeStateChanged;
         }
-    
-        [MenuItem("Assets/Fast Script Reload/Add Hot-Reload Exclusion", false)]
+        
+        private const int BaseMenuItemPriority_ManualScriptOverride = 100;
+        [MenuItem("Assets/Fast Script Reload/Add Hot-Reload Manual Script Override", false, BaseMenuItemPriority_ManualScriptOverride + 1)]
+        public static void AddHotReloadManualScriptOverride()
+        {
+            if (Selection.activeObject is MonoScript script)
+            {
+                ScriptGenerationOverridesManager.AddScriptOverride(script);
+            }
+        }
+        
+        [MenuItem("Assets/Fast Script Reload/Add Hot-Reload Manual Script Override", true)]
+        public static bool AddHotReloadManualScriptOverrideValidateFn()
+        {
+            return Selection.activeObject is MonoScript;
+        }
+        
+        private const int BaseMenuItemPriority_Exclusions = 200;
+        [MenuItem("Assets/Fast Script Reload/Add Hot-Reload Exclusion", false, BaseMenuItemPriority_Exclusions + 1)]
         public static void AddFileAsExcluded()
         {
             FastScriptReloadPreference.FilesExcludedFromHotReload.AddElement(ResolveRelativeToAssetDirectoryFilePath(Selection.activeObject));
         }
-    
+
         [MenuItem("Assets/Fast Script Reload/Add Hot-Reload Exclusion", true)]
         public static bool AddFileAsExcludedValidateFn()
         {
@@ -159,7 +177,7 @@ Workaround will search in all folders (under project root) and will use first fo
                        .Contains(ResolveRelativeToAssetDirectoryFilePath(Selection.activeObject));
         }
 
-        [MenuItem("Assets/Fast Script Reload/Remove Hot-Reload Exclusion", false)]
+        [MenuItem("Assets/Fast Script Reload/Remove Hot-Reload Exclusion", false, BaseMenuItemPriority_Exclusions + 2)]
         public static void RemoveFileAsExcluded()
         {
             FastScriptReloadPreference.FilesExcludedFromHotReload.RemoveElement(ResolveRelativeToAssetDirectoryFilePath(Selection.activeObject));
@@ -173,12 +191,14 @@ Workaround will search in all folders (under project root) and will use first fo
                    .Contains(ResolveRelativeToAssetDirectoryFilePath(Selection.activeObject));
         }
     
-        [MenuItem("Assets/Fast Script Reload/Show Exclusions", false)]
+        [MenuItem("Assets/Fast Script Reload/Show Exclusions", false, BaseMenuItemPriority_Exclusions + 3)]
         public static void ShowExcludedFilesInUi()
         {
             var window = FastScriptReloadWelcomeScreen.Init();
             window.OpenExclusionsSection();
         }
+
+
     
         private static string ResolveRelativeToAssetDirectoryFilePath(UnityEngine.Object obj)
         {

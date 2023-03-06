@@ -272,6 +272,10 @@ New fields will also show in editor - you can tweak them as normal variables.", 
                         EditorGUILayout.HelpBox(@"Currently asset hot-reloads only in play-mode, you can enable experimental editor mode support here.
 
 Please make sure to read limitation section as not all changes can be performed", MessageType.Warning);
+                        
+                        EditorGUILayout.HelpBox(@"As an experimental feature it may be unstable and is not as reliable as play-mode workflow.
+
+In some cases it can lock/crash editor.", MessageType.Error);
                         GUILayout.Space(10);
                         
                         using (LayoutHelper.LabelWidth(320))
