@@ -3,6 +3,7 @@
 - big optimization in how long hot-reload part will take, first call will be unaffected when type cache is build but subsequent calls will be significantly quicker
 - added 'Exclude References' options - this allows to remove specific dll references from dynamically compiled code (as in some cases you may get 'type defined in both assembly x.dll and y.dll'
 - destructors will no longer cause compilation error
+- (options opt-in) script rewriting can optionally emit comment - why change was made to help with troubleshooting issues
 
 1.3 - (Experimental) - New fields added in playmode
 New fields can be added and used in code
