@@ -14,15 +14,22 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
         
         protected SyntaxToken AddRewriteCommentIfNeeded(SyntaxToken syntaxToken, string commentText, bool append = false)
         {
-            if (_writeRewriteReasonAsComment)
+            return AddRewriteCommentIfNeeded(syntaxToken, commentText, _writeRewriteReasonAsComment, append);
+        }
+
+        public static SyntaxToken AddRewriteCommentIfNeeded(SyntaxToken syntaxToken, string commentText, bool writeRewriteReasonAsComment, bool append)
+        {
+            if (writeRewriteReasonAsComment)
             {
                 if (append)
                 {
-                    return syntaxToken.WithLeadingTrivia(syntaxToken.LeadingTrivia.Add(SyntaxFactory.Comment($"/*FSR:{commentText}*/")));
+                    return syntaxToken.WithLeadingTrivia(
+                        syntaxToken.LeadingTrivia.Add(SyntaxFactory.Comment($"/*FSR:{commentText}*/")));
                 }
                 else
                 {
-                    return syntaxToken.WithTrailingTrivia(syntaxToken.TrailingTrivia.Add(SyntaxFactory.Comment($"/*FSR:{commentText}*/")));
+                    return syntaxToken.WithTrailingTrivia(
+                        syntaxToken.TrailingTrivia.Add(SyntaxFactory.Comment($"/*FSR:{commentText}*/")));
                 }
             }
 
@@ -32,15 +39,23 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
         protected T AddRewriteCommentIfNeeded<T>(T syntaxNode, string commentText, bool append = false)
             where T : SyntaxNode
         {
-            if (_writeRewriteReasonAsComment)
-            {
-                if(append) {
-                    return syntaxNode.WithLeadingTrivia(syntaxNode.GetLeadingTrivia().Add(SyntaxFactory.Comment($"/*FSR:{commentText}*/")));
-                }
-                else {
-                    return syntaxNode.WithTrailingTrivia(syntaxNode.GetTrailingTrivia().Add(SyntaxFactory.Comment($"/*FSR:{commentText}*/")));
-                }
+            return AddRewriteCommentIfNeeded(syntaxNode, commentText, _writeRewriteReasonAsComment, append);
+        }
 
+        public static T AddRewriteCommentIfNeeded<T>(T syntaxNode, string commentText, bool writeRewriteReasonAsComment, bool append) where T : SyntaxNode
+        {
+            if (writeRewriteReasonAsComment)
+            {
+                if (append)
+                {
+                    return syntaxNode.WithLeadingTrivia(syntaxNode.GetLeadingTrivia()
+                        .Add(SyntaxFactory.Comment($"/*FSR:{commentText}*/")));
+                }
+                else
+                {
+                    return syntaxNode.WithTrailingTrivia(syntaxNode.GetTrailingTrivia()
+                        .Add(SyntaxFactory.Comment($"/*FSR:{commentText}*/")));
+                }
             }
 
             return syntaxNode;

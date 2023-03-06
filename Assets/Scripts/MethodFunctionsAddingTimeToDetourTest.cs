@@ -9,7 +9,7 @@ public class MethodFunctionsAddingTimeToDetourTest : MonoBehaviour
     private int SomeFieldIntClassMethod() => someFieldInt;
  
     private IEnumerator Coroutine1() { yield return null; }  
-    private IEnumerator Coroutine2() { yield return null; }     
+    private IEnumerator Coroutine2() { yield return null; }      
     private IEnumerator Coroutine3() { yield return null; }            
     private IEnumerator Coroutine4() { yield return null; }      
     
