@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
@@ -19,8 +20,7 @@ namespace FastScriptReload.Editor.Compilation.ScriptGenerationOverrides
 
         public static void AddScriptOverride(MonoScript script)
         {
-            if(!ManualOverridesFolder.Exists)
-                ManualOverridesFolder.Create();
+            EnsureOverrideFolderExists();
 
             var overridenFile = new FileInfo(Path.Combine(ManualOverridesFolder.FullName, script.name + ".cs"));
             if (!overridenFile.Exists)
@@ -28,6 +28,42 @@ namespace FastScriptReload.Editor.Compilation.ScriptGenerationOverrides
             
             //TODO: write a template in on how to change
             InternalEditorUtility.OpenFileAtLineExternal(overridenFile.FullName, 0);
+        }
+        
+        public static bool TryRemoveScriptOverride(MonoScript script)
+        {
+            EnsureOverrideFolderExists();
+
+            var overridenFile = new FileInfo(Path.Combine(ManualOverridesFolder.FullName, script.name + ".cs"));
+            if (overridenFile.Exists)
+            {
+                try
+                {
+                    overridenFile.Delete();
+                }
+                catch (Exception e)
+                {
+                    Debug.Log($"Unable to remove: '{overridenFile.Name}' - make sure it's not locked / open in editor");
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        public static bool TryGetScriptOverride(FileInfo changedFile, out FileInfo overridesFile)
+        {
+            //TODO: PERF: could cache?
+            overridesFile = new FileInfo(Path.Combine(ManualOverridesFolder.FullName, changedFile.Name));
+
+            return overridesFile.Exists;
+        }
+        
+        private static void EnsureOverrideFolderExists()
+        {
+            if (!ManualOverridesFolder.Exists)
+                ManualOverridesFolder.Create();
         }
     }
 }

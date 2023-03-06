@@ -79,7 +79,7 @@ namespace FastScriptReload.Editor.Compilation
                 var sourceCodeCombinedFilePath = _tempFolder + $"{asmName}.SourceCodeCombined.cs";
                 var outLibraryPath = $"{_tempFolder}{asmName}.dll";
 
-                var sourceCodeCombined = CreateSourceCodeCombinedContents(filePathsWithSourceCode.Select(File.ReadAllText), ActiveScriptCompilationDefines.ToList());
+                var sourceCodeCombined = CreateSourceCodeCombinedContents(filePathsWithSourceCode, ActiveScriptCompilationDefines.ToList());
                 CreateFileAndTrackAsCleanup(sourceCodeCombinedFilePath, sourceCodeCombined, _createdFilesToCleanUp);
 #if UNITY_EDITOR
                 UnityMainThreadDispatcher.Instance.Enqueue(() =>
