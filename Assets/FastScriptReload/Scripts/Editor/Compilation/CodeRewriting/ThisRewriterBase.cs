@@ -3,7 +3,6 @@ using ImmersiveVrToolsCommon.Runtime.Logging;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using UnityEngine;
 
 namespace FastScriptReload.Editor.Compilation.CodeRewriting
 {
@@ -29,8 +28,15 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
                     node
                 );
             }
+            
+            var firstAncestor = ancestors.FirstOrDefault();
+            if (firstAncestor == null)
+            {
+                LoggerScoped.LogWarning($"Unable to find first ancestor for node: {node.ToFullString()}, this rewrite will not be applied");
+                return node;
+            }
 
-            var methodInType = ancestors.First().Identifier.ToString();
+            var methodInType = firstAncestor.Identifier.ToString();
             var resultNode = SyntaxFactory.CastExpression(
                 SyntaxFactory.ParseTypeName(methodInType),
                 SyntaxFactory.CastExpression(
