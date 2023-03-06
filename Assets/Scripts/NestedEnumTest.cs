@@ -35,11 +35,14 @@ public class SetupGenerationData {
     }
 }
 
-public class NestedEnumTest : MonoBehaviour   
+public class NestedEnumTest : MonoBehaviour    
 {
-    public virtual void Deactivate()
+    private AreaSpot[,] spots;
+    protected List<(CardinalDirection, int)> stageExits;
+    
+    public virtual void Deactivate() 
     {
-        gameObject.SetActive(false);     
+        gameObject.SetActive(false);      
     }
     
     void Update()
@@ -62,4 +65,22 @@ public class NestedEnumTest : MonoBehaviour
         Blocked,
         Exit,
     }
+}
+
+public class AreaSpot {
+    public AreaSpot()
+    {
+        isOccupied = true;
+    }
+
+    public void SetEmpty()
+    {
+        isBlocking = false;
+        isOccupied = false;
+        isDestroyable = false;
+    }
+
+    public bool isOccupied;
+    public bool isBlocking;
+    public bool isDestroyable;
 }
