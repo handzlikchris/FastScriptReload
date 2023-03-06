@@ -1,16 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using FastScriptReload.Editor.Compilation.CodeRewriting;
+using FastScriptReload.Editor.Compilation.ScriptGenerationOverrides;
 using FastScriptReload.Runtime;
 using FastScriptReload.Scripts.Runtime;
 using ImmersiveVRTools.Editor.Common.Cache;
 using ImmersiveVRTools.Runtime.Common.Utilities;
 using ImmersiveVrToolsCommon.Runtime.Logging;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace FastScriptReload.Editor.Compilation
@@ -59,14 +63,18 @@ namespace FastScriptReload.Editor.Compilation
 
         }
         
-        protected static string CreateSourceCodeCombinedContents(IEnumerable<string> fileSourceCode, List<string> definedPreprocessorSymbols)
+        protected static string CreateSourceCodeCombinedContents(List<string> sourceCodeFiles, List<string> definedPreprocessorSymbols)
         {
             var combinedUsingStatements = new List<string>();
             
-            var sourceCodeWithAdjustments = fileSourceCode.Select(fileCode =>
+            var sourceCodeWithAdjustments = sourceCodeFiles.Select(sourceCodeFile =>
             {
+                var fileCode = File.ReadAllText(sourceCodeFile);
                 var tree = CSharpSyntaxTree.ParseText(fileCode, new CSharpParseOptions(preprocessorSymbols: definedPreprocessorSymbols));
                 var root = tree.GetRoot();
+                
+                //processed before everything else
+                root = PerformSaveUserDefinedOverridesReplacements(definedPreprocessorSymbols, sourceCodeFile, root);
                 
                 var typeToNewFieldDeclarations = new Dictionary<string, List<string>>();
                 if (FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.EnableExperimentalAddedFieldsSupport)
@@ -163,6 +171,26 @@ namespace FastScriptReload.Editor.Compilation
             
             LoggerScoped.LogDebug("Source Code Created:\r\n\r\n" + sourceCodeCombinedSb);
             return sourceCodeCombinedSb.ToString();
+        }
+
+        private static SyntaxNode PerformSaveUserDefinedOverridesReplacements(List<string> definedPreprocessorSymbols, string sourceCodeFile, SyntaxNode root)
+        {
+            if (ScriptGenerationOverridesManager.TryGetScriptOverride(new FileInfo(sourceCodeFile), out var userDefinedOverridesFile))
+            {
+                try
+                {
+                    var userDefinedOverridesTree = CSharpSyntaxTree.ParseText(File.ReadAllText(userDefinedOverridesFile.FullName), new CSharpParseOptions(preprocessorSymbols: definedPreprocessorSymbols)); 
+                    var userDefinedScriptOverridesRewriter = new ManualUserDefinedScriptOverridesRewriter(userDefinedOverridesTree.GetRoot(), DebugWriteRewriteReasonAsComment);
+                    root = userDefinedScriptOverridesRewriter.Visit(root);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError(
+                        $"Unable to resolve user defined overrides for file: '{userDefinedOverridesFile.FullName}' - please make sure it's compilable. Error: '{ex}'");
+                }
+            }
+
+            return root;
         }
 
         protected static List<string> ResolveReferencesToAdd(List<string> excludeAssyNames)

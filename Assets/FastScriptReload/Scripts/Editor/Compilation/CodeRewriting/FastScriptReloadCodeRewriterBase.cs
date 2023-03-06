@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace FastScriptReload.Editor.Compilation.CodeRewriting
 {
-    abstract class FastScriptReloadCodeRewriterBase : CSharpSyntaxRewriter
+    public abstract class FastScriptReloadCodeRewriterBase : CSharpSyntaxRewriter
     {
         protected readonly bool _writeRewriteReasonAsComment;
 
@@ -12,22 +12,35 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
             _writeRewriteReasonAsComment = writeRewriteReasonAsComment;
         }
         
-        protected SyntaxToken AddRewriteCommentIfNeeded(SyntaxToken syntaxToken, string commentText)
+        protected SyntaxToken AddRewriteCommentIfNeeded(SyntaxToken syntaxToken, string commentText, bool append = false)
         {
             if (_writeRewriteReasonAsComment)
             {
-                return syntaxToken.WithTrailingTrivia(syntaxToken.TrailingTrivia.Add(SyntaxFactory.Comment($"/*FSR:{commentText}*/")));
+                if (append)
+                {
+                    return syntaxToken.WithLeadingTrivia(syntaxToken.LeadingTrivia.Add(SyntaxFactory.Comment($"/*FSR:{commentText}*/")));
+                }
+                else
+                {
+                    return syntaxToken.WithTrailingTrivia(syntaxToken.TrailingTrivia.Add(SyntaxFactory.Comment($"/*FSR:{commentText}*/")));
+                }
             }
 
             return syntaxToken;
         }
-        
-        protected T AddRewriteCommentIfNeeded<T>(T syntaxNode, string commentText)
-            where T: SyntaxNode
+
+        protected T AddRewriteCommentIfNeeded<T>(T syntaxNode, string commentText, bool append = false)
+            where T : SyntaxNode
         {
             if (_writeRewriteReasonAsComment)
             {
-                return syntaxNode.WithTrailingTrivia(syntaxNode.GetTrailingTrivia().Add(SyntaxFactory.Comment($"/*FSR:{commentText}*/")));
+                if(append) {
+                    return syntaxNode.WithLeadingTrivia(syntaxNode.GetLeadingTrivia().Add(SyntaxFactory.Comment($"/*FSR:{commentText}*/")));
+                }
+                else {
+                    return syntaxNode.WithTrailingTrivia(syntaxNode.GetTrailingTrivia().Add(SyntaxFactory.Comment($"/*FSR:{commentText}*/")));
+                }
+
             }
 
             return syntaxNode;
