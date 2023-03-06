@@ -11,16 +11,16 @@ namespace Root
 
         private void MethodToLeaveUntouched()
         {
-            Debug.Log("MethodToLeaveUntouched");  
+            Debug.Log("MethodToLeaveUntouched");    
         }
 
         private void MethodToChange1()
         {
-            Debug.Log("MethodToChange1 - 1");
+            Debug.Log("MethodToChange1 - 1");     
         }
 
         private void MethodToChange1(string arg1)
-        {
+        { 
             Debug.Log("MethodToChange1 with arg1");  
         }
 

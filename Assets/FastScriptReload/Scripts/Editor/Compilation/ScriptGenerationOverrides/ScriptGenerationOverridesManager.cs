@@ -15,25 +15,15 @@ namespace FastScriptReload.Editor.Compilation.ScriptGenerationOverrides
     [InitializeOnLoad]
     public static class ScriptGenerationOverridesManager
     {
-        public static DirectoryInfo ManualOverridesFolder { get; }
+        private static readonly string TemplateInterfaceDeclaration = @"
 
-        static ScriptGenerationOverridesManager()
-        {
-            //TODO: allow to customize later from code, eg for user that'd like to include in source control
-            ManualOverridesFolder = new DirectoryInfo(Application.persistentDataPath + @"FastScriptReload\ScriptOverrides");
-        }
+//New interface declaration, this is very useful in cases where code depends on some internal interfaces that re-compiled code can no longer access. Simply define them here and code will compile.
+//You can add any type in that manner
+public interface ITestNewInterface {
+    bool Test { get; set; }
+}";
 
-        public static void AddScriptOverride(MonoScript script)
-        {
-            EnsureOverrideFolderExists();
-
-            var overridenFile = new FileInfo(Path.Combine(ManualOverridesFolder.FullName, script.name + ".cs"));
-            if (!overridenFile.Exists)
-            {
-                var originalFile = new FileInfo(Path.Combine(Path.Combine(Application.dataPath + "//..", AssetDatabase.GetAssetPath(script))));
-
-                string fileTemplate =
-@$"// You can use this file to specify custom code overrides. Those will be applied to resulting code.
+        private static readonly string TemplateTopComment = @$"// You can use this file to specify custom code overrides. Those will be applied to resulting code.
 // This approach is very useful if your code is failing to compile due to one of the existing limitations.
 // 
 //  While I work on reducing limitations you can simply specify override with proper code to make sure you can continue working.
@@ -53,6 +43,23 @@ namespace FastScriptReload.Editor.Compilation.ScriptGenerationOverrides
 // You can also refer to documentation section 'User defined script overrides'
 
 ";
+
+        public static DirectoryInfo ManualOverridesFolder { get; }
+
+        static ScriptGenerationOverridesManager()
+        {
+            //TODO: allow to customize later from code, eg for user that'd like to include in source control
+            ManualOverridesFolder = new DirectoryInfo(Application.persistentDataPath + @"FastScriptReload\ScriptOverrides");
+        }
+
+        public static void AddScriptOverride(MonoScript script)
+        {
+            EnsureOverrideFolderExists();
+
+            var overridenFile = new FileInfo(Path.Combine(ManualOverridesFolder.FullName, script.name + ".cs"));
+            if (!overridenFile.Exists)
+            {
+                var originalFile = new FileInfo(Path.Combine(Path.Combine(Application.dataPath + "//..", AssetDatabase.GetAssetPath(script))));
 
                 var templateString = string.Empty;
                 try
@@ -84,6 +91,12 @@ namespace FastScriptReload.Editor.Compilation.ScriptGenerationOverrides
                                 SyntaxFactory.Identifier(firstType.Identifier.ValueText + AssemblyChangesLoader.ClassnamePatchedPostfix)
                             )
                             .WithMembers(members)).NormalizeWhitespace();
+
+                        var interfaceDeclaration = CSharpSyntaxTree.ParseText(TemplateInterfaceDeclaration);
+                        
+                        root = ((CompilationUnitSyntax)root).AddMembers(
+                            interfaceDeclaration.GetRoot().DescendantNodes().OfType<InterfaceDeclarationSyntax>().First()
+                        );
                     }
 
                     templateString = root.ToFullString();
@@ -96,12 +109,11 @@ namespace FastScriptReload.Editor.Compilation.ScriptGenerationOverrides
                 if (!overridenFile.Exists)
                 {
                     File.WriteAllText(overridenFile.FullName, 
-                        fileTemplate.Replace("<ClassPostfix>", AssemblyChangesLoader.ClassnamePatchedPostfix) + templateString
+                        TemplateTopComment.Replace("<ClassPostfix>", AssemblyChangesLoader.ClassnamePatchedPostfix) + templateString
                     );
                 }
             }
-
-            //TODO: write a template in on how to change, make sure it contains class name with __Patched postfix
+            
             InternalEditorUtility.OpenFileAtLineExternal(overridenFile.FullName, 0);
         }
         
