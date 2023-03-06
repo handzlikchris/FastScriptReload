@@ -10,6 +10,7 @@ using ImmersiveVRTools.Editor.Common.WelcomeScreen.PreferenceDefinition;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen.Utilities;
 using ImmersiveVrToolsCommon.Runtime.Logging;
 using UnityEditor;
+using UnityEditor.Compilation;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -270,17 +271,23 @@ New fields will also show in editor - you can tweak them as normal variables.", 
                     {
                         EditorGUILayout.HelpBox(@"Currently asset hot-reloads only in play-mode, you can enable experimental editor mode support here.
 
-Please make sure to read limitation section as not all changes can be performed, where possible asset will detect those changes and offer full reload instead:
-- new fields / methods can not be accessed from outside of changed file
-- you can not change methods signature
-
-TODO: add more
-", MessageType.Warning);
+Please make sure to read limitation section as not all changes can be performed", MessageType.Warning);
                         GUILayout.Space(10);
                         
                         using (LayoutHelper.LabelWidth(320))
                         {
+                            var valueBefore = (bool)FastScriptReloadPreference.EnableExperimentalEditorHotReloadSupport.GetEditorPersistedValueOrDefault();
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableExperimentalEditorHotReloadSupport);
+                            var valueAfter = (bool)FastScriptReloadPreference.EnableExperimentalEditorHotReloadSupport.GetEditorPersistedValueOrDefault();
+                            if (!valueBefore && valueAfter)
+                            {
+                                EditorUtility.DisplayDialog("Experimental feature",
+                                    "Reloading outside of playmode is still in experimental phase. " +
+                                    "\r\n\r\nIt's not as good as in-playmode workflow",
+                                    "Ok");
+                                
+                                CompilationPipeline.RequestScriptCompilation(RequestScriptCompilationOptions.None);
+                            }
                         }
                         
                         GUILayout.Space(10);
