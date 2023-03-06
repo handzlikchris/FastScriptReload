@@ -61,6 +61,9 @@ Custom code can be executed on hot reload by adding a method to changed script.
     }
 ```
 
+## User defined script overrides
+asda
+
 ## Options
 ```
 Context menus will be prefixed with used version, either Fast Script Reload or Live Script Reload.
