@@ -5,9 +5,12 @@
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "0Harmony.dll",
+        "ImmersiveVRTools.Common.Runtime.dll"
+    ],
+    "autoReferenced": false,
     "defineConstraints": [
         "UNITY_EDITOR || LiveScriptReload_IncludeInBuild_Enabled"
     ],

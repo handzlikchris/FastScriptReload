@@ -9,7 +9,7 @@ PluginImporter:
   - UNITY_EDITOR || LiveScriptReload_IncludeInBuild_Enabled
   isPreloaded: 0
   isOverridable: 0
-  isExplicitlyReferenced: 0
+  isExplicitlyReferenced: 1
   validateReferences: 1
   platformData:
   - first:
