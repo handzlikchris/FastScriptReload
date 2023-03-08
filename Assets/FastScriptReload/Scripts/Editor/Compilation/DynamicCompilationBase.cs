@@ -202,7 +202,9 @@ namespace FastScriptReload.Editor.Compilation
                 foreach (var overridenTypeToAdd in userDefinedOverrideTypesWithoutMatchnigInRecompiledFile)
                 {
                     var newMember = FastScriptReloadCodeRewriterBase.AddRewriteCommentIfNeeded(overridenTypeToAdd.Value,
-                        "New type defined in override file", DebugWriteRewriteReasonAsComment, true);
+                        "New type defined in override file", 
+                        true, //always write reason so it's not easy to miss in generated file
+                        true);
                     if (rootNamespace != null)
                     {
                         rootNamespace =
@@ -250,7 +252,8 @@ namespace FastScriptReload.Editor.Compilation
             {
                 try
                 {
-                    var userDefinedScriptOverridesRewriter = new ManualUserDefinedScriptOverridesRewriter(userDefinedOverridesRoot, DebugWriteRewriteReasonAsComment);
+                    var userDefinedScriptOverridesRewriter = new ManualUserDefinedScriptOverridesRewriter(userDefinedOverridesRoot, 
+                        true); //always write rewrite reason so it's not easy to miss
                     root = userDefinedScriptOverridesRewriter.Visit(root);
                 }
                 catch (Exception ex)
