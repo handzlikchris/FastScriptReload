@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ImmersiveVRTools.Runtime.Common.Utilities;
 using UnityEditor;
 using UnityEngine;
 
@@ -49,24 +48,25 @@ public class ChangeFileTester : MonoBehaviour
     [ContextMenu(nameof(LoadAllScripts))]
     void LoadAllScripts()
     {
-        _scriptsToTest = ReflectionHelper.GetAllTypes().Where(t => typeof(MonoBehaviour).IsAssignableFrom(t)
-            && _doNotIncludeIfTypeNameStartsWith.All(sw => !t.FullName.StartsWith(sw)))
-            .Select(m =>
-            {
-                try
-                {
-                    var c = gameObject.AddComponent(m);
-                    var script = MonoScript.FromMonoBehaviour((MonoBehaviour)c);
-                    DestroyImmediate(c);
-                    return script;
-                }
-                catch (Exception)
-                {
-                    return null;
-                }
-
-            })
-            .Where(s => s != null)
-            .ToList();
+        throw new NotImplementedException("reimplement");
+        // _scriptsToTest = ReflectionHelper.GetAllTypes().Where(t => typeof(MonoBehaviour).IsAssignableFrom(t)
+        //     && _doNotIncludeIfTypeNameStartsWith.All(sw => !t.FullName.StartsWith(sw)))
+        //     .Select(m =>
+        //     {
+        //         try
+        //         {
+        //             var c = gameObject.AddComponent(m);
+        //             var script = MonoScript.FromMonoBehaviour((MonoBehaviour)c);
+        //             DestroyImmediate(c);
+        //             return script;
+        //         }
+        //         catch (Exception)
+        //         {
+        //             return null;
+        //         }
+        //
+        //     })
+        //     .Where(s => s != null)
+        //     .ToList();
     }
 }
