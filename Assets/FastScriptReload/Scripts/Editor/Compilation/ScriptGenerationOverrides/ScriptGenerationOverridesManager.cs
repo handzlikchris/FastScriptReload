@@ -73,7 +73,10 @@ public interface ITestNewInterface {
         private static void UpdateUserDefinedScriptOverridesFileCache()
         {
             UserDefinedScriptOverrides.Clear();
-            UserDefinedScriptOverrides.AddRange(UserDefinedScriptRewriteOverridesFolder.GetFiles().Select(f => new UserDefinedScriptOverride(f)));
+            if (UserDefinedScriptRewriteOverridesFolder.Exists)
+            {
+                UserDefinedScriptOverrides.AddRange(UserDefinedScriptRewriteOverridesFolder.GetFiles().Select(f => new UserDefinedScriptOverride(f)));
+            }
         }
 
         public static void AddScriptOverride(MonoScript script)
