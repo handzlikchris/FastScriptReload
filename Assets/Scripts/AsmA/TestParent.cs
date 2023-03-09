@@ -6,7 +6,7 @@ namespace AsmA
     public class TestParent : TestChild
     {
         [ContextMenu("Test")]
-        void Test()
+        void Test()  
         {
             // Debug.Log(child._protectedField);  
         }
