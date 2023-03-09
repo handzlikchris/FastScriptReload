@@ -313,6 +313,8 @@ There are some limitation due to the approach taken to Hot-Reload your scripts. 
 
 In some cases however you may need to use workarounds as described below.
 
+> In most cases you'll be able to use User Script Rewrite Overrides to overcome limitations and make hot reload code compilable. 
+
 ### Generic methods and classes won't be Hot-Reloaded
 Unfortunately generics will not be Hot-Reloaded, to workaround you'd need to move code to non-generic class / method.
 
@@ -377,6 +379,8 @@ public class EnemyManager : MonoBehaviour {
 
 It could be changed to support Hot-Reload in following way:
 
+> You can use User Script Rewrite Overrides to overcome this limitation
+
 1) Don't depend on concrete implementations, instead use interfaces/abstraction
 ```
 public class EnemyController: MonoBehaviour, IRegistrableEnemy { 
@@ -427,9 +431,13 @@ public class MySingleton: MonoBehaviour {
 ```
 
 ### Calling internal class members from changed code
+> You can use User Script Rewrite Overrides to overcome this limitation
+
 Technically, once your changed code is compiled it'll be in a separate assembly. As a result this changed code won't be able to access internal classes from assembly it originated from.
 
 ### Extensive use of nested classed / structs
+> You can use User Script Rewrite Overrides to overcome this limitation
+
 If your code-base contains lots of nested classes - you may see more compilation errors.
 
 Easy workaround is to move those nested classes away so they are top-level.
@@ -441,6 +449,8 @@ Hot-reload for new methods will only work with private methods (only called by c
 When you're trying to reference new code in play-mode session that'll fail if assembly is not yet referencing that (most often happens when using AsmDefs that are not yet referencing each other)
 
 ### Changing class that uses extension and passes itself as a reference
+> You can use User Script Rewrite Overrides to overcome this limitation
+
 Changing class that uses extension method and passes itself as a reference will create compiler error.
 
 Generally that shouldn't be an issue, extension methods are primarily used as a syntatic sugar to extend a class that you do not have access to.
@@ -514,6 +524,8 @@ public static ObjectFromExternalAssemblyExtensions
 ```
 
 ### Changing class that implements internal interface can trigger compilation error
+> You can use User Script Rewrite Overrides to overcome this limitation
+
 If class is implementing interface that's defined in different file as internal (default for no access modifier) - then changes to that class will fail to compile.
 
 eg.
@@ -534,6 +546,8 @@ class ClassImplementingIInterface: IInterface {
 > 
 
 ### Changing class that accesses `private protected` members
+> You can use User Script Rewrite Overrides to overcome this limitation
+
 With C# 7.2 `private protected` access modifier was introduced. It works as `protected` access modifier in a sense that inherited classes can access it but. 
 Addition of `private` also limits it to same assembly. Your changes are technically compiled into separate assembly and at the moment trying to access `private protected` in changed code will produce compiler error.
 
