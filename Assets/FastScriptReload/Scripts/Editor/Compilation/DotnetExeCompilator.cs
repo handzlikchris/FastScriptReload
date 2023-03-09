@@ -109,14 +109,27 @@ namespace FastScriptReload.Editor.Compilation
                 {
                     LoggerScoped.LogWarning($@"HOW TO FIX - INSTRUCTIONS:
 
-(error could be caused by a normal compilation error that you created in source file, in that case please fix and it'll recompile, read further if you see that message repeatedly)
+1) Open file that caused issue by looking at error log starting with: 'FSR: Compilation error: temporary files were not removed so they can be inspected: '.
+2) Find exact line that failed to compile (in XXX_SourceCodeGenerated.cs file). Those are same compilation errors as you see in Unity/IDE when developing.
+3) Read compiler error message as it'll help understand the issue
 
-Apologies this happened, tool is still under development and they are still some cases that'll trip it up.
+Error could be caused by a normal compilation issue that you created in source file (eg typo), in that case please fix and it'll recompile.
 
-If you could please get in touch with me via 'support@immersivevrtools.com' and include error you see in the console as well as created files (paths in previous error). This way I can get it fixed for you.
+It's possible compilation fails due to existing limitation, in that case:
 
-In the meantime, you can:
-1) Look at 'limitation' section in the docs - used code pattern might not be supported yet 
+<b><color='orange'>You can quickly specify custom script rewrite override for part of code that's failing.</color></b>
+
+Please use project panel to:
+1) Right-click on the original file that has compilation issue
+2) Click Fast Script Reload -> Add / Open User Script Rewrite Override
+3) Read top comment in opened file and it'll explain how to create overrides
+
+I'm continuously working on mitigating limitations.
+
+If you could please get in touch with me via 'support@immersivevrtools.com' and include error you see in the console as well as created files (from paths in previous error). This way I can get it fixed for you.
+
+You can also:
+1) Look at 'limitation' section in the docs - which will explain bit more around limitations and workarounds
 2) Move some of the code that you want to work on to different file - compilation happens on whole file, if you have multiple types there it could increase the chance of issues
 3) Have a look at compilation error, it shows error line (in the '*.SourceCodeCombined.cs' file, it's going to be something that compiler does not accept, likely easy to spot. To workaround you can change that part of code in original file. It's specific patterns that'll break it.
 
