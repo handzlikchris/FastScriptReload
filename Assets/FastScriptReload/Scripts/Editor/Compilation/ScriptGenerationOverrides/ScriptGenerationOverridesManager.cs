@@ -44,7 +44,6 @@ public interface ITestNewInterface {
 // If you can't see anything please refer to the above and create overrides file manually.
 // 
 // You can also refer to documentation section 'User defined script rewrite overrides'
-s
 ";
 
         public static DirectoryInfo UserDefinedScriptRewriteOverridesFolder { get; }
