@@ -164,6 +164,15 @@ interface IInterface {
 }
 ```
 
+### Managing existing User Script Rewrite Overrides
+You can see all your overrides by:
+
+1) Right clicking on file in Unity project panel
+2) Clicking `Fast Script Reload -> Show User Script Rewrite Overrides`
+
+This will take you to tool settings window. You can also access it via:
+1) Clicking `Window -> Fast Script Reload -> Start Screen`
+2) Selecting `User Script Rewrite Overrides` side tab
 
 ## Options
 ```
