@@ -62,7 +62,108 @@ Custom code can be executed on hot reload by adding a method to changed script.
 ```
 
 ## User defined script overrides
-asda
+For asset to hot reload your changes it needs to make some adjustments to code. This could cause some issues as described in limitations section.
+
+I continuously work on mitigating limitations, when they happen though you can help yourself quickly by creating user defined script override.
+
+Those are simply overrides on a per-file / method basis - when specified their contents will be used for final source code. Allowing you to simply fix any issues. 
+This is especially helpful with larger files.
+
+### Replacing methods
+You can replace existing methods by specifying their full signature in correct type - contents will be then replaced.
+> You can't add new methods in that manner, if method is missing it'll be
+
+For example, let's look at limitation with assigning Singleton to Instance
+> That limitation is already solved although it'll serve as a clean example illustrating the feature
+
+Following code:
+```
+public class MySingleton: MonoBehaviour {
+    public static MySingleton Instance;
+    
+    void Start() {
+        Instance = this;
+    }
+    
+    void SomeOtherMethod() {
+        //some other logic
+    }
+}
+```
+
+Would be rewritten to:
+```
+public class MySingleton__Patched_: MonoBehaviour { //FSR: name change to include __Patched_ postfix to prevent name clashes
+    public static MySingleton Instance;
+    
+    void Start() {
+        //assigning 'this' (now of type MySingleton__Patched_) to
+        //'Instance' of type MySingleton will now show compilation error due to type mismach
+        Instance = this;  
+    }
+    
+    void SomeOtherMethod() {
+        //some other logic
+    }
+}
+```
+
+In that case you can create a user script rewrite override, to do so:
+1) In Unity project panel right-click on 'MySingleton.cs'
+2) Select `Fast Script Reload -> Add \ Open User Script Rewrite Override`
+3) Asset will create override file for you with some template already in (there's also description in top comment how to use)
+
+Override:
+```
+public class MySingleton__Patched_: MonoBehaviour {   
+    void Start() { //override will target class specified above and only defined methods, in that case Start()
+        Instance = (MySingleton)(object)this;   //contents will be changed as they are visible here, casting to object and then to expected type will correct the issue
+    }
+}
+```
+
+### Adding types
+When your code is recompiled it lands in new assembly. This can cause some issues, for example if your class is using `internal` 
+interface - after recompile it won't be able to access that interface.
+
+For example, following code will fail to compile when changing MyClass as it won't be able to access IInterface which is `internal`:
+```
+//Defined in file MyClass.cs
+public class MyClass: IInterface {
+
+}
+
+//Defined on other file, IInterface.cs
+interface IInterface { //no access modifier for interfaces will infer 'internal' - only available to assembly it's defined in.
+    
+}
+```
+
+In that case you can create a user script rewrite override, to do so:
+1) In Unity project panel right-click on 'MyClass.cs'
+2) Select `Fast Script Reload -> Add \ Open User Script Rewrite Override`
+3) Asset will create override file for you with some template already in (there's also description in top comment how to use)
+
+And put following in the override file
+```
+interface IInterface {
+    // add any definitions as needed
+}
+```
+
+This will then be simply added to newly compiled file and interface will be accessible.
+```
+//now both in same assembly/file when hot reloaded
+public class MyClass: IInterface {
+
+}
+
+
+interface IInterface {
+    
+}
+```
+
 
 ## Options
 ```
