@@ -54,7 +54,7 @@ public interface ITestNewInterface {
         static ScriptGenerationOverridesManager()
         {
             //TODO: allow to customize later from code, eg for user that'd like to include in source control
-            UserDefinedScriptRewriteOverridesFolder = new DirectoryInfo(Application.persistentDataPath + @"FastScriptReload\ScriptOverrides");
+            UserDefinedScriptRewriteOverridesFolder = new DirectoryInfo(Application.persistentDataPath + @"\FastScriptReload\ScriptOverrides");
             UpdateUserDefinedScriptOverridesFileCache();
             EditorApplication.update += Update;
         }
