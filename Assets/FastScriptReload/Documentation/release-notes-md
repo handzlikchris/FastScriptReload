@@ -1,5 +1,6 @@
 1.4
 - added experimental editor-mode hot-reload, you'll need to opt in via Start Screen -> Editor Hot-Reload (please read the notes on that page, playmode workflow is still far superior)
+- you can now define User Script Rewrite Overrides - which will allow you to overcome most of existing limitations that cause compilation errors (on a one by one basis)
 - big optimization in how long hot-reload part will take, first call will be unaffected when type cache is build but subsequent calls will be significantly quicker
 - added 'Exclude References' options - this allows to remove specific dll references from dynamically compiled code (as in some cases you may get 'type defined in both assembly x.dll and y.dll'
 - destructors will no longer cause compilation error
