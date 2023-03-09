@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using FastScriptReload.Runtime;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -15,6 +15,8 @@ namespace FastScriptReload.Editor.Compilation.ScriptGenerationOverrides
     [InitializeOnLoad]
     public static class ScriptGenerationOverridesManager
     {
+        private static float LoadOverridesFolderFilesEveryNSeconds = 5;
+        
         private static readonly string TemplateInterfaceDeclaration = @"
 
 //New interface declaration, this is very useful in cases where code depends on some internal interfaces that re-compiled code can no longer access. Simply define them here and code will compile.
@@ -38,25 +40,48 @@ public interface ITestNewInterface {
 // You can simply redefine those here, while not ideal it'll allow you to continue using Hot-Reload without modifying your code.
 // 
 // Tool will now attempt to create a template file for you with first found class and first method as override, please adjust as necessary. 
-// And if you can't see anything please refer to the above to create override file contents.
+// It'll also create an example redefined interface.
+// If you can't see anything please refer to the above and create overrides file manually.
 // 
-// You can also refer to documentation section 'User defined script overrides'
-
+// You can also refer to documentation section 'User defined script rewrite overrides'
+s
 ";
 
-        public static DirectoryInfo ManualOverridesFolder { get; }
+        public static DirectoryInfo UserDefinedScriptRewriteOverridesFolder { get; }
+        private static double _lastTimeOverridesFolderFilesRead;
+
+        public static List<UserDefinedScriptOverride> UserDefinedScriptOverrides { get; } = new List<UserDefinedScriptOverride>();
 
         static ScriptGenerationOverridesManager()
         {
             //TODO: allow to customize later from code, eg for user that'd like to include in source control
-            ManualOverridesFolder = new DirectoryInfo(Application.persistentDataPath + @"FastScriptReload\ScriptOverrides");
+            UserDefinedScriptRewriteOverridesFolder = new DirectoryInfo(Application.persistentDataPath + @"FastScriptReload\ScriptOverrides");
+            UpdateUserDefinedScriptOverridesFileCache();
+            EditorApplication.update += Update;
+        }
+
+        private static void Update()
+        {
+            var timeSinceStartup = EditorApplication.timeSinceStartup;
+            if (_lastTimeOverridesFolderFilesRead + LoadOverridesFolderFilesEveryNSeconds < timeSinceStartup)
+            {
+                _lastTimeOverridesFolderFilesRead = timeSinceStartup;
+
+                UpdateUserDefinedScriptOverridesFileCache();
+            }
+        }
+
+        private static void UpdateUserDefinedScriptOverridesFileCache()
+        {
+            UserDefinedScriptOverrides.Clear();
+            UserDefinedScriptOverrides.AddRange(UserDefinedScriptRewriteOverridesFolder.GetFiles().Select(f => new UserDefinedScriptOverride(f)));
         }
 
         public static void AddScriptOverride(MonoScript script)
         {
             EnsureOverrideFolderExists();
 
-            var overridenFile = new FileInfo(Path.Combine(ManualOverridesFolder.FullName, script.name + ".cs"));
+            var overridenFile = new FileInfo(Path.Combine(UserDefinedScriptRewriteOverridesFolder.FullName, script.name + ".cs"));
             if (!overridenFile.Exists)
             {
                 var originalFile = new FileInfo(Path.Combine(Path.Combine(Application.dataPath + "//..", AssetDatabase.GetAssetPath(script))));
@@ -111,47 +136,67 @@ public interface ITestNewInterface {
                     File.WriteAllText(overridenFile.FullName, 
                         TemplateTopComment.Replace("<ClassPostfix>", AssemblyChangesLoader.ClassnamePatchedPostfix) + templateString
                     );
+                    UpdateUserDefinedScriptOverridesFileCache();
                 }
             }
             
             InternalEditorUtility.OpenFileAtLineExternal(overridenFile.FullName, 0);
         }
         
-        public static bool TryRemoveScriptOverride(MonoScript script)
+        public static bool TryRemoveScriptOverride(MonoScript originalScript)
         {
             EnsureOverrideFolderExists();
 
-            var overridenFile = new FileInfo(Path.Combine(ManualOverridesFolder.FullName, script.name + ".cs"));
+            var overridenFile = new FileInfo(Path.Combine(UserDefinedScriptRewriteOverridesFolder.FullName, originalScript.name + ".cs"));
             if (overridenFile.Exists)
             {
-                try
-                {
-                    overridenFile.Delete();
-                }
-                catch (Exception)
-                {
-                    Debug.Log($"Unable to remove: '{overridenFile.Name}' - make sure it's not locked / open in editor");
-                    throw;
-                }
-
-                return true;
+                return TryRemoveScriptOverride(overridenFile);
             }
 
             return false;
         }
 
+        private static bool TryRemoveScriptOverride(FileInfo overridenFile)
+        {
+            try
+            {
+                overridenFile.Delete();
+                UpdateUserDefinedScriptOverridesFileCache();
+            }
+            catch (Exception)
+            {
+                Debug.Log($"Unable to remove: '{overridenFile.Name}' - make sure it's not locked / open in editor");
+                throw;
+            }
+
+            return true;
+        }
+
+        public static bool TryRemoveScriptOverride(UserDefinedScriptOverride scriptOverride)
+        {
+            return TryRemoveScriptOverride(scriptOverride.File);
+        }
+
         public static bool TryGetScriptOverride(FileInfo changedFile, out FileInfo overridesFile)
         {
-            //TODO: PERF: could cache?
-            overridesFile = new FileInfo(Path.Combine(ManualOverridesFolder.FullName, changedFile.Name));
-
-            return overridesFile.Exists;
+            overridesFile = UserDefinedScriptOverrides.FirstOrDefault(f => f.File.Name == changedFile.Name && f.File.Exists)?.File;
+            return overridesFile?.Exists ?? false;
         }
         
         private static void EnsureOverrideFolderExists()
         {
-            if (!ManualOverridesFolder.Exists)
-                ManualOverridesFolder.Create();
+            if (!UserDefinedScriptRewriteOverridesFolder.Exists)
+                UserDefinedScriptRewriteOverridesFolder.Create();
+        }
+    }
+
+    public class UserDefinedScriptOverride
+    {
+        public FileInfo File { get; }
+
+        public UserDefinedScriptOverride(FileInfo file)
+        {
+            File = file;
         }
     }
 }

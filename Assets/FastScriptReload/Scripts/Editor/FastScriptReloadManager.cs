@@ -147,7 +147,7 @@ Workaround will search in all folders (under project root) and will use first fo
         }
         
         private const int BaseMenuItemPriority_ManualScriptOverride = 100;
-        [MenuItem("Assets/Fast Script Reload/Add \\ Open Hot-Reload Manual Script Override", false, BaseMenuItemPriority_ManualScriptOverride + 1)]
+        [MenuItem("Assets/Fast Script Reload/Add \\ Open User Script Rewrite Override", false, BaseMenuItemPriority_ManualScriptOverride + 1)]
         public static void AddHotReloadManualScriptOverride()
         {
             if (Selection.activeObject is MonoScript script)
@@ -156,13 +156,13 @@ Workaround will search in all folders (under project root) and will use first fo
             }
         }
         
-        [MenuItem("Assets/Fast Script Reload/Add Hot-Reload Manual Script Override", true)]
+        [MenuItem("Assets/Fast Script Reload/Add \\ Open User Script Rewrite Override", true)]
         public static bool AddHotReloadManualScriptOverrideValidateFn()
         {
             return Selection.activeObject is MonoScript;
         }
         
-        [MenuItem("Assets/Fast Script Reload/Remove Hot-Reload Manual Script Override", false, BaseMenuItemPriority_ManualScriptOverride + 2)]
+        [MenuItem("Assets/Fast Script Reload/Remove User Script Rewrite Override", false, BaseMenuItemPriority_ManualScriptOverride + 2)]
         public static void RemoveHotReloadManualScriptOverride()
         {
             if (Selection.activeObject is MonoScript script)
@@ -171,7 +171,7 @@ Workaround will search in all folders (under project root) and will use first fo
             }
         }
         
-        [MenuItem("Assets/Fast Script Reload/Remove Hot-Reload Manual Script Override", true)]
+        [MenuItem("Assets/Fast Script Reload/Remove User Script Rewrite Override", true)]
         public static bool RemoveHotReloadManualScriptOverrideValidateFn()
         {
             if (Selection.activeObject is MonoScript script)
@@ -183,6 +183,13 @@ Workaround will search in all folders (under project root) and will use first fo
             }
 
             return false;
+        }
+        
+        [MenuItem("Assets/Fast Script Reload/Show User Script Rewrite Overrides", false, BaseMenuItemPriority_ManualScriptOverride + 3)]
+        public static void ShowManualScriptRewriteOverridesInUi()
+        {
+            var window = FastScriptReloadWelcomeScreen.Init();
+            window.OpenUserScriptRewriteOverridesSection();
         }
         
         private const int BaseMenuItemPriority_Exclusions = 200;

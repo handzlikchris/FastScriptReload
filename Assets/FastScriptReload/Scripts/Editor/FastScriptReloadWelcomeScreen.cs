@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using FastScriptReload.Editor.Compilation;
+using FastScriptReload.Editor.Compilation.ScriptGenerationOverrides;
 using FastScriptReload.Runtime;
 using ImmersiveVRTools.Editor.Common.Utilities;
 using ImmersiveVRTools.Editor.Common.WelcomeScreen;
@@ -11,6 +12,7 @@ using ImmersiveVRTools.Editor.Common.WelcomeScreen.Utilities;
 using ImmersiveVrToolsCommon.Runtime.Logging;
 using UnityEditor;
 using UnityEditor.Compilation;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -34,10 +36,16 @@ namespace FastScriptReload.Editor
         public static ChangeMainViewButton ExclusionsSection { get; private set; }
         public static ChangeMainViewButton EditorHotReloadSection { get; private set; }
         public static ChangeMainViewButton NewFieldsSection { get; private set; }
+        public static ChangeMainViewButton UserScriptRewriteOverrides { get; private set; }
 
         public void OpenExclusionsSection()
         {
             ExclusionsSection.OnClick(this);
+        }
+        
+        public void OpenUserScriptRewriteOverridesSection()
+        {
+            UserScriptRewriteOverrides.OnClick(this);
         }
         
         public void OpenEditorHotReloadSection()
@@ -182,6 +190,51 @@ namespace FastScriptReload.Editor
                             , MessageType.Info);
 
                     }),
+                    (UserScriptRewriteOverrides = new ChangeMainViewButton("User Script\r\nRewrite Overrides", (screen) =>
+                    {
+                        EditorGUILayout.HelpBox(
+                            $@"For tool to work it'll need to slightly adjust your code to make it compilable. Sometimes due to existing limitations this can fail and you'll see an error.
+
+You can specify custom script rewrite overrides, those are specified for specific parts of code that fail, eg method. 
+
+It will help overcome limitations in the short run while I work on implementing proper solution."
+                            , MessageType.Info);
+                        
+                        EditorGUILayout.HelpBox(
+                            $@"To add:
+1) right-click in project panel on the file that causes the issue. 
+2) select Fast Script Reload -> Add / Open User Script Rewrite Override
+
+It'll open override file with template already in. You can read top comments that describe how to use it."
+                            , MessageType.Warning);
+
+                        EditorGUILayout.LabelField("Existing User Defined Script Overrides:", screen.BoldTextStyle);
+                        Action executeAfterIteration = null;
+                        foreach (var scriptOverride in ScriptGenerationOverridesManager.UserDefinedScriptOverrides)
+                        {
+                            EditorGUILayout.BeginHorizontal();
+                            
+                            EditorGUILayout.LabelField(scriptOverride.File.Name);
+                            if (GUILayout.Button("Open"))
+                            {
+                                InternalEditorUtility.OpenFileAtLineExternal(scriptOverride.File.FullName, 0);
+                            }
+                            
+                            if (GUILayout.Button("Delete"))
+                            {
+                                executeAfterIteration = () =>
+                                {
+                                    if (EditorUtility.DisplayDialog("Are you sure", "This will permanently remove override file.", "Delete", "Keep File"))
+                                    {
+                                        ScriptGenerationOverridesManager.TryRemoveScriptOverride(scriptOverride);
+                                    }
+                                };
+                            }
+                            
+                            EditorGUILayout.EndHorizontal();
+                        }
+                        executeAfterIteration?.Invoke();
+                    })),
                     (ExclusionsSection = new ChangeMainViewButton("Exclusions", (screen) => 
                     {
                         EditorGUILayout.HelpBox("Those are easiest to manage from Project window by right clicking on script file and selecting: " +
