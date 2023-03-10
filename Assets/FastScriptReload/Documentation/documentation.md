@@ -11,6 +11,10 @@ Tool will allow you to iterate quicker on your code. You simply go into play mod
 
 > During startup asset will check if Unity Auto Refresh is enabled and offer to adjust it in order to work properly. Depending on your workflow you want it in 'EnabledOutsidePlaymode' or 'Disabled' - this is to ensure Unity will not trigger script compilation on changes and will let Fast Script Reload to work.
 
+> Sometimes Unity can be quite stubborn and try to auto-reload scripts even with Auto-Reload turned off, if you can still see standard 'Reloading script assemblies' progress bar on change please go to:
+> 'Window -> Fast Script Reload -> Start Screen -> Reload -> Force prevent assembly reload during playmode'.
+> This way tool will lock reload in code when you enter playmode.
+
 ```
 Example scene 'Point' material should automatically detect URP or surface shader
 If it shows pink, please adjust by picking shader manually:
