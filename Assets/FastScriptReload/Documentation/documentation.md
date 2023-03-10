@@ -32,6 +32,7 @@ If you'd like to know how tool works from technical point of view - have a look 
 
 [1) How to build Hot Reload For Unity](https://immersivevrtools.com/Blog/how-to-build-hot-reload-functionality-for-unity)
 
+[2) Hot Reload - on device, (eg Android / Windows Exe)](https://immersivevrtools.com/Blog/how-to-build-unity-hot-reload-on-device)
 
 ## Reporting Compilation Errors
 I've put lots of effort to test various code patterns in various codebases. Still - it's possible you'll find some instances where code would not compile, it's easiest to:
@@ -61,19 +62,44 @@ Custom code can be executed on hot reload by adding a method to changed script.
     }
 ```
 
-## User defined script overrides
+## EXPERIMENTAL Adding New Fields
+Asset has an experimental support for adding new fields at runtime which will also render in Editor and allow you to tweak values - same as with normal fields.
+
+To enable, please:
+`Window -> Fast Script Reload -> Start Window -> New Fields -> Enable experimental added field support`.
+
+> As this is an experimental feature please expect it to break more often! It'd be great help if you could report any issues via Discord / email.
+
+### New Fields - specific limitations
+
+- outside classes can not call new fields added at runtime
+- new fields will only show in editor if they were already used at least once
+    - eg if you've added a variable into a method, on first call that variable will be initialized and will start showing in editor
+
+### New Fields - performance
+For new fields to work your code will be adjusted. Instead of calling fields directly your code will call into a method that retrieves value from dynamic dictionary.
+
+Due to that there'll be some overhead with:
+- looking up proper object and new-field value in dictionary
+- initializing values
+- use of dynamic type, which will introduce some additional casts
+
+> All that shouldn't really add too much overhead on dev-machine - you may lose few FPS though.
+
+
+## User Defined Script Overrides
 For asset to hot reload your changes it needs to make some adjustments to code. This could cause some issues as described in limitations section.
 
-I continuously work on mitigating limitations, when they happen though you can help yourself quickly by creating user defined script override.
+I continuously work on mitigating limitations. When they happen you can help yourself quickly by creating user defined script override.
 
 Those are simply overrides on a per-file / method basis - when specified their contents will be used for final source code. Allowing you to simply fix any issues. 
 This is especially helpful with larger files.
 
 ### Replacing methods
 You can replace existing methods by specifying their full signature in correct type - contents will be then replaced.
-> You can't add new methods in that manner, if method is missing it'll be
+> If no match for the method signature is found it'll be ignored
 
-For example, let's look at limitation with assigning Singleton to Instance
+For example, let's look at limitation with assigning Singleton to Instance using 'this' keyword
 > That limitation is already solved although it'll serve as a clean example illustrating the feature
 
 Following code:
@@ -126,14 +152,14 @@ public class MySingleton__Patched_: MonoBehaviour {
 When your code is recompiled it lands in new assembly. This can cause some issues, for example if your class is using `internal` 
 interface - after recompile it won't be able to access that interface.
 
-For example, following code will fail to compile when changing MyClass as it won't be able to access IInterface which is `internal`:
+Following code will fail to compile when changing MyClass as it won't be able to access IInterface which is `internal`:
 ```
 //Defined in file MyClass.cs
 public class MyClass: IInterface {
 
 }
 
-//Defined on other file, IInterface.cs
+//Defined in other file, IInterface.cs
 interface IInterface { //no access modifier for interfaces will infer 'internal' - only available to assembly it's defined in.
     
 }
@@ -174,15 +200,45 @@ This will take you to tool settings window. You can also access it via:
 1) Clicking `Window -> Fast Script Reload -> Start Screen`
 2) Selecting `User Script Rewrite Overrides` side tab
 
+## EXPERIMENTAL In-editor Hot Reload (outside of playmode)
+Asset has an experimental support for hot reload outside of playmode. However with limitations as they are now (eg not being able to add new methods) - it 
+is intended for some specific use cases (like iterating on editor scripts).
+
+> **Feature is not intended as a replacement for Unity compile / reload mechanism**
+
+To enable, please:
+`Window -> Fast Script Reload -> Start Window -> Editor Hot-Reload -> Enable Hot-Reload outside of play mode`.
+
+> As this is an experimental feature please expect it to break more often! It'd be great help if you could report any issues via Discord / email.
+
+## Debugging
+Debugging is fully supported although breakpoints in your original file won't be hit.
+
+Once change is compiled, you'll get an option to open generated file [via clickable link in console window] in which you can set breakpoints.
+
+Tool can also auto-open generated files for you on change for simpler access, you can find option via 'Window -> Fast Script Reload -> Start Screen -> Debugging -> Auto open generated source file for debugging'
+
+> Debugging with Rider for Unity 2019 and 2020 is having some issues, once breakpoint has been hit it'll stop asset from hot-reloading in that play-session.
+
+### Adding Function Breakpoint
+If for whatever reason debugger breakpoint is not hit you can try setting Function Breakpoint in your IDE.
+
+For type name you want to include `<OriginalTypeName>__Patched_`, the `__Patched_` postfix is auto-added by asset to prevent name clash.
+Function name remains unchanged.
+
+## Production Build
+For Fast Script Reload asset code will be excluded from any builds.
+
+For Live Script Reload you should exclude it from final production build, do that via:
+- 'Window -> Fast Script Reload -> Welcome Screen -> Build -> Enable Hot Reload For Build' - untick
+ 
+**When building via File -> Build Settings - you'll also see Live Script Reload status under 'Build' button. You can click 'Adjust' button which will take you to build page for asset.**
+```This is designed to make sure you don't accidentally build tool into release althoguh best approach would be to ensure your release process takes care of that.```
+
 ## Options
-```
-Context menus will be prefixed with used version, either Fast Script Reload or Live Script Reload.
-```
-
 You can access Welcome Screen / Options via 'Window -> Fast/Live Script Reload -> Start Screen' - it contains useful information as well as options.
-
 ```
-Options can aslo be accessed via 'Edit -> Preferences -> Fast/Live Script Reload'
+Context menus will be prefixed with used version, either 'Fast Script Reload' or 'Live Script Reload'
 ```
 
 ### Auto Hot-Reload
@@ -198,7 +254,7 @@ You can also manually manage reload, to do so:
 ### [Live-Reload] Hot-Reload over Network
 With on-device build, your code changes will be distributed over the network in real-time.
 
-By default running application will send a broadcast and try to discover editor running the tool. 
+By default running application will send a broadcast and try to discover editor running the tool.
 
 Broadcast is initiated from device where build is running on (not from editor) - this means device running editor needs to allow the connection.
 
@@ -209,7 +265,7 @@ If for whatever reason reload over network doesn't work, please:
 2) make sure port used is not already used by any other application
 3) make sure your Firewall allows connections on that port
 4) If you think broadcast doesn't work in your network it's best to specify IP Address explicitly (tick 'Force specific UP address for clients to receive Hot-Reload updates' and add IP)
-   - this will allow client (build on device) connect directly to specified address
+    - this will allow client (build on device) connect directly to specified address
 
 ### [Live-Reload] Connected Client
 In playmode, message will be logged when clients connects. Also Options/Network will display connected client, eg Android phone could be identified as:
@@ -221,7 +277,7 @@ In playmode, message will be logged when clients connects. Also Options/Network 
 ### [Live-Reload] Testing with Editor
 By default, editor will reflect any changes you made without using network. If you want to force editor to behave as networked client:
 1) Press play
-2) Find DontDestroyOnLoadObject 'NetworkedAssemblyChangesLoader' - 
+2) Find DontDestroyOnLoadObject 'NetworkedAssemblyChangesLoader' -
 3) tick 'IsDebug'
 4) tick 'Editor Acts as Remote Client'
 5) enable NetworkedAssemblyChangesLoader component
@@ -255,58 +311,10 @@ This is to ensure there are no issues as that is generally not supported.
 Some assets however will use IL weaving to adjust your classes (eg Mirror) as a post compile step. In that case it's quite likely hot-reload will still work.
 
 ### Managing reference exclusions
-Asset will reference all .dll files that original code is referencing. In some cases that causes compilation error (eg 'Type XYZ is defined in both assembly a.dll and b.dll). 
+Asset will reference all .dll files that original code is referencing. In some cases that causes compilation error (eg 'Type XYZ is defined in both assembly a.dll and b.dll).
 You can use those options to exclude specific references from being added.
 
 > 'Start Screen -> Exclude References (Advanced) -> adjust as needed'.
-
-## EXPERIMENTAL Adding New Fields
-Asset has an experimental support for adding new fields at runtime which will also render in Editor and allow you to tweak values - same as with normal fields.
-
-To enable, please:
-`Window -> Fast Script Reload -> Start Window -> New Fields -> Enable experimental added field support`.
-
-> As this is an experimental feature please expect it to break more often! It'd be great help if you could report any issues via Discord / email.
-
-### New Fields - specific limitations
-
-- outside classes can not call new fields added at runtime
-- new fields will only show in editor if they were already used at least once
-  - eg if you've added a variable into a method, on first call that variable will be initialized and will start showing in editor
-
-### New Fields - performance
-For new fields to work your code will be adjusted. Instead of calling fields directly your code will call into a method that retrieves value from dynamic dictionary.
-
-Due to that there'll be some overhead with:
-- looking up proper object and new-field value in dictionary
-- initializing values
-- use of dynamic type, which will introduce some additional casts
-
-> All that shouldn't really add too much overhead on dev-machine - you may lose few FPS though.
-
-## Debugging
-Debugging is fully supported although breakpoints in your original file won't be hit.
-
-Once change is compiled, you'll get an option to open generated file [via clickable link in console window] in which you can set breakpoints.
-
-Tool can also auto-open generated files for you on change for simpler access, you can find option via 'Window -> Fast Script Reload -> Start Screen -> Debugging -> Auto open generated source file for debugging'
-
-> Debugging with Rider for Unity 2019 and 2020 is having some issues, once breakpoint has been hit it'll stop asset from hot-reloading in that play-session.
-
-### Adding Function Breakpoint
-If for whatever reason debugger breakpoint is not hit you can try setting Function Breakpoint in your IDE.
-
-For type name you want to include `<OriginalTypeName>__Patched_`, the `__Patched_` postfix is auto-added by asset to prevent name clash.
-Function name remains unchanged.
-
-## Production Build
-For Fast Script Reload asset code will be excluded from any builds.
-
-For Live Script Reload you should exclude it from final production build, do that via:
-- 'Window -> Fast Script Reload -> Welcome Screen -> Build -> Enable Hot Reload For Build' - untick
- 
-**When building via File -> Build Settings - you'll also see Live Script Reload status under 'Build' button. You can click 'Adjust' button which will take you to build page for asset.**
-```This is designed to make sure you don't accidentally build tool into release althoguh best approach would be to ensure your release process takes care of that.```
 
 ## Performance
 
@@ -322,7 +330,7 @@ There are some limitation due to the approach taken to Hot-Reload your scripts. 
 
 In some cases however you may need to use workarounds as described below.
 
-> In most cases you'll be able to use User Script Rewrite Overrides to overcome limitations and make hot reload code compilable. 
+> In most cases you'll be able to use [User Defined Script Overrides](#user-defined-script-overrides) to overcome limitations and make hot reload code compilable. 
 
 ### Generic methods and classes won't be Hot-Reloaded
 Unfortunately generics will not be Hot-Reloaded, to workaround you'd need to move code to non-generic class / method.
@@ -361,6 +369,7 @@ Experimental support with 1.3, minor limitations remaining:
 
 ### Passing `this` reference to method that expect concrete class implementation
 
+
 `**By default experimental setting 'Enable method calls with 'this' as argument fix' is turned on in options, and should fix 'this' calls/assignment issue.
 If you see issues with that please turn setting off and get in touch via support email.**
 
@@ -388,7 +397,6 @@ public class EnemyManager : MonoBehaviour {
 
 It could be changed to support Hot-Reload in following way:
 
-> You can use User Script Rewrite Overrides to overcome this limitation
 
 1) Don't depend on concrete implementations, instead use interfaces/abstraction
 ```
@@ -440,12 +448,12 @@ public class MySingleton: MonoBehaviour {
 ```
 
 ### Calling internal class members from changed code
-> You can use User Script Rewrite Overrides to overcome this limitation
+> You can use [User Defined Script Overrides](#user-defined-script-overrides) to overcome this limitation
 
 Technically, once your changed code is compiled it'll be in a separate assembly. As a result this changed code won't be able to access internal classes from assembly it originated from.
 
 ### Extensive use of nested classed / structs
-> You can use User Script Rewrite Overrides to overcome this limitation
+> You can use [User Defined Script Overrides](#user-defined-script-overrides) to overcome this limitation
 
 If your code-base contains lots of nested classes - you may see more compilation errors.
 
@@ -458,7 +466,7 @@ Hot-reload for new methods will only work with private methods (only called by c
 When you're trying to reference new code in play-mode session that'll fail if assembly is not yet referencing that (most often happens when using AsmDefs that are not yet referencing each other)
 
 ### Changing class that uses extension and passes itself as a reference
-> You can use User Script Rewrite Overrides to overcome this limitation
+> You can use [User Defined Script Overrides](#user-defined-script-overrides) to overcome this limitation
 
 Changing class that uses extension method and passes itself as a reference will create compiler error.
 
@@ -533,7 +541,7 @@ public static ObjectFromExternalAssemblyExtensions
 ```
 
 ### Changing class that implements internal interface can trigger compilation error
-> You can use User Script Rewrite Overrides to overcome this limitation
+> You can use [User Defined Script Overrides](#user-defined-script-overrides) to overcome this limitation
 
 If class is implementing interface that's defined in different file as internal (default for no access modifier) - then changes to that class will fail to compile.
 
@@ -555,7 +563,7 @@ class ClassImplementingIInterface: IInterface {
 > 
 
 ### Changing class that accesses `private protected` members
-> You can use User Script Rewrite Overrides to overcome this limitation
+> You can use [User Defined Script Overrides](#user-defined-script-overrides) to overcome this limitation
 
 With C# 7.2 `private protected` access modifier was introduced. It works as `protected` access modifier in a sense that inherited classes can access it but. 
 Addition of `private` also limits it to same assembly. Your changes are technically compiled into separate assembly and at the moment trying to access `private protected` in changed code will produce compiler error.
