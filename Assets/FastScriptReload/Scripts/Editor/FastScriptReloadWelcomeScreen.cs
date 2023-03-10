@@ -160,7 +160,7 @@ namespace FastScriptReload.Editor
                         }
                         GUILayout.Space(sectionBreakHeight);
                 
-                        EditorGUILayout.HelpBox("(only works if you opted in below, this is to avoid unnecessary file watching)\r\nOn demand reload :\r\nvia Window -> Fast Script Reload -> Force Reload, \r\nor by calling 'FastScriptIterationManager.Instance.TriggerReloadForChangedFiles()'", MessageType.Info);
+                        EditorGUILayout.HelpBox("On demand reload :\r\n(only works if you opted in below, this is to avoid unnecessary file watching)\r\nvia Window -> Fast Script Reload -> Force Reload, \r\nor by calling 'FastScriptIterationManager.Instance.TriggerReloadForChangedFiles()'", MessageType.Warning);
                         
                         using (LayoutHelper.LabelWidth(320))
                         {

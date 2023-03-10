@@ -398,7 +398,7 @@ Workaround will search in all folders (under project root) and will use first fo
             {
                 if (!HotReloadDisabled_WarningMessageShownAlready)
                 {
-                    LoggerScoped.Log($"Both auto hot reload and on-demand reload are disabled, file watchers will not be initialized. Please adjust settings and restart if you want hot reload to work.");
+                    LoggerScoped.LogWarning($"Both auto hot reload and on-demand reload are disabled, file watchers will not be initialized. Please adjust settings and restart if you want hot reload to work.");
                     HotReloadDisabled_WarningMessageShownAlready = true;
                 }
                 return;
