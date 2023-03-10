@@ -67,16 +67,27 @@ namespace FastScriptReload.Editor
                 using (LayoutHelper.LabelWidth(350))
                 {
                     ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableAutoReloadForChangedFiles);
-                    RenderSettingsWithCheckLimitationsButton(FastScriptReloadPreference.EnableExperimentalAddedFieldsSupport, () => ((FastScriptReloadWelcomeScreen)screen).OpenNewFieldsSection());
-                    RenderSettingsWithCheckLimitationsButton(FastScriptReloadPreference.EnableExperimentalEditorHotReloadSupport, () => ((FastScriptReloadWelcomeScreen)screen).OpenEditorHotReloadSection());
+                    RenderSettingsWithCheckLimitationsButton(FastScriptReloadPreference.EnableExperimentalAddedFieldsSupport, true, () => ((FastScriptReloadWelcomeScreen)screen).OpenNewFieldsSection());
+                    RenderSettingsWithCheckLimitationsButton(FastScriptReloadPreference.EnableExperimentalEditorHotReloadSupport, false,  () => ((FastScriptReloadWelcomeScreen)screen).OpenEditorHotReloadSection());
                 }
             }
         );
 
-        private static void RenderSettingsWithCheckLimitationsButton(ToggleProjectEditorPreferenceDefinition preferenceDefinition, Action onCheckLimitationsClick)
+        private static void RenderSettingsWithCheckLimitationsButton(ToggleProjectEditorPreferenceDefinition preferenceDefinition, bool allowChange, Action onCheckLimitationsClick)
         {
             EditorGUILayout.BeginHorizontal();
-            ProductPreferenceBase.RenderGuiAndPersistInput(preferenceDefinition);
+            if (!allowChange)
+            {
+                using (LayoutHelper.LabelWidth(313))
+                {
+                    EditorGUILayout.LabelField(preferenceDefinition.Label);
+                }
+            }
+            else
+            {
+                ProductPreferenceBase.RenderGuiAndPersistInput(preferenceDefinition);
+            }
+
             if (GUILayout.Button("Check limitations"))
             {
                 onCheckLimitationsClick();
