@@ -14,6 +14,25 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
             _userDefinedOverridesRoot = userDefinedOverridesRoot;
         }
 
+        public override SyntaxNode VisitConversionOperatorDeclaration(ConversionOperatorDeclarationSyntax node)
+        {
+            var methodFQDN = RoslynUtils.GetMemberFQDN(node, "operator");
+            var matchingInOverride = _userDefinedOverridesRoot.DescendantNodes()
+                //implicit conversion operators do not have name, just parameter list
+                .OfType<BaseMethodDeclarationSyntax>()
+                .FirstOrDefault(m => m.ParameterList.ToString() == node.ParameterList.ToString() //parameter lists is type / order / names, all good for targetting if there's a proper match
+                                      && methodFQDN == RoslynUtils.GetMemberFQDN(m, "operator") //make sure same FQDN, even though there's no name there could be more implicit operators in file
+                );
+
+            if (matchingInOverride != null)
+            {
+                return AddRewriteCommentIfNeeded(matchingInOverride.WithTriviaFrom(node), $"User defined custom conversion override", true);
+            }
+            else {
+                return base.VisitConversionOperatorDeclaration(node);
+            }
+        }
+
         public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
             var methodName = node.Identifier.ValueText;
