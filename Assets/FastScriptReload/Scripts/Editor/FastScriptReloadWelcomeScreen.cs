@@ -189,6 +189,19 @@ namespace FastScriptReload.Editor
                                                 "\r\n\r\nIn case you're seeing compile errors relating to 'this' keyword please let me know via support page. Also turning this setting off will prevent rewrite.", MessageType.Info);
                         
                         GUILayout.Space(sectionBreakHeight);
+                        
+                        using (LayoutHelper.LabelWidth(350))
+                        {
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.IsForceLockAssembliesViaCode);
+                        }
+                        EditorGUILayout.HelpBox(
+@"Sometimes Unity continues to reload assemblies on change in playmode even when Auto-Refresh is turned off.
+
+Use this setting to force lock assemblies via code."
+, MessageType.Info);
+                        GUILayout.Space(sectionBreakHeight);
+                        
+                        
                         using (LayoutHelper.LabelWidth(350))
                         {
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.IsDidFieldsOrPropertyCountChangedCheckDisabled);
@@ -580,6 +593,9 @@ includeSubdirectories - whether child directories should be watched as well
             }
         );
         
+        public static readonly ToggleProjectEditorPreferenceDefinition IsForceLockAssembliesViaCode = new ToggleProjectEditorPreferenceDefinition(
+            "Force prevent assembly reload during playmode", "IsForceLockAssembliesViaCode", false);
+        
         public static readonly JsonObjectListProjectEditorPreferenceDefinition<FileWatcherSetupEntry> FileWatcherSetupEntries = new JsonObjectListProjectEditorPreferenceDefinition<FileWatcherSetupEntry>(
             "File Watchers Setup", "FileWatcherSetupEntries", new List<string>
             {
@@ -656,7 +672,8 @@ includeSubdirectories - whether child directories should be watched as well
             EnableExperimentalAddedFieldsSupport,
             ReferencesExcludedFromHotReload,
             EnableExperimentalEditorHotReloadSupport,
-            TriggerDomainReloadIfOverNDynamicallyLoadedAssembles
+            TriggerDomainReloadIfOverNDynamicallyLoadedAssembles,
+            IsForceLockAssembliesViaCode
         };
 
         private static bool PrefsLoaded = false;
@@ -738,51 +755,56 @@ includeSubdirectories - whether child directories should be watched as well
         private static void EnsureUserAwareOfAutoRefresh()
         {
             var autoRefreshMode = (AssetPipelineAutoRefreshMode)EditorPrefs.GetInt("kAutoRefreshMode", EditorPrefs.GetBool("kAutoRefresh") ? 1 : 0);
-            if (autoRefreshMode == AssetPipelineAutoRefreshMode.Enabled)
+            if (autoRefreshMode != AssetPipelineAutoRefreshMode.Enabled)
+                return;
+            
+            if ((bool)FastScriptReloadPreference.IsForceLockAssembliesViaCode.GetEditorPersistedValueOrDefault())
+                return;
+            
+            LoggerScoped.LogWarning("Fast Script Reload - asset auto refresh enabled - full reload will be triggered unless editor preference adjusted - see documentation for more details.");
+
+            if ((bool)FastScriptReloadPreference.StopShowingAutoReloadEnabledDialogBox.GetEditorPersistedValueOrDefault())
+                return;
+
+            var chosenOption = EditorUtility.DisplayDialogComplex("Fast Script Reload - Warning",
+                "Auto reload for assets/scripts is enabled." +
+                $"\n\nThis means any change made in playmode will likely trigger full recompile." +
+                $"\r\n\r\nIt's an editor setting and can be adjusted at any time via Edit -> Preferences -> Asset Pipeline -> Auto Refresh" +
+                $"\r\n\r\nI can also adjust that for you now - that means you'll need to manually load changes (outside of playmode) via Assets -> Refresh (CTRL + R)." +
+                $"\r\n\r\nIn some editor versions you can also set script compilation to happen outside of playmode and don't have to manually refresh. " +
+                $"\r\n\r\nDepending on version you'll find it via: " +
+                $"\r\n1) Edit -> Preferences -> General -> Script Changes While Playing -> Recompile After Finished Playing." +
+                $"\r\n2) Edit -> Preferences -> Asset Pipeline -> Auto Refresh -> Enabled Outside Playmode",
+                "Ok, disable asset auto refresh (I'll refresh manually when needed)",
+                "No, don't change (stop showing this message)",
+                "No, don't change"
+            );
+
+            switch (chosenOption)
             {
-                LoggerScoped.LogWarning("Fast Script Reload - asset auto refresh enabled - full reload will be triggered unless editor preference adjusted - see documentation for more details.");
+                // change.
+                case 0:
+                    EditorPrefs.SetInt("kAutoRefreshMode", (int)AssetPipelineAutoRefreshMode.Disabled);
+                    EditorPrefs.SetInt("kAutoRefresh", 0); //older unity versions
+                    break;
 
-                if (!(bool)FastScriptReloadPreference.StopShowingAutoReloadEnabledDialogBox.GetEditorPersistedValueOrDefault())
-                {
-                    var chosenOption = EditorUtility.DisplayDialogComplex("Fast Script Reload - Warning",
-                        "Auto reload for assets/scripts is enabled." +
-                        $"\n\nThis means any change made in playmode will likely trigger full recompile." +
-                        $"\r\n\r\nIt's an editor setting and can be adjusted at any time via Edit -> Preferences -> Asset Pipeline -> Auto Refresh" +
-                        $"\r\n\r\nI can also adjust that for you now - that means you'll need to manually load changes (outside of playmode) via Assets -> Refresh (CTRL + R)." +
-                        $"\r\n\r\nIn some editor versions you can also set script compilation to happen outside of playmode and don't have to manually refresh. " +
-                        $"\r\n\r\nDepending on version you'll find it via: " +
-                        $"\r\n1) Edit -> Preferences -> General -> Script Changes While Playing -> Recompile After Finished Playing." +
-                        $"\r\n2) Edit -> Preferences -> Asset Pipeline -> Auto Refresh -> Enabled Outside Playmode",
-                        "Ok, disable asset auto refresh (I'll refresh manually when needed)",
-                        "No, don't change (stop showing this message)",
-                        "No, don't change"
-                    );
+                // don't change and stop showing message.
+                case 1:
+                    FastScriptReloadPreference.StopShowingAutoReloadEnabledDialogBox.SetEditorPersistedValue(true);
 
-                    switch (chosenOption)
-                    {
-                        // change.
-                        case 0:
-                            EditorPrefs.SetInt("kAutoRefreshMode", (int)AssetPipelineAutoRefreshMode.Disabled);
-                            EditorPrefs.SetInt("kAutoRefresh", 0); //older unity versions
-                            break;
+                    break;
 
-                        // don't change and stop showing message.
-                        case 1:
-                            FastScriptReloadPreference.StopShowingAutoReloadEnabledDialogBox.SetEditorPersistedValue(true);
+                // don't change
+                case 2:
 
-                            break;
+                    break;
 
-                        // don't change
-                        case 2:
-
-                            break;
-
-                        default:
-                            LoggerScoped.LogError("Unrecognized option.");
-                            break;
-                    }
-                }
+                default:
+                    LoggerScoped.LogError("Unrecognized option.");
+                    break;
             }
+                
+            
         }
 
         //copied from internal UnityEditor.AssetPipelineAutoRefreshMode

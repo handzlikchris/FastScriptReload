@@ -29,6 +29,7 @@ namespace FastScriptReload.Editor
             [FileWatcherReplacementTokenForApplicationDataPath] = () => DataPath
         };
 
+        private bool _wasLockReloadAssembliesCalled;
         private PlayModeStateChange _lastPlayModeStateChange;
         private List<FileSystemWatcher> _fileWatchers = new List<FileSystemWatcher>();
         private IEnumerable<string> _currentFileExclusions;
@@ -373,20 +374,25 @@ Workaround will search in all folders (under project root) and will use first fo
 
             _lastTimeChangeBatchRun = DateTime.UtcNow;
         }
-
+        
         private void OnEditorApplicationOnplayModeStateChanged(PlayModeStateChange obj)
         {
             Instance._lastPlayModeStateChange = obj;
 
-            //TODO: add an option as on some older editor versions AutoUpdate.OutsideOfPlaymode does not exist
-            // if (obj == PlayModeStateChange.EnteredPlayMode)
-            // {
-            //     EditorApplication.LockReloadAssemblies();
-            // }
-            // else if(obj == PlayModeStateChange.EnteredEditMode)
-            // {
-            //     EditorApplication.UnlockReloadAssemblies();
-            // }
+            if ((bool)FastScriptReloadPreference.IsForceLockAssembliesViaCode.GetEditorPersistedValueOrDefault())
+            {
+                if (obj == PlayModeStateChange.EnteredPlayMode)
+                {
+                    EditorApplication.LockReloadAssemblies();
+                    _wasLockReloadAssembliesCalled = true;
+                }
+            }
+            
+            if(obj == PlayModeStateChange.EnteredEditMode && _wasLockReloadAssembliesCalled)
+            {
+                EditorApplication.UnlockReloadAssemblies();
+                _wasLockReloadAssembliesCalled = false;
+            }
         }
 
         private static bool HotReloadDisabled_WarningMessageShownAlready;
