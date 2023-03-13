@@ -6,6 +6,7 @@
 - destructors will no longer cause compilation error
 - (options opt-in) script rewriting can optionally emit comment - why change was made to help with troubleshooting issues
 - Unity assembly reload can be forced off via LockAssemblyReload if specified in options - sometimes even though Auto-Refresh is turned off Editor still tries to recompile changes in playmode which prevents FSR from working 
+- new fields support (experimental) will be enabled by default
 
 1.3 - (Experimental) - New fields added in playmode
 New fields can be added and used in code

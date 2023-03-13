@@ -612,7 +612,7 @@ includeSubdirectories - whether child directories should be watched as well
         );
         
         public static readonly ToggleProjectEditorPreferenceDefinition EnableExperimentalAddedFieldsSupport = new ToggleProjectEditorPreferenceDefinition(
-            "(Experimental) Enable runtime added field support", "EnableExperimentalAddedFieldsSupport", false,
+            "(Experimental) Enable runtime added field support", "EnableExperimentalAddedFieldsSupport", true,
             (object newValue, object oldValue) =>
             {
                 FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.EnableExperimentalAddedFieldsSupport = (bool)newValue;
