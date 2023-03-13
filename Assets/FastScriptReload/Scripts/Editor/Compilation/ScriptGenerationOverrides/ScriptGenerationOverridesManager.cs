@@ -25,7 +25,7 @@ public interface ITestNewInterface {
     bool Test { get; set; }
 }";
 
-        private static readonly string TemplateTopComment = @$"// You can use this file to specify custom code overrides. Those will be applied to resulting code.
+        private static readonly string TemplateTopComment = @"// You can use this file to specify custom code overrides. Those will be applied to resulting code.
 // This approach is very useful if your code is failing to compile due to one of the existing limitations.
 // 
 //  While I work on reducing limitations you can simply specify override with proper code to make sure you can continue working.
