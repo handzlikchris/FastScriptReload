@@ -109,8 +109,8 @@ namespace FastScriptReload.Editor.Compilation
                 {
                     LoggerScoped.LogWarning($@"HOW TO FIX - INSTRUCTIONS:
 
-1) Open file that caused issue by looking at error log starting with: 'FSR: Compilation error: temporary files were not removed so they can be inspected: '.
-2) Find exact line that failed to compile (in XXX_SourceCodeGenerated.cs file). Those are same compilation errors as you see in Unity/IDE when developing.
+1) Open file that caused issue by looking at error log starting with: 'FSR: Compilation error: temporary files were not removed so they can be inspected: '. And click on file path to open.
+2) Look up other error in the console, which will be like 'Error When updating files:' - this one contains exact line that failed to compile (in XXX_SourceCodeGenerated.cs file). Those are same compilation errors as you see in Unity/IDE when developing.
 3) Read compiler error message as it'll help understand the issue
 
 Error could be caused by a normal compilation issue that you created in source file (eg typo), in that case please fix and it'll recompile.
