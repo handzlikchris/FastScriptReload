@@ -281,7 +281,17 @@ Workaround will search in all folders (under project root) and will use first fo
             }
             else if (_lastPlayModeStateChange == PlayModeStateChange.EnteredPlayMode)
             {
-                EnsureInitialized();
+                if (_lastPlayModeStateChange == PlayModeStateChange.EnteredPlayMode)
+                {
+                    EnsureInitialized();
+                }
+
+                if (_lastPlayModeStateChange != PlayModeStateChange.ExitingPlayMode && Application.isPlaying && Instance._fileWatchers.Count == 0 && FastScriptReloadPreference.FileWatcherSetupEntries.GetElementsTyped().Count > 0)
+                {
+                    LoggerScoped.LogWarning("Reinitializing file-watchers as defined configuration does not match current instance setup. If hot reload still doesn't work you'll need to reset play session.");
+                    ClearFileWatchers();
+                    EnsureInitialized();
+                }
             }
             
             AssignConfigValuesThatCanNotBeAccessedOutsideOfMainThread();
