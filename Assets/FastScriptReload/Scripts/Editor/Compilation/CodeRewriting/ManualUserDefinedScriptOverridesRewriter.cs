@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -13,7 +14,8 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
         {
             _userDefinedOverridesRoot = userDefinedOverridesRoot;
         }
-
+        
+        //TODO: refactor to use OverrideDeclarationWithMatchingUserDefinedIfExists
         public override SyntaxNode VisitConversionOperatorDeclaration(ConversionOperatorDeclarationSyntax node)
         {
             var methodFQDN = RoslynUtils.GetMemberFQDN(node, "operator");
@@ -33,6 +35,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
             }
         }
 
+        //TODO: refactor to use OverrideDeclarationWithMatchingUserDefinedIfExists
         public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
             var methodName = node.Identifier.ValueText;
@@ -53,6 +56,72 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
             else {
                 return base.VisitMethodDeclaration(node);
             }
+        }
+        
+        
+        public override SyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
+        {
+            return OverrideDeclarationWithMatchingUserDefinedIfExists(
+                node, 
+                (d) => d.Identifier.ValueText, 
+                (d) => HasSameParametersPredicate(node.ParameterList)(d.ParameterList), 
+                (d) => base.VisitConstructorDeclaration(d)
+            );
+        }
+        
+        public override SyntaxNode VisitDestructorDeclaration(DestructorDeclarationSyntax node)
+        {
+            return OverrideDeclarationWithMatchingUserDefinedIfExists(
+                node, 
+                (d) => d.Identifier.ValueText, 
+                (d) => HasSameParametersPredicate(node.ParameterList)(d.ParameterList), 
+                (d) => base.VisitDestructorDeclaration(d)
+            );
+        }
+        
+        public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
+        {
+            return OverrideDeclarationWithMatchingUserDefinedIfExists(
+                node, 
+                (d) => d.Identifier.ValueText, 
+                (d) => true, 
+                (d) => base.VisitPropertyDeclaration(d)
+            );
+        }
+
+        private SyntaxNode OverrideDeclarationWithMatchingUserDefinedIfExists<T>(T node, Func<T, string> getName, 
+            Func<T, bool> customFindMatchInOverridePredicate, Func<T, SyntaxNode> visitDefault)
+            where T: MemberDeclarationSyntax
+        {
+            var name = getName(node);
+            var fqdn = RoslynUtils.GetMemberFQDN(node, name);
+            var matchingInOverride = _userDefinedOverridesRoot.DescendantNodes()
+                .OfType<T>()
+                .FirstOrDefault(d =>
+                    {
+                        var declarationName = getName(d);
+                        return declarationName == name
+                               && customFindMatchInOverridePredicate(d)
+                               && fqdn == RoslynUtils.GetMemberFQDN(d, declarationName);                     //last check for mathod FQDN (potentially slower than others)
+                    }
+
+                );
+
+            if (matchingInOverride != null)
+            {
+                return AddRewriteCommentIfNeeded(matchingInOverride.WithTriviaFrom(node),
+                    $"User defined custom {typeof(T)} override", true);
+            }
+            else
+            {
+                return visitDefault(node);
+            }
+        }
+        
+        private Func<ParameterListSyntax, bool> HasSameParametersPredicate(ParameterListSyntax parameters)
+        {
+            return (resolvedParams) => resolvedParams.Parameters.Count == parameters.Parameters.Count
+                                       && resolvedParams.ToString() == parameters.ToString();
         }
     }
 }
