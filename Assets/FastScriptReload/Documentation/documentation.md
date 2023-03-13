@@ -205,7 +205,7 @@ This will take you to tool settings window. You can also access it via:
 2) Selecting `User Script Rewrite Overrides` side tab
 
 ## EXPERIMENTAL In-editor Hot Reload (outside of playmode)
-Asset has an experimental support for hot reload outside of playmode. However with limitations as they are now (eg not being able to add new methods) - it 
+Asset has an experimental support for hot reload outside of playmode. However with limitations as they are now - it
 is intended for some specific use cases (like iterating on editor scripts).
 
 > **Feature is not intended as a replacement for Unity compile / reload mechanism**
