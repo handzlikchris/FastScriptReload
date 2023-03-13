@@ -367,7 +367,14 @@ In some cases it can lock/crash editor.", MessageType.Error);
                                     "\r\n\r\nIt's not as good as in-playmode workflow",
                                     "Ok");
                                 
-                                CompilationPipeline.RequestScriptCompilation(RequestScriptCompilationOptions.None);
+#if UNITY_2019_3_OR_NEWER
+                                CompilationPipeline.RequestScriptCompilation();
+#elif UNITY_2017_1_OR_NEWER
+                                 var editorAssembly = Assembly.GetAssembly(typeof(Editor));
+                                 var editorCompilationInterfaceType = editorAssembly.GetType("UnityEditor.Scripting.ScriptCompilation.EditorCompilationInterface");
+                                 var dirtyAllScriptsMethod = editorCompilationInterfaceType.GetMethod("DirtyAllScripts", BindingFlags.Static | BindingFlags.Public);
+                                 dirtyAllScriptsMethod.Invoke(editorCompilationInterfaceType, null);
+#endif
                             }
                         }
                         
