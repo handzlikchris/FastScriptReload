@@ -28,9 +28,15 @@ namespace FastScriptReload.Editor.Compilation
 	    public static bool EnableExperimentalThisCallLimitationFix;
         public static List<string> ReferencesExcludedFromHotReload = new List<string>();
 
-	    public const string DebuggingInformationComment = 
-@"// DEBUGGING READ-ME 
-//
+        public const string DebuggingInformationComment = 
+            @"// DEBUGGING READ-ME " +
+#if !UNITY_2021_1_OR_NEWER
+"WARN: on Unity versions prior to 2021, opening files in that manner can cause static values to be reinitialized"
+#else
+            ""
+#endif
+            +
+            @"//
 // To debug simply add a breakpoint in this file.
 // 
 // With every code change - new file is generated, currently you'll need to re-set breakpoints after each change.

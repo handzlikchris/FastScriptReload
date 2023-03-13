@@ -222,7 +222,7 @@ Once change is compiled, you'll get an option to open generated file [via clicka
 
 Tool can also auto-open generated files for you on change for simpler access, you can find option via 'Window -> Fast Script Reload -> Start Screen -> Debugging -> Auto open generated source file for debugging'
 
-> Debugging with Rider for Unity 2019 and 2020 is having some issues, once breakpoint has been hit it'll stop asset from hot-reloading in that play-session.
+> Debugging with Rider for Unity 2019 and 2020 is having some issues, you can only open debuggable files with auto-open feature. Clicking a file in console causes subtle static-variables reload (not full domain reload) that'll break your play-session.
 
 ### Adding Function Breakpoint
 If for whatever reason debugger breakpoint is not hit you can try setting Function Breakpoint in your IDE.

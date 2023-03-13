@@ -20,7 +20,19 @@ namespace FastScriptReload.Editor
     public class FastScriptReloadManager
     {
         private static FastScriptReloadManager _instance;
-        public static FastScriptReloadManager Instance => _instance ?? (_instance = new FastScriptReloadManager());
+        public static FastScriptReloadManager Instance
+        {
+            get {
+                if (_instance == null)
+                {
+                    _instance = new FastScriptReloadManager();
+                    LoggerScoped.LogDebug("Created Manager");
+                }
+
+                return _instance;
+            }
+        }
+
         private static string DataPath = Application.dataPath;
 
         public const string FileWatcherReplacementTokenForApplicationDataPath = "<Application.dataPath>";
@@ -147,6 +159,20 @@ Workaround will search in all folders (under project root) and will use first fo
             EditorApplication.playModeStateChanged += Instance.OnEditorApplicationOnplayModeStateChanged;
         }
         
+        ~FastScriptReloadManager()
+        {
+            LoggerScoped.LogDebug("Destroying FSR Manager "); 
+            if (_instance != null)
+            {
+                if (_lastPlayModeStateChange == PlayModeStateChange.EnteredPlayMode)
+                {
+                    LoggerScoped.LogError("Manager is being destroyed in play session, this indicates some sort of issue where static variables were reset, hot reload will not function properly please reset. " +
+                                          "This is usually caused by Unity triggering that reset for some reason that's outside of asset control - other static variables will also be affected and recovering just hot reload would hide wider issue.");
+                }
+                ClearFileWatchers();
+            }
+        }
+        
         private const int BaseMenuItemPriority_ManualScriptOverride = 100;
         [MenuItem("Assets/Fast Script Reload/Add \\ Open User Script Rewrite Override", false, BaseMenuItemPriority_ManualScriptOverride + 1)]
         public static void AddHotReloadManualScriptOverride()
@@ -241,11 +267,7 @@ Workaround will search in all folders (under project root) and will use first fo
             _isEditorModeHotReloadEnabled = (bool)FastScriptReloadPreference.EnableExperimentalEditorHotReloadSupport.GetEditorPersistedValueOrDefault();
             if (_lastPlayModeStateChange == PlayModeStateChange.ExitingPlayMode && Instance._fileWatchers.Any())
             {
-                foreach (var fileWatcher in Instance._fileWatchers)
-                {
-                    fileWatcher.Dispose();
-                }
-                Instance._fileWatchers.Clear();
+                ClearFileWatchers();
             }
             
             if (!_isEditorModeHotReloadEnabled  && !EditorApplication.isPlaying)
@@ -275,6 +297,16 @@ Workaround will search in all folders (under project root) and will use first fo
             {
                 TriggerReloadForChangedFiles();
             }
+        }
+
+        private static void ClearFileWatchers()
+        {
+            foreach (var fileWatcher in Instance._fileWatchers)
+            {
+                fileWatcher.Dispose();
+            }
+
+            Instance._fileWatchers.Clear();
         }
 
         private void AssignConfigValuesThatCanNotBeAccessedOutsideOfMainThread()
