@@ -69,7 +69,7 @@ namespace FastScriptReload.Editor.Compilation
             });
         }
 
-        public static CompileResult Compile(List<string> filePathsWithSourceCode)
+        public static CompileResult Compile(List<string> filePathsWithSourceCode, UnityMainThreadDispatcher unityMainThreadDispatcher)
         {
             try
             {
@@ -82,7 +82,7 @@ namespace FastScriptReload.Editor.Compilation
                 var sourceCodeCombined = CreateSourceCodeCombinedContents(filePathsWithSourceCode, ActiveScriptCompilationDefines.ToList());
                 CreateFileAndTrackAsCleanup(sourceCodeCombinedFilePath, sourceCodeCombined, _createdFilesToCleanUp);
 #if UNITY_EDITOR
-                UnityMainThreadDispatcher.Instance.Enqueue(() =>
+                unityMainThreadDispatcher.Enqueue(() =>
                 {
                     if ((bool)FastScriptReloadPreference.IsAutoOpenGeneratedSourceFileOnChangeEnabled.GetEditorPersistedValueOrDefault())
                     {

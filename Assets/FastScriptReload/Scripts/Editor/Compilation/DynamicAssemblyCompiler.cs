@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using FastScriptReload.Runtime;
+using ImmersiveVRTools.Runtime.Common;
 using ImmersiveVrToolsCommon.Runtime.Logging;
 using Debug = UnityEngine.Debug;
 
@@ -11,7 +12,7 @@ namespace FastScriptReload.Editor.Compilation
 {
     public class DynamicAssemblyCompiler
     {
-        public static CompileResult Compile(List<string> filePathsWithSourceCode)
+        public static CompileResult Compile(List<string> filePathsWithSourceCode, UnityMainThreadDispatcher unityMainThreadDispatcher)
         {
             var sw = new Stopwatch();
             sw.Start();
@@ -19,7 +20,7 @@ namespace FastScriptReload.Editor.Compilation
 #if FastScriptReload_CompileViaMCS
         var result = McsExeDynamicCompilation.Compile(filePathsWithSourceCode);
 #else
-            var compileResult = DotnetExeDynamicCompilation.Compile(filePathsWithSourceCode);
+            var compileResult = DotnetExeDynamicCompilation.Compile(filePathsWithSourceCode, unityMainThreadDispatcher);
 #endif  
         
             LoggerScoped.Log($"Files: {string.Join(",", filePathsWithSourceCode.Select(fn => new FileInfo(fn).Name))} changed " +

@@ -346,7 +346,7 @@ Workaround will search in all folders (under project root) and will use first fo
             {
                 changesAwaitingHotReload.ForEach(c => { c.IsBeingProcessed = true; });
 
-                UnityMainThreadDispatcher.Instance.EnsureInitialized();
+                var unityMainThreadDispatcher = UnityMainThreadDispatcher.Instance.EnsureInitialized(); //need to pass that in, resolving on other than main thread will cause exception
                 Task.Run(() =>
                 {
                     List<string> sourceCodeFilesWithUniqueChangesAwaitingHotReload = null;
@@ -356,7 +356,7 @@ Workaround will search in all folders (under project root) and will use first fo
                             .GroupBy(e => e.FullFileName)
                             .Select(e => e.First().FullFileName).ToList();
                     
-                        var dynamicallyLoadedAssemblyCompilerResult = DynamicAssemblyCompiler.Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload);
+                        var dynamicallyLoadedAssemblyCompilerResult = DynamicAssemblyCompiler.Compile(sourceCodeFilesWithUniqueChangesAwaitingHotReload, unityMainThreadDispatcher);
                         if (!dynamicallyLoadedAssemblyCompilerResult.IsError)
                         {
                             changesAwaitingHotReload.ForEach(c =>
