@@ -4,16 +4,21 @@ public class InternalInterfaceInOtherFile : MonoBehaviour, IInternalInterface
 {
     public float Test123 = 5f;
     
-    static void OnScriptHotReloadNoInstance()  
-    {   
-        var go = new GameObject("Test");
-        go.AddComponent<InternalInterfaceInOtherFile>().Test("arg");      
-    }
+    // static void OnScriptHotReloadNoInstance()  
+    // {   
+    //     var go = new GameObject("Test");
+    //     go.AddComponent<InternalInterfaceInOtherFile>().Test("arg");      
+    // }
 
     private void Update()
     {
         // Test("Update-changed1: "); 
     }
+
+    // void OnScriptHotReload() 
+    // {
+    //     Debug.Log("TSTS!" + Test123);   
+    // } 
 
     public void Test(string arg)   
     {
