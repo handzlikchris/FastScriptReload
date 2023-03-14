@@ -5,14 +5,16 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
-using FastScriptReload.Runtime;
+using FastScriptReload.Editor.AssemblyPostProcess;
+using HarmonyLib;
 using ImmersiveVRTools.Editor.Common.Cache;
+using ImmersiveVRTools.Editor.Common.Utilities;
 using ImmersiveVRTools.Runtime.Common;
 using ImmersiveVrToolsCommon.Runtime.Logging;
 using UnityEditor;
-using Debug = UnityEngine.Debug;
 
 namespace FastScriptReload.Editor.Compilation
 {
@@ -79,8 +81,8 @@ namespace FastScriptReload.Editor.Compilation
                 var sourceCodeCombinedFilePath = _tempFolder + $"{asmName}.SourceCodeCombined.cs";
                 var outLibraryPath = $"{_tempFolder}{asmName}.dll";
 
-                var sourceCodeCombined = CreateSourceCodeCombinedContents(filePathsWithSourceCode, ActiveScriptCompilationDefines.ToList());
-                CreateFileAndTrackAsCleanup(sourceCodeCombinedFilePath, sourceCodeCombined, _createdFilesToCleanUp);
+                var createSourceCodeCombinedResult = CreateSourceCodeCombinedContents(filePathsWithSourceCode, ActiveScriptCompilationDefines.ToList());
+                CreateFileAndTrackAsCleanup(sourceCodeCombinedFilePath, createSourceCodeCombinedResult.SourceCode, _createdFilesToCleanUp);
 #if UNITY_EDITOR
                 unityMainThreadDispatcher.Enqueue(() =>
                 {
@@ -91,14 +93,19 @@ namespace FastScriptReload.Editor.Compilation
                 });
 #endif
 
-                var rspFileContent = GenerateCompilerArgsRspFileContents(outLibraryPath, _tempFolder, asmName, sourceCodeCombinedFilePath, assemblyAttributeFilePath);
+                var originalAssemblyPathToAsmWithInternalsVisibleToCompiled = PerfMeasure.Elapsed(
+                    () => CreateAssemblyCopiesWithInternalsVisibleTo(createSourceCodeCombinedResult, asmName),
+                    out var createInternalVisibleToAsmElapsedMilliseconds);
+
+                var rspFileContent = GenerateCompilerArgsRspFileContents(outLibraryPath, sourceCodeCombinedFilePath, assemblyAttributeFilePath, originalAssemblyPathToAsmWithInternalsVisibleToCompiled);
                 CreateFileAndTrackAsCleanup(rspFile, rspFileContent, _createdFilesToCleanUp);
                 CreateFileAndTrackAsCleanup(assemblyAttributeFilePath, DynamicallyCreatedAssemblyAttributeSourceCode, _createdFilesToCleanUp);
 
                 var exitCode = ExecuteDotnetExeCompilation(_dotnetExePath, _cscDll, rspFile, outLibraryPath, out var outputMessages);
 
                 var compiledAssembly = Assembly.LoadFrom(outLibraryPath);
-                return new CompileResult(outLibraryPath, outputMessages, exitCode, compiledAssembly, sourceCodeCombined, sourceCodeCombinedFilePath);
+                return new CompileResult(outLibraryPath, outputMessages, exitCode, compiledAssembly, createSourceCodeCombinedResult.SourceCode, 
+                    sourceCodeCombinedFilePath, createInternalVisibleToAsmElapsedMilliseconds);
             }
             catch (Exception)
             {
@@ -140,19 +147,48 @@ You can also:
             }
         }
 
+        private static Dictionary<string, string> CreateAssemblyCopiesWithInternalsVisibleTo(CreateSourceCodeCombinedContentsResult createSourceCodeCombinedResult, string asmName)
+        {
+            var originalAssemblyPathToAsmWithInternalsVisibleToCompiled = new Dictionary<string, string>();
+            try
+            {
+                var assembliesForTypesInCombinedFile = createSourceCodeCombinedResult.TypeNamesDefinitions
+                    .Select(t => AccessTools.TypeByName(t))
+                    .Where(t => t != null)
+                    .Select(t => t.Assembly)
+                    .GroupBy(a => a)
+                    .Select(g => g.First())
+                    .ToList();
+
+                foreach (var assemblyForTypesInCombinedFile in assembliesForTypesInCombinedFile)
+                {
+                    var createdAssemblyWithInternalsVisibleToNewlyCompiled = AddInternalsVisibleToForAllUserAssembliesPostProcess.CreateAssemblyWithInternalsContentsVisibleTo(
+                        assemblyForTypesInCombinedFile, asmName
+                    );
+                    originalAssemblyPathToAsmWithInternalsVisibleToCompiled.Add(assemblyForTypesInCombinedFile.Location, createdAssemblyWithInternalsVisibleToNewlyCompiled);
+                }
+            }
+            catch (Exception e)
+            {
+                LoggerScoped.LogWarning($"Unable to create assembly with '{nameof(InternalsVisibleToAttribute)}' for dynamically recompiled code. {e}");
+            }
+
+            return originalAssemblyPathToAsmWithInternalsVisibleToCompiled;
+        }
+
         private static void CreateFileAndTrackAsCleanup(string filePath, string contents, List<string> createdFilesToCleanUp)
         {
             File.WriteAllText(filePath, contents);
             createdFilesToCleanUp.Add(filePath);
         }
 
-        private static string GenerateCompilerArgsRspFileContents(string outLibraryPath, string tempFolder, string asmName,
-            string sourceCodeCombinedFilePath, string assemblyAttributeFilePath)
+        private static string GenerateCompilerArgsRspFileContents(string outLibraryPath, string sourceCodeCombinedFilePath, string assemblyAttributeFilePath, 
+            Dictionary<string, string> originalAssemblyPathToAsmWithInternalsVisibleToCompiled)
         {
             var rspContents = new StringBuilder();
             rspContents.AppendLine("-target:library");
             rspContents.AppendLine($"-out:\"{outLibraryPath}\"");
-            rspContents.AppendLine($"-refout:\"{tempFolder}{asmName}.ref.dll\""); //TODO: what's that?
+            // rspContents.AppendLine($"-refout:\"{tempFolder}{asmName}.ref.dll\""); //reference assembly for linking, not needed
             foreach (var symbol in ActiveScriptCompilationDefines)
             {
                 rspContents.AppendLine($"-define:{symbol}");
@@ -160,7 +196,15 @@ You can also:
 
             foreach (var referenceToAdd in ResolveReferencesToAdd(new List<string>()))
             {
-                rspContents.AppendLine($"-r:\"{referenceToAdd}\"");
+                if (originalAssemblyPathToAsmWithInternalsVisibleToCompiled.TryGetValue(referenceToAdd, out var asmWithInternalsVisibleTo))
+                {
+                    //Changed assembly have InternalsVisibleTo added to it to avoid any issues where types are defined internal
+                    rspContents.AppendLine($"-r:\"{asmWithInternalsVisibleTo}\"");
+                }
+                else
+                {
+                    rspContents.AppendLine($"-r:\"{referenceToAdd}\"");
+                }
             }
 
             rspContents.AppendLine($"\"{sourceCodeCombinedFilePath}\"");

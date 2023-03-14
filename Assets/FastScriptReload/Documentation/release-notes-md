@@ -1,3 +1,6 @@
+1.5
+- using internal interfaces / classes will 
+
 1.4
 - added experimental editor-mode hot-reload, you'll need to opt in via Start Screen -> Editor Hot-Reload (please read the notes on that page, playmode workflow is still far superior)
 - you can now define User Script Rewrite Overrides - which will allow you to overcome most of existing limitations that cause compilation errors (on a one by one basis)

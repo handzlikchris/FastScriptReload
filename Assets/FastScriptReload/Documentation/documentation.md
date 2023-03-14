@@ -454,6 +454,8 @@ public class MySingleton: MonoBehaviour {
 ### Calling internal class members from changed code
 > You can use [User Defined Script Overrides](#user-defined-script-overrides) to overcome this limitation
 
+> fixed in unreleased 1.5 - please get in touch if you need a copy before release
+
 Technically, once your changed code is compiled it'll be in a separate assembly. As a result this changed code won't be able to access internal classes from assembly it originated from.
 
 ### Extensive use of nested classed / structs
@@ -547,6 +549,8 @@ public static ObjectFromExternalAssemblyExtensions
 ### Changing class that implements internal interface can trigger compilation error
 > You can use [User Defined Script Overrides](#user-defined-script-overrides) to overcome this limitation
 
+> fixed in unreleased 1.5 - please get in touch if you need a copy before release
+
 If class is implementing interface that's defined in different file as internal (default for no access modifier) - then changes to that class will fail to compile.
 
 eg.
@@ -568,6 +572,8 @@ class ClassImplementingIInterface: IInterface {
 
 ### Changing class that accesses `private protected` members
 > You can use [User Defined Script Overrides](#user-defined-script-overrides) to overcome this limitation
+
+> fixed in unreleased 1.5 - please get in touch if you need a copy before release
 
 With C# 7.2 `private protected` access modifier was introduced. It works as `protected` access modifier in a sense that inherited classes can access it but. 
 Addition of `private` also limits it to same assembly. Your changes are technically compiled into separate assembly and at the moment trying to access `private protected` in changed code will produce compiler error.

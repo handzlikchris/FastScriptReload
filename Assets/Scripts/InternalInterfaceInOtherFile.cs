@@ -7,12 +7,18 @@ public class InternalInterfaceInOtherFile : MonoBehaviour, IInternalInterface
     static void OnScriptHotReloadNoInstance()  
     {   
         var go = new GameObject("Test");
-        go.AddComponent<InternalInterfaceInOtherFile>().Test("arg");  
-    } 
- 
+        go.AddComponent<InternalInterfaceInOtherFile>().Test("arg");      
+    }
+
+    private void Update()
+    {
+        // Test("Update-changed1: "); 
+    }
+
     public void Test(string arg)   
     {
         Debug.Log("TEst" + arg);
-        throw new System.NotImplementedException();
+
+        Debug.Log("Test Call back to existing:" + ExistingSingletonTest.Instance.IntValueGetter);     
     }
 }

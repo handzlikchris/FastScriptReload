@@ -70,9 +70,10 @@ namespace FastScriptReload.Editor.Compilation
 
         }
         
-        protected static string CreateSourceCodeCombinedContents(List<string> sourceCodeFiles, List<string> definedPreprocessorSymbols)
+        protected static CreateSourceCodeCombinedContentsResult CreateSourceCodeCombinedContents(List<string> sourceCodeFiles, List<string> definedPreprocessorSymbols)
         {
             var combinedUsingStatements = new List<string>();
+            var typesDefined = new List<string>();
             
             var sourceCodeWithAdjustments = sourceCodeFiles.Select(sourceCodeFile =>
             {
@@ -80,13 +81,14 @@ namespace FastScriptReload.Editor.Compilation
                 var tree = CSharpSyntaxTree.ParseText(fileCode, new CSharpParseOptions(preprocessorSymbols: definedPreprocessorSymbols));
                 var root = tree.GetRoot();
                 
+                //WARN: needs to walk before root class name changes, otherwise it'll resolve wrong name
+                var fieldsWalker = new FieldsWalker();
+                fieldsWalker.Visit(root);
+                typesDefined.AddRange(fieldsWalker.GetTypeNames());
+                
                 var typeToNewFieldDeclarations = new Dictionary<string, List<string>>();
                 if (FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.EnableExperimentalAddedFieldsSupport)
                 {
-                    //WARN: needs to walk before root class name changes, otherwise it'll resolve wrong name
-                    var fieldsWalker = new FieldsWalker();
-                    fieldsWalker.Visit(root);
-                    
                     var typeToFieldDeclarations = fieldsWalker.GetTypeToFieldDeclarations();
                     typeToNewFieldDeclarations = typeToFieldDeclarations.ToDictionary(
                         t => t.Key,
@@ -179,7 +181,7 @@ namespace FastScriptReload.Editor.Compilation
             }
             
             LoggerScoped.LogDebug("Source Code Created:\r\n\r\n" + sourceCodeCombinedSb);
-            return sourceCodeCombinedSb.ToString();
+            return new CreateSourceCodeCombinedContentsResult(sourceCodeCombinedSb.ToString(), typesDefined);
         }
 
         private static SyntaxNode AddUserDefinedOverridenTypes(SyntaxNode userDefinedOverridesRoot, SyntaxNode root)
@@ -311,6 +313,18 @@ namespace FastScriptReload.Editor.Compilation
 	        //ThisRewriters will cast to dynamic - if using .NET Standard 2.1 - reference is required
 	        referencesToAdd.Add(AssemblyCsharpFullPath);
 	        // referencesToAdd.Add(@"C:\Program Files\Unity\Hub\Editor\2021.3.12f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Microsoft.CSharp.dll");
+        }
+    }
+
+    public class CreateSourceCodeCombinedContentsResult
+    {
+        public string SourceCode { get; }
+        public List<string> TypeNamesDefinitions { get; }
+
+        public CreateSourceCodeCombinedContentsResult(string sourceCode, List<string> typeNamesDefinitions)
+        {
+            SourceCode = sourceCode;
+            TypeNamesDefinitions = typeNamesDefinitions;
         }
     }
 }

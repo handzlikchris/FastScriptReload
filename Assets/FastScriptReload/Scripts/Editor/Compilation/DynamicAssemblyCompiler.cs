@@ -29,7 +29,11 @@ namespace FastScriptReload.Editor.Compilation
 #else
                             "(to debug go to Fast Script Reload -> Start Screen -> Debugging -> Auto-open generated source file for debugging)" +
 #endif
-                             $" - compilation (took {sw.ElapsedMilliseconds}ms)");
+                             $" - compilation (took {sw.ElapsedMilliseconds}ms)"
+#if ImmersiveVrTools_DebugEnabled
+                            + $" (of which creating internal visible to assemblies {compileResult.CreatingAssemblyWithInternalsVisibleToTook})ms"
+#endif
+);
             
             return compileResult;
         }
@@ -44,8 +48,9 @@ namespace FastScriptReload.Editor.Compilation
         public int NativeCompilerReturnValue { get; }
         public string SourceCodeCombined { get; }
         public string SourceCodeCombinedFileLocation { get; }
+        public float CreatingAssemblyWithInternalsVisibleToTook { get; }
 
-        public CompileResult(string compiledAssemblyPath, List<string> messagesFromCompilerProcess, int nativeCompilerReturnValue, Assembly compiledAssembly, string sourceCodeCombined, string sourceCodeCombinedFileLocation)
+        public CompileResult(string compiledAssemblyPath, List<string> messagesFromCompilerProcess, int nativeCompilerReturnValue, Assembly compiledAssembly, string sourceCodeCombined, string sourceCodeCombinedFileLocation, float creatingAssemblyWithInternalsVisibleToTook)
         {
             CompiledAssemblyPath = compiledAssemblyPath;
             MessagesFromCompilerProcess = messagesFromCompilerProcess;
@@ -53,6 +58,7 @@ namespace FastScriptReload.Editor.Compilation
             CompiledAssembly = compiledAssembly;
             SourceCodeCombined = sourceCodeCombined;
             SourceCodeCombinedFileLocation = sourceCodeCombinedFileLocation;
+            CreatingAssemblyWithInternalsVisibleToTook = creatingAssemblyWithInternalsVisibleToTook;
         }
     }
 }

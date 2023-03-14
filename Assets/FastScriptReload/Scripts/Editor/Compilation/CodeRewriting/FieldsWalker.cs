@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -33,6 +34,10 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 
         public Dictionary<string, List<NewFieldDeclaration>> GetTypeToFieldDeclarations() {
             return _typeNameToFieldDeclarations;
+        }
+        
+        public List<string> GetTypeNames() {
+            return _typeNameToFieldDeclarations.Select(kv => kv.Key).ToList();
         }
     }
 }
