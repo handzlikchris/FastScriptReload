@@ -1,6 +1,7 @@
 1.5
 - hot-reloading internal interfaces / classes would no longer cause compilation error 
 - OnScriptHotReload method can be added at runtime
+- builder functions will be correctly rewritten
 
 1.4
 - added experimental editor-mode hot-reload, you'll need to opt in via Start Screen -> Editor Hot-Reload (please read the notes on that page, playmode workflow is still far superior)

@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace FastScriptReload.Editor.Compilation.CodeRewriting
 {
-        class ConstructorRewriter : FastScriptReloadCodeRewriterBase
+	class ConstructorRewriter : FastScriptReloadCodeRewriterBase
         {
 	        private readonly bool _adjustCtorOnlyForNonNestedTypes;
 	        

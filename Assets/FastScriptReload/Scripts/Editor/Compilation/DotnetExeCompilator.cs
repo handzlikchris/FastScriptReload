@@ -159,7 +159,7 @@ You can also:
                     .GroupBy(a => a)
                     .Select(g => g.First())
                     .ToList();
-
+                
                 foreach (var assemblyForTypesInCombinedFile in assembliesForTypesInCombinedFile)
                 {
                     var createdAssemblyWithInternalsVisibleToNewlyCompiled = AddInternalsVisibleToForAllUserAssembliesPostProcess.CreateAssemblyWithInternalsContentsVisibleTo(
