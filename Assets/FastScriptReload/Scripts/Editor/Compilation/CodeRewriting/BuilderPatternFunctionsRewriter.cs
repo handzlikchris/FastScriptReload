@@ -5,9 +5,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace FastScriptReload.Editor.Compilation.CodeRewriting
 {
-    class BuilderFunctionsRewriter : FastScriptReloadCodeRewriterBase
+    class BuilderPatternFunctionsRewriter : FastScriptReloadCodeRewriterBase
     {
-        public BuilderFunctionsRewriter(bool writeRewriteReasonAsComment, bool visitIntoStructuredTrivia = false) 
+        public BuilderPatternFunctionsRewriter(bool writeRewriteReasonAsComment, bool visitIntoStructuredTrivia = false) 
             : base(writeRewriteReasonAsComment, visitIntoStructuredTrivia)
         {
         }
