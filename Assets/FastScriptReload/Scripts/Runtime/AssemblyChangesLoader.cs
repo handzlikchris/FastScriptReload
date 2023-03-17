@@ -253,9 +253,10 @@ namespace FastScriptReload.Runtime
             IsDidFieldsOrPropertyCountChangedCheckDisabled = isDidFieldsOrPropertyCountChangedCheckDisabled;
             EnableExperimentalAddedFieldsSupport = enableExperimentalAddedFieldsSupport;
         }
+        
 #pragma warning disable 0618
         [Obsolete("Needed for network serialization")]
-#pragma warning enable 0618
+#pragma warning restore 0618
         public AssemblyChangesLoaderEditorOptionsNeededInBuild()
         {
         }
