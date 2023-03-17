@@ -201,7 +201,6 @@ Use this setting to force lock assemblies via code."
 , MessageType.Info);
                         GUILayout.Space(sectionBreakHeight);
                         
-                        
                         using (LayoutHelper.LabelWidth(350))
                         {
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.IsDidFieldsOrPropertyCountChangedCheckDisabled);
@@ -212,7 +211,12 @@ Use this setting to force lock assemblies via code."
                                                 "\r\n\r\nTick this box for tool to try and reload changes when that happens."
                             
                             , MessageType.Info);
+                        GUILayout.Space(sectionBreakHeight);
 
+                        using (LayoutHelper.LabelWidth(430))
+                        {
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.IsVisualHotReloadIndicationShownInProjectWindow);
+                        }
                     }),
                     (UserScriptRewriteOverrides = new ChangeMainViewButton("User Script\r\nRewrite Overrides", (screen) =>
                     {
@@ -599,6 +603,9 @@ includeSubdirectories - whether child directories should be watched as well
                 FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.IsDidFieldsOrPropertyCountChangedCheckDisabled = (bool)value;
             }
         );
+        
+        public static readonly ToggleProjectEditorPreferenceDefinition IsVisualHotReloadIndicationShownInProjectWindow = new ToggleProjectEditorPreferenceDefinition(
+            "Show red / green bar in project window to indicate hot reload state for file", "IsVisualHotReloadIndicationShownInProjectWindow", true);
         
         public static readonly ToggleProjectEditorPreferenceDefinition IsForceLockAssembliesViaCode = new ToggleProjectEditorPreferenceDefinition(
             "Force prevent assembly reload during playmode", "IsForceLockAssembliesViaCode", false);

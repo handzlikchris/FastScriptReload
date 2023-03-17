@@ -13,7 +13,7 @@ public enum AreaType {
     Exit,
 }
 
-public class GenerationGiveUpException: Exception { }  
+public class GenerationGiveUpException: Exception { }   
 
 public class SetupGenerationData {
     public CardinalDirection SpawnDirection;

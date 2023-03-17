@@ -8,8 +8,8 @@ public class A_Test : MonoBehaviour
     {
         
     } 
-    private IEnumerator IE() 
+    private IEnumerator IE()     
     {
-        yield break;
+        yield break;  
     }
 }
