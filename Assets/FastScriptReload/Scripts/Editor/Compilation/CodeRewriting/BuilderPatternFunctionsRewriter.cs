@@ -16,9 +16,9 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
         public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
             var ancestorName = node.Ancestors().OfType<TypeDeclarationSyntax>().FirstOrDefault()?.Identifier.ValueText;
-            if (string.IsNullOrEmpty(ancestorName))
+            if (string.IsNullOrEmpty(ancestorName)) //TODO: that happens too often for some methods, odd. Why? At very least don't spam user
             {
-                LoggerScoped.LogWarning($"Unable to find ancestor for '{node.ToFullString()}'");
+                LoggerScoped.LogWarning($"Unable to find ancestor for node '{node.ToFullString()}'");
             }
             else
             {
