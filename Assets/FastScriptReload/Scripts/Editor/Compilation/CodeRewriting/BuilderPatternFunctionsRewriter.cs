@@ -1,4 +1,5 @@
 using System.Linq;
+using ImmersiveVrToolsCommon.Runtime.Logging;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -15,11 +16,18 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
         public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
             var ancestorName = node.Ancestors().OfType<TypeDeclarationSyntax>().FirstOrDefault()?.Identifier.ValueText;
-            var ancestorNameWithoutPatchedPostfix = ancestorName.Replace(FastScriptReload.Runtime.AssemblyChangesLoader.ClassnamePatchedPostfix, "");
-
-            if (node.ReturnType is IdentifierNameSyntax name && name.Identifier.ValueText == ancestorNameWithoutPatchedPostfix)
+            if (string.IsNullOrEmpty(ancestorName))
             {
-                return node.WithReturnType(SyntaxFactory.IdentifierName(ancestorName + " "));
+                LoggerScoped.LogWarning($"Unable to find ancestor for '{node.ToFullString()}'");
+            }
+            else
+            {
+                var ancestorNameWithoutPatchedPostfix = ancestorName.Replace(FastScriptReload.Runtime.AssemblyChangesLoader.ClassnamePatchedPostfix, "");
+
+                if (node.ReturnType is IdentifierNameSyntax name && name.Identifier.ValueText == ancestorNameWithoutPatchedPostfix)
+                {
+                    return node.WithReturnType(SyntaxFactory.IdentifierName(ancestorName + " "));
+                }
             }
             
             return base.VisitMethodDeclaration(node);
