@@ -1,5 +1,5 @@
 
-    public enum CardinalDirection
+    public enum CardinalDirection 
     {
         None,
         North,

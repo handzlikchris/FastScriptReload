@@ -7,7 +7,7 @@ public class InternalInterfaceInOtherFile : MonoBehaviour, IInternalInterface
     // static void OnScriptHotReloadNoInstance()  
     // {   
     //     var go = new GameObject("Test");
-    //     go.AddComponent<InternalInterfaceInOtherFile>().Test("arg");      
+    //     go.AddComponent<InternalInterfaceInOtherFile>().Test("arg");       
     // }
 
     private void Update()

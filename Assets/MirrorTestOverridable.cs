@@ -3,7 +3,7 @@
 // using Mirror;
 // using UnityEngine;
 //
-// public class MirrorTestOverridable : NetworkBehaviour
+// public class MirrorTestOverridable : NetworkBehaviour 
 // {
 //     public override void OnStartServer()
 //     {
@@ -16,7 +16,7 @@
 //         {
 //             var firstConnection = NetworkServer.connections.FirstOrDefault().Value;
 //
-//             if (firstConnection != null)
+//             if (firstConnection != null)  
 //             {
 //                 if (firstConnection.owned.Contains(netIdentity))
 //                 {
@@ -24,7 +24,7 @@
 //                 }
 //                 else
 //                 {
-//                     netIdentity.AssignClientAuthority(firstConnection);
+                  / netIdentity.AssignClientAuthority(firstConnection);    
 //                 }
 //             }
 //

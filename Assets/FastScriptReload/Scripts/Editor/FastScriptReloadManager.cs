@@ -44,8 +44,8 @@ namespace FastScriptReload.Editor
             [FileWatcherReplacementTokenForApplicationDataPath] = () => DataPath
         };
 
-        private Dictionary<string, DynamicFileHotReloadState> _lastProcessedDynamicFileHotReloadStates = new Dictionary<string, DynamicFileHotReloadState>();
-        public IReadOnlyDictionary<string, DynamicFileHotReloadState> LastProcessedDynamicFileHotReloadStates => _lastProcessedDynamicFileHotReloadStates;
+        private Dictionary<string, DynamicFileHotReloadState> _lastProcessedDynamicFileHotReloadStatesInSession = new Dictionary<string, DynamicFileHotReloadState>();
+        public IReadOnlyDictionary<string, DynamicFileHotReloadState> LastProcessedDynamicFileHotReloadStatesInSession => _lastProcessedDynamicFileHotReloadStatesInSession;
 
         private bool _wasLockReloadAssembliesCalled;
         private PlayModeStateChange _lastPlayModeStateChange;
@@ -360,11 +360,10 @@ Workaround will search in all folders (under project root) and will use first fo
 
             if (changesAwaitingHotReload.Any())
             {
-                ClearLastProcessedDynamicFileHotReloadStates();
+                UpdateLastProcessedDynamicFileHotReloadStates(changesAwaitingHotReload);
                 foreach (var c in changesAwaitingHotReload)
                 {
                     c.IsBeingProcessed = true;
-                    AddToLastProcessedDynamicFileHotReloadStates(c);
                 }
 
                 var unityMainThreadDispatcher = UnityMainThreadDispatcher.Instance.EnsureInitialized(); //need to pass that in, resolving on other than main thread will cause exception
@@ -438,13 +437,29 @@ Workaround will search in all folders (under project root) and will use first fo
             var assetGuid = AssetDatabaseUtilities.AbsolutePathToGUID(c.FullFileName);
             if (!string.IsNullOrEmpty(assetGuid))
             {
-                _lastProcessedDynamicFileHotReloadStates.Add(assetGuid, c);
+                _lastProcessedDynamicFileHotReloadStatesInSession[assetGuid] = c;
             }
         }
         
         private void ClearLastProcessedDynamicFileHotReloadStates()
         {
-            _lastProcessedDynamicFileHotReloadStates.Clear();
+            _lastProcessedDynamicFileHotReloadStatesInSession.Clear();
+        }
+        
+        //Success entries will always be cleared - errors will remain till another change fixes them
+        private void UpdateLastProcessedDynamicFileHotReloadStates(List<DynamicFileHotReloadState> changesToHotReload)
+        {
+            var succeededReloads = _lastProcessedDynamicFileHotReloadStatesInSession
+                .Where(s => s.Value.IsChangeHotSwapped).ToList();
+            foreach (var kv in succeededReloads)
+            {
+                _lastProcessedDynamicFileHotReloadStatesInSession.Remove(kv.Key);
+            }
+
+            foreach (var changeToHotReload in changesToHotReload)
+            {
+                AddToLastProcessedDynamicFileHotReloadStates(changeToHotReload);
+            }
         }
 
         private void OnEditorApplicationOnplayModeStateChanged(PlayModeStateChange obj)
