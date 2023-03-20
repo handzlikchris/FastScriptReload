@@ -422,6 +422,7 @@ Workaround will search in all folders (under project root) and will use first fo
                         {
                             c.ErrorOn = DateTime.UtcNow;
                             c.ErrorText = ex.Message;
+                            c.SourceCodeCombinedFilePath = (ex as HotReloadCompilationException)?.SourceCodeCombinedFileCreated;
                         });
                     }
                 });
@@ -529,6 +530,7 @@ Workaround will search in all folders (under project root) and will use first fo
         public DateTime? ErrorOn { get; set; }
         public bool IsFailed => ErrorOn.HasValue;
         public bool IsBeingProcessed { get; set; }
+        public string SourceCodeCombinedFilePath { get; set; }
 
         public DynamicFileHotReloadState(string fullFileName, DateTime fileChangedOn)
         {
