@@ -37,7 +37,16 @@ namespace FastScriptReload.Editor
         public static ChangeMainViewButton EditorHotReloadSection { get; private set; }
         public static ChangeMainViewButton NewFieldsSection { get; private set; }
         public static ChangeMainViewButton UserScriptRewriteOverrides { get; private set; }
+        public static ChangeMainViewButton InspectError { get; private set; }
 
+        private static DynamicFileHotReloadState LastInspectFileHotReloadStateError;
+
+        public void OpenInspectError(DynamicFileHotReloadState fileHotReloadState)
+        {
+            LastInspectFileHotReloadStateError = fileHotReloadState;
+            InspectError.OnClick(this);
+        }
+        
         public void OpenExclusionsSection()
         {
             ExclusionsSection.OnClick(this);
@@ -141,6 +150,18 @@ namespace FastScriptReload.Editor
             return new List<GuiSection>() {
                 new GuiSection("", new List<ClickableElement>
                 {
+                    //TODO: add render if function and check if selected
+                    //TODO: also make sure user not locked on that page if left it?
+                    (InspectError = new ChangeMainViewButton("Error - Inspect", (screen) =>
+                    {
+                        if (LastInspectFileHotReloadStateError == null)
+                        {
+                            GUILayout.Label(@"No error selected. Possibly it's been cleared by domain reload.", screen.TextStyle);
+                            return;
+                        }
+                        
+                        GUILayout.Label($"Error in: {LastInspectFileHotReloadStateError.FullFileName}");
+                    })), 
                     new LastUpdateButton("New Update!", (screen) => LastUpdateUpdateScrollViewSection.RenderMainScrollViewSection(screen)),
                     new ChangeMainViewButton("Welcome", (screen) => mainScrollViewSection.RenderMainScrollViewSection(screen)),
                 }),

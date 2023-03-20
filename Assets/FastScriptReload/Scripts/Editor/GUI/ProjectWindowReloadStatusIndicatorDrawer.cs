@@ -51,7 +51,7 @@ Last hot reload failed.
 Please click for more details.")),
                             EditorStyles.linkLabel))
                     {
-                        Debug.LogWarning("Clicked");
+                        FastScriptReloadWelcomeScreen.Init().OpenInspectError(fileHotReloadState);
                     }; 
                 }    
                 else if (fileHotReloadState.IsChangeHotSwapped)
