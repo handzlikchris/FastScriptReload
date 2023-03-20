@@ -150,18 +150,18 @@ namespace FastScriptReload.Editor
             return new List<GuiSection>() {
                 new GuiSection("", new List<ClickableElement>
                 {
-                    //TODO: add render if function and check if selected
-                    //TODO: also make sure user not locked on that page if left it?
                     (InspectError = new ChangeMainViewButton("Error - Inspect", (screen) =>
                     {
                         if (LastInspectFileHotReloadStateError == null)
                         {
-                            GUILayout.Label(@"No error selected. Possibly it's been cleared by domain reload.", screen.TextStyle);
+                            GUILayout.Label(@"No error selected. Possibly it's been cleared by domain reload.
+
+Choose other tab on the left.", screen.TextStyle);
                             return;
                         }
                         
                         GUILayout.Label($"Error in: {LastInspectFileHotReloadStateError.FullFileName}");
-                    })), 
+                    })).WithShouldRender(() => LastInspectFileHotReloadStateError != null), 
                     new LastUpdateButton("New Update!", (screen) => LastUpdateUpdateScrollViewSection.RenderMainScrollViewSection(screen)),
                     new ChangeMainViewButton("Welcome", (screen) => mainScrollViewSection.RenderMainScrollViewSection(screen)),
                 }),
