@@ -24,7 +24,7 @@
  //                 }
  //                 else
  //                 {
- //                  netIdentity.AssignClientAuthority(firstConnection);    
+ //                   netIdentity.AssignClientAuthority(firstConnection);    
  //                 }
  //             }
  //

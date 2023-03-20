@@ -163,38 +163,40 @@ namespace FastScriptReload.Editor
                     (InspectError = new ChangeMainViewButton("Error - Inspect", (screen) =>
                     {
             if (FastScriptReloadWelcomeScreen.LastInspectFileHotReloadStateError == null)
-                                 {
-                                     GUILayout.Label(
-@"No error selected. Possibly it's been cleared by domain reload.
+            {
+                GUILayout.Label(
+                    @"No error selected. Possibly it's been cleared by domain reload.
 
 Choose other tab on the left.", screen.TextStyle);
-                                     return;
-                                 }
-                     
-                     
-                                     EditorGUILayout.HelpBox(@"Errors are usually down to compilation / rewrite issue. There are ways you can mitigate those.", MessageType.Warning);
-                                     GUILayout.Space(10);
-                     
-                                     GUILayout.Label("1) Review compilation error, especially looking for specific lines that caused error:");
-                                     EditorGUILayout.HelpBox(
-@"For example following error below shows line 940 as causing compilation issue due to missing #endif directive.
+                return;
+            }
+
+
+            EditorGUILayout.HelpBox(
+                @"Errors are usually down to compilation / rewrite issue. There are ways you can mitigate those.",
+                MessageType.Warning);
+            GUILayout.Space(10);
+
+            GUILayout.Label("1) Review compilation error, especially looking for specific lines that caused error:");
+            EditorGUILayout.HelpBox(
+                @"For example following error below shows line 940 as causing compilation issue due to missing #endif directive.
 
 System.Exception: Compiler failed to produce the assembly. 
 Output: '<filepath>.SourceCodeCombined.cs(940,1): error CS1027: #endif directive expected'",
-                                         MessageType.Info);
-                                     
-                                     GUILayout.Space(10);
-                                     GUILayout.Label("Error:");
-                                     GUILayout.TextArea(FastScriptReloadWelcomeScreen.LastInspectFileHotReloadStateError.ErrorText);
-                     
-                                     GUILayout.Space(10);
-                                     if (GUILayout.Button("2) Click here to open generated file that failed to compile"))
-                                     {
-                                         UnityEditorInternal.InternalEditorUtility.OpenFileAtLineExternal(FastScriptReloadWelcomeScreen.LastInspectFileHotReloadStateError.FullFileName, 1);
-                                     }
-                     
-                                     GUILayout.Label(
-@"Error could be caused by a normal compilation issue that you created in source file 
+                MessageType.Info);
+
+            GUILayout.Space(10);
+            GUILayout.Label("Error:");
+            GUILayout.TextArea(LastInspectFileHotReloadStateError.ErrorText);
+
+            GUILayout.Space(10);
+            if (GUILayout.Button("2) Click here to open generated file that failed to compile"))
+            {
+                InternalEditorUtility.OpenFileAtLineExternal(LastInspectFileHotReloadStateError.FullFileName, 1);
+            }
+
+            GUILayout.Label(
+                @"Error could be caused by a normal compilation issue that you created in source file 
 (eg typo), in that case please fix and it'll recompile.
 
 It's possible compilation fails due to existing limitation, while I work continuously 
@@ -203,21 +205,21 @@ on mitigating limitations it's best that you're aware where they are.
 Please see documentation (link above) to understand them better 
 They also contain workarounds if needed.");
 
-                                     GUILayout.Space(10);
-                                     GUILayout.Label(
-@"You can also create one-off override file that'll allow to specify
+            GUILayout.Space(10);
+            GUILayout.Label(
+                @"You can also create one-off override file that'll allow to specify
 custom rewrites for methods.", screen.BoldTextStyle);
-                                     if (GUILayout.Button("3) Create User Defined Script Override"))
-                                     {
-                                        ScriptGenerationOverridesManager.AddScriptOverride(new FileInfo(FastScriptReloadWelcomeScreen.LastInspectFileHotReloadStateError.FullFileName));
-                                     }
-                                 
-                                     //TODO: extend to allow zipping of ready made support package, error, generated script and original script, warn that this will happen
-                     //                 GUILayout.Label(
-                     // @"If you could please get in touch with me using one of the links above and copy following details: 
-                     // error you see in the console as well as created files 
-                     // (from paths in previous error). This way I can get it fixed for you."
-                     //                 );
+            if (GUILayout.Button("3) Create User Defined Script Override"))
+            {
+                ScriptGenerationOverridesManager.AddScriptOverride(new FileInfo(FastScriptReloadWelcomeScreen.LastInspectFileHotReloadStateError.FullFileName));
+            }
+
+             //TODO: extend to allow zipping of ready made support package, error, generated script and original script, warn that this will happen
+             //                 GUILayout.Label(
+             // @"If you could please get in touch with me using one of the links above and copy following details: 
+             // error you see in the console as well as created files 
+             // (from paths in previous error). This way I can get it fixed for you."
+             //                 );
                     })).WithShouldRender(() => LastInspectFileHotReloadStateError != null), 
                     new LastUpdateButton("New Update!", (screen) => LastUpdateUpdateScrollViewSection.RenderMainScrollViewSection(screen)),
                     new ChangeMainViewButton("Welcome", (screen) => mainScrollViewSection.RenderMainScrollViewSection(screen)),

@@ -43,9 +43,11 @@ namespace FastScriptReload.Editor
         {
             [FileWatcherReplacementTokenForApplicationDataPath] = () => DataPath
         };
-
+        
         private Dictionary<string, DynamicFileHotReloadState> _lastProcessedDynamicFileHotReloadStatesInSession = new Dictionary<string, DynamicFileHotReloadState>();
         public IReadOnlyDictionary<string, DynamicFileHotReloadState> LastProcessedDynamicFileHotReloadStatesInSession => _lastProcessedDynamicFileHotReloadStatesInSession;
+        public event Action<List<DynamicFileHotReloadState>> HotReloadFailed;
+        public event Action<List<DynamicFileHotReloadState>> HotReloadSucceeded;
 
         private bool _wasLockReloadAssembliesCalled;
         private PlayModeStateChange _lastPlayModeStateChange;
@@ -393,6 +395,8 @@ Workaround will search in all folders (under project root) and will use first fo
                             }); //TODO: technically not all were hot swapped at same time
 
                             _hotReloadPerformedCount++;
+                            
+                            SafeInvoke(HotReloadSucceeded, changesAwaitingHotReload);
                         }
                         else
                         {
@@ -425,6 +429,8 @@ Workaround will search in all folders (under project root) and will use first fo
                             c.ErrorText = ex.Message;
                             c.SourceCodeCombinedFilePath = (ex as HotReloadCompilationException)?.SourceCodeCombinedFileCreated;
                         });
+
+                        SafeInvoke(HotReloadFailed, changesAwaitingHotReload);
                     }
                 });
             }
@@ -432,9 +438,21 @@ Workaround will search in all folders (under project root) and will use first fo
             _lastTimeChangeBatchRun = DateTime.UtcNow;
         }
 
+        private void SafeInvoke(Action<List<DynamicFileHotReloadState>> ev, List<DynamicFileHotReloadState> changesAwaitingHotReload)
+        {
+            try
+            {
+                ev?.Invoke(changesAwaitingHotReload);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error when executing event, {e}");
+            }
+        }
+
         private void AddToLastProcessedDynamicFileHotReloadStates(DynamicFileHotReloadState c)
         {
-            var assetGuid = AssetDatabaseUtilities.AbsolutePathToGUID(c.FullFileName);
+            var assetGuid = AssetDatabaseHelper.AbsolutePathToGUID(c.FullFileName);
             if (!string.IsNullOrEmpty(assetGuid))
             {
                 _lastProcessedDynamicFileHotReloadStatesInSession[assetGuid] = c;

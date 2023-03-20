@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using ImmersiveVRTools.Editor.Common.Utilities;
+using ImmersiveVRTools.Runtime.Common;
 using UnityEditor;
 using UnityEngine;
 
@@ -16,10 +18,29 @@ namespace FastScriptReload.Editor.GUI
         static ProjectWindowReloadStatusIndicatorDrawer()
         {
             EditorApplication.projectWindowItemOnGUI += ProjectWindowItemOnGUI;
+            FastScriptReloadManager.Instance.HotReloadFailed += OnHotReloadFailed;
             EditorApplication.update += () =>
             {
                 IsEnabled = (bool)FastScriptReloadPreference.IsVisualHotReloadIndicationShownInProjectWindow.GetEditorPersistedValueOrDefault();
             };
+        }
+
+        private static void OnHotReloadFailed(List<DynamicFileHotReloadState> failedForFileStates)
+        {
+            if (!IsEnabled)
+            {
+                return;
+            }
+            
+            UnityMainThreadDispatcher.Instance.Enqueue(() =>
+            {
+                var lastFailed = failedForFileStates.LastOrDefault();
+                if (lastFailed != null)
+                {
+                    var script = AssetDatabase.LoadAssetAtPath<MonoScript>(AssetDatabaseHelper.AbsolutePathToAssetPath(lastFailed.FullFileName));
+                    EditorGUIUtility.PingObject(script);
+                }
+            });
         }
 
         private static void ProjectWindowItemOnGUI(string guid, Rect rect)
