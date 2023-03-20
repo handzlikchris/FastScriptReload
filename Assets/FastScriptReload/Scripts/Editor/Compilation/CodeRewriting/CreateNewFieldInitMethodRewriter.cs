@@ -135,7 +135,6 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 																													.ObjectKeyword))))))
 																		}))))
 													.WithInitializer(dictionaryInitializer))))))
-					.WithTriviaFrom(node)
 					.WithModifiers(
 						SyntaxFactory.TokenList(
 							SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
