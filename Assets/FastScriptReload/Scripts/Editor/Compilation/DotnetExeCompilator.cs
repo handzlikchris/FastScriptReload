@@ -73,12 +73,13 @@ namespace FastScriptReload.Editor.Compilation
 
         public static CompileResult Compile(List<string> filePathsWithSourceCode, UnityMainThreadDispatcher unityMainThreadDispatcher)
         {
+            var sourceCodeCombinedFilePath = string.Empty;
             try
             {
                 var asmName = Guid.NewGuid().ToString().Replace("-", "");
                 var rspFile = _tempFolder + $"{asmName}.rsp";
                 var assemblyAttributeFilePath = _tempFolder + $"{asmName}.DynamicallyCreatedAssemblyAttribute.cs";
-                var sourceCodeCombinedFilePath = _tempFolder + $"{asmName}.SourceCodeCombined.cs";
+                sourceCodeCombinedFilePath = _tempFolder + $"{asmName}.SourceCodeCombined.cs";
                 var outLibraryPath = $"{_tempFolder}{asmName}.dll";
 
                 var createSourceCodeCombinedResult = CreateSourceCodeCombinedContents(filePathsWithSourceCode, ActiveScriptCompilationDefines.ToList());
@@ -107,7 +108,7 @@ namespace FastScriptReload.Editor.Compilation
                 return new CompileResult(outLibraryPath, outputMessages, exitCode, compiledAssembly, createSourceCodeCombinedResult.SourceCode, 
                     sourceCodeCombinedFilePath, createInternalVisibleToAsmElapsedMilliseconds);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 LoggerScoped.LogError($"Compilation error: temporary files were not removed so they can be inspected: " 
                                + string.Join(", ", _createdFilesToCleanUp
@@ -143,7 +144,8 @@ You can also:
 *If you want to prevent that message from reappearing please go to Window -> Fast Script Reload -> Start Screen -> Logging -> tick off 'Log how to fix message on compilation error'*");
 
                 }
-                throw;
+                
+                throw new HotReloadCompilationException(e.Message, e, sourceCodeCombinedFilePath);
             }
         }
 
@@ -303,6 +305,16 @@ You can also:
             outputMessages = new List<string>();
             outputMessages.AddRange(outMessages);
             return exitCode;
+        }
+    }
+
+    public class HotReloadCompilationException : Exception
+    {
+        public string SourceCodeCombinedFileCreated { get; }
+
+        public HotReloadCompilationException(string message, Exception innerException, string sourceCodeCombinedFileCreated) : base(message, innerException)
+        {
+            SourceCodeCombinedFileCreated = sourceCodeCombinedFileCreated;
         }
     }
 }

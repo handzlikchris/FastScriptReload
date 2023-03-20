@@ -9,13 +9,13 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
     class HotReloadCompliantRewriter : FastScriptReloadCodeRewriterBase
     {
         public List<string> StrippedUsingDirectives = new List<string>();
+        public List<string> OriginalIdentifiersRenamedToContainPatchedPostfix = new List<string>();
         
         public HotReloadCompliantRewriter(bool writeRewriteReasonAsComment, bool visitIntoStructuredTrivia = false) 
             : base(writeRewriteReasonAsComment, visitIntoStructuredTrivia)
         {
         }
 
-        
         public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
         {
             return AddPatchedPostfixToTopLevelDeclarations(node, node.Identifier);
@@ -60,6 +60,8 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 
         private SyntaxNode AddPatchedPostfixToTopLevelDeclarations(CSharpSyntaxNode node, SyntaxToken identifier)
         {
+            OriginalIdentifiersRenamedToContainPatchedPostfix.Add(identifier.ValueText);
+            
             var newIdentifier = SyntaxFactory.Identifier(identifier + AssemblyChangesLoader.ClassnamePatchedPostfix);
             newIdentifier = AddRewriteCommentIfNeeded(newIdentifier, $"{nameof(HotReloadCompliantRewriter)}:{nameof(AddPatchedPostfixToTopLevelDeclarations)}");
             node = node.ReplaceToken(identifier, newIdentifier);

@@ -157,6 +157,9 @@ namespace FastScriptReload.Editor.Compilation
                 root = hotReloadCompliantRewriter.Visit(root);
                 combinedUsingStatements.AddRange(hotReloadCompliantRewriter.StrippedUsingDirectives);
 
+                root = new AllPatchedIdentifiersRewriter(DebugWriteRewriteReasonAsComment, hotReloadCompliantRewriter.OriginalIdentifiersRenamedToContainPatchedPostfix)
+                    .Visit(root);
+                
                 root = new BuilderPatternFunctionsRewriter(DebugWriteRewriteReasonAsComment).Visit(root);
                 
                 //processed as last step to simply rewrite all changes made before
