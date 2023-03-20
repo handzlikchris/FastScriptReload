@@ -337,8 +337,9 @@ Workaround will search in all folders (under project root) and will use first fo
 
         public void TriggerReloadForChangedFiles()
         {
-            if (!Application.isPlaying && _hotReloadPerformedCount > _triggerDomainReloadIfOverNDynamicallyLoadedAssembles) 
+            if (!Application.isPlaying && _hotReloadPerformedCount > _triggerDomainReloadIfOverNDynamicallyLoadedAssembles)
             {
+                _hotReloadPerformedCount = 0;
                 LoggerScoped.LogWarning($"Dynamically created assembles reached over: {_triggerDomainReloadIfOverNDynamicallyLoadedAssembles} - triggering full domain reload to clean up. You can adjust that value in settings.");
 #if UNITY_2019_3_OR_NEWER
                 CompilationPipeline.RequestScriptCompilation(); //TODO: add some timer to ensure this does not go into some kind of loop
