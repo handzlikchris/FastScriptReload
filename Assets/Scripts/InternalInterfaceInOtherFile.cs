@@ -12,7 +12,7 @@ public class InternalInterfaceInOtherFile : MonoBehaviour, IInternalInterface
 
     private void Update()
     {
-        // Test("Update-changed1: "); 
+        // Test("Update-changed1: ");  ssd
     }
 
     // void OnScriptHotReload() 

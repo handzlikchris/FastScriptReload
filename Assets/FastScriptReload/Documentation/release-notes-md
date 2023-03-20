@@ -3,7 +3,9 @@
 - OnScriptHotReload method can be added at runtime
 - builder functions will be correctly rewritten
 - hot reload status (red / green) will be visible in project panel next to changed script
+- compilation error reporting will be much improved, project panel will allow to click error next to actual file for more details and workarounds
 - all type declarations that were appended with __Patched_ postfix to avoid name collisions will also have all corresponding identifiers changed
+- OnScriptHotReload methods will also be called in editor-workflow
 
 1.4
 - added experimental editor-mode hot-reload, you'll need to opt in via Start Screen -> Editor Hot-Reload (please read the notes on that page, playmode workflow is still far superior)

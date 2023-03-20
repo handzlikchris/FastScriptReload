@@ -81,13 +81,16 @@ public interface ITestNewInterface {
 
         public static void AddScriptOverride(MonoScript script)
         {
+            AddScriptOverride(new FileInfo(Path.Combine(Path.Combine(Application.dataPath + "//..", AssetDatabase.GetAssetPath(script)))));
+        }
+
+        public static void AddScriptOverride(FileInfo originalFile)
+        {
             EnsureOverrideFolderExists();
 
-            var overridenFile = new FileInfo(Path.Combine(UserDefinedScriptRewriteOverridesFolder.FullName, script.name + ".cs"));
+            var overridenFile = new FileInfo(Path.Combine(UserDefinedScriptRewriteOverridesFolder.FullName, originalFile.Name));
             if (!overridenFile.Exists)
             {
-                var originalFile = new FileInfo(Path.Combine(Path.Combine(Application.dataPath + "//..", AssetDatabase.GetAssetPath(script))));
-
                 var templateString = string.Empty;
                 try
                 {
