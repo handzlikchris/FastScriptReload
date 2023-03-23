@@ -98,7 +98,9 @@ namespace FastScriptReload.Editor.Compilation
                     () => CreateAssemblyCopiesWithInternalsVisibleTo(createSourceCodeCombinedResult, asmName),
                     out var createInternalVisibleToAsmElapsedMilliseconds);
 
-                var rspFileContent = GenerateCompilerArgsRspFileContents(outLibraryPath, sourceCodeCombinedFilePath, assemblyAttributeFilePath, originalAssemblyPathToAsmWithInternalsVisibleToCompiled);
+                var shouldAddUnsafeFlag = createSourceCodeCombinedResult.SourceCode.Contains("unsafe"); //TODO: not ideal as 'unsafe' can be part of comment, not code. But compiling with that flag in more cases shouldn't cause issues
+                var rspFileContent = GenerateCompilerArgsRspFileContents(outLibraryPath, sourceCodeCombinedFilePath, assemblyAttributeFilePath, 
+                    originalAssemblyPathToAsmWithInternalsVisibleToCompiled, shouldAddUnsafeFlag);
                 CreateFileAndTrackAsCleanup(rspFile, rspFileContent, _createdFilesToCleanUp);
                 CreateFileAndTrackAsCleanup(assemblyAttributeFilePath, DynamicallyCreatedAssemblyAttributeSourceCode, _createdFilesToCleanUp);
 
@@ -185,7 +187,7 @@ You can also:
         }
 
         private static string GenerateCompilerArgsRspFileContents(string outLibraryPath, string sourceCodeCombinedFilePath, string assemblyAttributeFilePath, 
-            Dictionary<string, string> originalAssemblyPathToAsmWithInternalsVisibleToCompiled)
+            Dictionary<string, string> originalAssemblyPathToAsmWithInternalsVisibleToCompiled, bool addUnsafeFlag)
         {
             var rspContents = new StringBuilder();
             rspContents.AppendLine("-target:library");
@@ -219,6 +221,11 @@ You can also:
             rspContents.AppendLine("/debug:portable");
             rspContents.AppendLine("/nologo");
             rspContents.AppendLine("/RuntimeMetadataVersion:v4.0.30319");
+
+            if (addUnsafeFlag)
+            {
+                rspContents.AppendLine("/unsafe");
+            }
 
             rspContents.AppendLine("/nowarn:0169");
             rspContents.AppendLine("/nowarn:0649");
