@@ -214,12 +214,37 @@ custom rewrites for methods.", screen.BoldTextStyle);
                 ScriptGenerationOverridesManager.AddScriptOverride(new FileInfo(FastScriptReloadWelcomeScreen.LastInspectFileHotReloadStateError.FullFileName));
             }
 
-             //TODO: extend to allow zipping of ready made support package, error, generated script and original script, warn that this will happen
-             //                 GUILayout.Label(
-             // @"If you could please get in touch with me using one of the links above and copy following details: 
-             // error you see in the console as well as created files 
-             // (from paths in previous error). This way I can get it fixed for you."
-             //                 );
+            GUILayout.Space(10);
+            GUILayout.Label(@"You can help make FSR better!", screen.BoldTextStyle);
+            EditorGUILayout.HelpBox(@"Could you please assist in improving the tool by providing me with the details of the error? 
+I can use those to recreate the issue and fix the limitation.
+
+Simply click the button below - it'll create a support pack automatically.
+
+Support pack contains:
+1) Original script file that caused error
+2) Patched script file that was generated
+3) Error message", MessageType.Warning);
+
+            if (GUILayout.Button("4) Click here to create support-pack"))
+            {
+                try
+                {
+                    var folder = EditorUtility.OpenFolderPanel("Select Folder", "", "");
+                    var sourceCodeCombinedFile = new FileInfo(LastInspectFileHotReloadStateError.SourceCodeCombinedFilePath);
+                    var originalFile = new FileInfo(LastInspectFileHotReloadStateError.FullFileName);
+                    File.Copy(LastInspectFileHotReloadStateError.SourceCodeCombinedFilePath, Path.Combine(folder, sourceCodeCombinedFile.Name));
+                    File.Copy(LastInspectFileHotReloadStateError.FullFileName, Path.Combine(folder, originalFile.Name));
+                    File.WriteAllText(Path.Combine(folder, "error-message.txt"), LastInspectFileHotReloadStateError.ErrorText);
+                    
+                    EditorUtility.DisplayDialog("Support Pack Created", $"Thanks!\r\n\r\nPlease send files from folder:\r\n'{folder}'\r\n\r\nto:\r\n\r\nsupport@immersivevrtools.com", "Ok, copy email to clipboard");
+                    EditorGUIUtility.systemCopyBuffer = "support@immersivevrtools.com";
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"Unable to create support pack., {e}");
+                }
+            }
                     })).WithShouldRender(() => LastInspectFileHotReloadStateError != null), 
                     new LastUpdateButton("New Update!", (screen) => LastUpdateUpdateScrollViewSection.RenderMainScrollViewSection(screen)),
                     new ChangeMainViewButton("Welcome", (screen) => mainScrollViewSection.RenderMainScrollViewSection(screen)),
