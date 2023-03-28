@@ -192,7 +192,7 @@ Output: '<filepath>.SourceCodeCombined.cs(940,1): error CS1027: #endif directive
             GUILayout.Space(10);
             if (GUILayout.Button("2) Click here to open generated file that failed to compile"))
             {
-                InternalEditorUtility.OpenFileAtLineExternal(LastInspectFileHotReloadStateError.FullFileName, 1);
+                InternalEditorUtility.OpenFileAtLineExternal(LastInspectFileHotReloadStateError.SourceCodeCombinedFilePath, 1);
             }
 
             GUILayout.Label(
