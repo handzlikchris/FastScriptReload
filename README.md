@@ -17,7 +17,7 @@ And you don't have to adjust your code either, just import.
 Works with any code editor.
 
 ## Quickstart
-1) Download latest FSR version from releases tab to the right and import <TODO: add link once released>
+1) Download [latest FSR version](https://github.com/handzlikchris/FastScriptReload/releases/download/1.4-rc1/Fast.Script.Reload.unitypackage) and import to Unity
 2) Play
 3) Make Code Change
 4) See results
@@ -35,7 +35,7 @@ Gaining reviews like:
 ## Hot-Reload in development build (on device)
 You can use same hot reload functionality in actual builds / on device. Iterate quickly on deployed Android APK / standalone windows build (exe).
 
-> Currently it's a separate release pack **(that's not as up to date as main FSR)** you can download it here <TODO: add link once released>
+> Currently it's a separate release pack **(that's not as up to date as main FSR)** [you can download it here](https://github.com/handzlikchris/FastScriptReload/releases/download/1.4-rc1/Live.Script.Reload.on.device.Hot-Reload.unitypackage)
 
 ## One-off custom code executions on Hot-Reload
 When you need to set the stage to test your feature out.
