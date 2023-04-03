@@ -24,6 +24,14 @@ Works with any code editor.
 
 **It's that simple.**
 
+# Unity Asset Store Best Seller
+I was really chuffed to see FSR selling over 1000 copies on [Asset Store](https://assetstore.unity.com/packages/tools/utilities/fast-script-reload-239351?aid=1100ltZSe&pubref=github) in February - propelling it to #1 best-selling for a few days and keeping on first page for most of the month.
+
+Gaining reviews like:
+> **Goosebumps and tears of joy**
+> 
+> Felt like I was underwater and that I can breathe again. Just buy this stuff for any serious project. Working around the limitations is just worth it.
+
 ## Hot-Reload in development build (on device)
 You can use same hot reload functionality in actual builds / on device. Iterate quickly on deployed Android APK / standalone windows build (exe).
 
