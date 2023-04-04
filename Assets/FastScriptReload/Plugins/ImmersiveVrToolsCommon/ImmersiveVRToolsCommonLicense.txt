@@ -1,3 +1,3 @@
-﻿This code is part of the product and can be used with same licence as the one you purchased it with.
+﻿This code is part of the product and can be used with same licence as the one you got it with.
 
 Left in Plugins folder solely for convenience.
