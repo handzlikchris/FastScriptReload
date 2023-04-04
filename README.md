@@ -111,6 +111,14 @@ There are some other minor limitations, please consult full list
 
 
 ### FAQ
+- My changes no longer automatically compile / reload
+> You probably allowed tool to change auto-reload to 'disabled' and have forgotten about it. 
+> 
+> You can reload changes manually with CTRL+R 
+> 
+> or reenable auto-reload - please go to `Edit -> Preferences -> Asset Pipeline -> Auto Refresh`and set to `Enabled Outside of Playmode`.
+> This way FSR will work in playmode and Unity will do full recompile when you hit 'stop'.
+
 - When importing I'm getting error: 'Unable to update following assemblies: (...)/ImmersiveVRTools.Common.Runtime.dll'
 > This happens occasionally, especially on upgrade between versions. It's harmless error that'll go away on play mode.
 
@@ -118,6 +126,14 @@ There are some other minor limitations, please consult full list
 > This is down to reimporting 'Point' prefab. Right now plugin will make sure it's using correct shader eg. URP / Built-in but only on initial import.
 
 To fix please go to `FastScripReload\Examples\Point\Point.prefab` and search for 'Point' shader.
+
+### Building Hot Reload for Unity - blog posts about technical approach (with code)
+I find FSR approach to hot reload very interesting (taking about being biased :)). I'm breaking down technical approach in a blog post series. You can find all about it here:
+
+[1) Building hot reload functionality](https://immersivevrtools.com/Blog/how-to-build-hot-reload-functionality-for-unity) | [Download Example Project Code](_github~/building-hot-reload-for-unity-blog-posts-example-code/01-simple-approach.zip)
+
+[2) Building hot reload for Unity builds / running directly on device](https://immersivevrtools.com/Blog/how-to-build-unity-hot-reload-on-device) | [Download Example Project Code](_github~/building-hot-reload-for-unity-blog-posts-example-code/02-hot-reload-on-device.zip)
+
 
 # Support the project
 If you got this far there's a good chance you're excited about FSR and want to help make it better.
