@@ -1,0 +1,19 @@
+{
+    "name": "com.immersivevrtools.fastscriptreload",
+    "displayName": "FastScriptReload",
+    "author": {
+        "name": "Reliable Solutions Ltd",
+        "url": "https://immersivevrtools.com/"
+    },
+    "version": "1.4.0",
+    "unity": "2021.3",
+    "description": "Hot Reload implementation for Unity. Iterate on code insanely fast without breaking play session. Supports any editor. 1. Play 2. Make change 3. See results ",
+    "keywords": [
+        "FastScriptReload",
+        "Fast",
+        "Script",
+        "Reload"
+    ],
+    "license": "MIT",
+    "dependencies": {}
+}

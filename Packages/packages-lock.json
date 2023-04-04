@@ -7,8 +7,8 @@
       "dependencies": {},
       "hash": "73d86259ce31ce7f4dfe1d028ea1c3edf96c23e4"
     },
-    "com.unity.asset-store-tools": {
-      "version": "file:com.unity.asset-store-tools",
+    "com.immersivevrtools.fastscriptreload": {
+      "version": "file:com.immersivevrtools.fastscriptreload",
       "depth": 0,
       "source": "embedded",
       "dependencies": {}
