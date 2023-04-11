@@ -19,7 +19,7 @@ Works with any code editor.
 ## Quickstart
 1) Download [latest FSR version](https://github.com/handzlikchris/FastScriptReload/releases/download/1.4-rc1/Fast.Script.Reload.unitypackage) and import to Unity
 > You can also install via package manager. Window -> Package Manager -> + -> Add package from Git url:
-> https://github.com/handzlikchris/FastScriptReload?path=Assets
+> https://github.com/handzlikchris/FastScriptReload.git?path=Assets
 3) Play
 3) Make Code Change
 4) See results
