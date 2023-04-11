@@ -10,6 +10,8 @@ using HarmonyLib;
 using ImmersiveVRTools.Runtime.Common;
 using ImmersiveVRTools.Runtime.Common.Extensions;
 using ImmersiveVrToolsCommon.Runtime.Logging;
+using MonoMod.Core;
+using MonoMod.RuntimeDetour;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -21,6 +23,8 @@ namespace FastScriptReload.Runtime
 #endif
     public class AssemblyChangesLoader: IAssemblyChangesLoader
     {
+        private static readonly Dictionary<MethodBase, ICoreDetour> detours = new();
+        
         const BindingFlags ALL_BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic |
                                                BindingFlags.Static | BindingFlags.Instance |
                                                BindingFlags.FlattenHierarchy;
@@ -33,9 +37,6 @@ namespace FastScriptReload.Runtime
         public const string ON_HOT_RELOAD_METHOD_NAME = "OnScriptHotReload";
         public const string ON_HOT_RELOAD_NO_INSTANCE_STATIC_METHOD_NAME = "OnScriptHotReloadNoInstance";
         
-        //TODO PERF: add reverse hook for performance reasons?
-        private static MethodInfo _detour;
-        private static MethodInfo DetourFn => _detour ??= AccessTools.Method("HarmonyLib.PatchTools:DetourMethod");
 
         private static readonly List<Type> ExcludeMethodsDefinedOnTypes = new List<Type>
         {
@@ -110,7 +111,7 @@ namespace FastScriptReload.Runtime
                                 LoggerScoped.LogDebug($"Trying to detour method, from: '{matchingMethodInExistingType.FullDescription()}' to: '{createdTypeMethodToUpdate.FullDescription()}'");
                                 DetourCrashHandler.LogDetour(matchingMethodInExistingType.ResolveFullName());
 
-                                DetourFn.Invoke(null, new[] { matchingMethodInExistingType, createdTypeMethodToUpdate });
+                                DetourMethod(matchingMethodInExistingType, createdTypeMethodToUpdate);
                             }
                             else 
                             {
@@ -143,6 +144,16 @@ namespace FastScriptReload.Runtime
         public Type GetRedirectedType(Type forExistingType)
         {
             return _existingTypeToRedirectedType[forExistingType];
+        }
+        
+        private static void DetourMethod(MethodBase method, MethodBase replacement)
+        {
+            lock (detours)
+            {
+                if (detours.TryGetValue(method, out var detour))
+                    detour.Dispose();
+                detours[method] = DetourFactory.Current.CreateDetour(method, replacement);
+            }
         }
 
         private static bool DidFieldsOrPropertyCountChanged(Type createdType, Type matchingTypeInExistingAssemblies)
@@ -202,7 +213,7 @@ namespace FastScriptReload.Runtime
                 var gen = dynamicMethodDynamicallyAdded.GetILGenerator();
                 gen.Emit(OpCodes.Ret); //simple return to ensure IL is valid
                 
-                DetourFn.Invoke(null, new[] { dynamicMethodDynamicallyAdded, onScriptHotReloadFnForCreatedType });
+                DetourMethod(dynamicMethodDynamicallyAdded, onScriptHotReloadFnForCreatedType);
 
                 ExecuteFnOnMainThread(originalType, dynamicMethodDynamicallyAdded);
             }

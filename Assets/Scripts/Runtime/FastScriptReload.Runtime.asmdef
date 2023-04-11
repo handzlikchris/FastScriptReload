@@ -9,7 +9,8 @@
     "precompiledReferences": [
         "0Harmony.dll",
         "ImmersiveVRTools.Common.Runtime.dll",
-        "MonoMod.RuntimeDetour.dll"
+        "MonoMod.RuntimeDetour.dll",
+        "MonoMod.Core.dll"
     ],
     "autoReferenced": false,
     "defineConstraints": [
