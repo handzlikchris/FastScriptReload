@@ -124,7 +124,22 @@ namespace FastScriptReload.Editor
                     }
                 )
             }, 
-            new LaunchSceneButton("Basic Example", (s) => GetScenePath("ExampleScene"), (screen) =>
+            new LaunchSceneButton("Basic Example", (s) =>
+            {
+                var path = GetScenePath("ExampleScene");
+                if (path == null)
+                {
+                    var userChoice = EditorUtility.DisplayDialogComplex("Example not found",
+                        "Example scene was not found. If you got FSR via package manager, please make sure to import samples.", 
+                        "Ok", "Close", "Open Package Manager");
+                    if (userChoice == 2)
+                    {
+                        UnityEditor.PackageManager.UI.Window.Open("com.fastscriptreload");
+                    }
+                }
+
+                return path;
+            }, (screen) =>
             {
                 GUILayout.Label(
                     $@"Asset is very simple to use:
