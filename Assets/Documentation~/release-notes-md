@@ -1,4 +1,5 @@
 1.5
+- you can now import FSR as a package from github page
 - hot-reloading internal interfaces / classes would no longer cause compilation error 
 - OnScriptHotReload method can be added at runtime
 - builder functions will be correctly rewritten
