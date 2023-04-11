@@ -1,0 +1,26 @@
+{
+    "name": "FastScriptReload.Tests.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:0acc523941302664db1f4e527237feb3",
+        "GUID:27619889b8ba8c24980f49ee34dbb44a",
+        "GUID:b75b497805046c443a21f90e84a5ff4f",
+        "GUID:97dcf6b63da809f4aa9573d9e792e540",
+        "GUID:11386f958962b1e4bb7bfe4849957216"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "ImmersiveVRTools.Common.Editor.dll",
+        "ImmersiveVRTools.Common.Runtime.dll",
+        "0Harmony.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

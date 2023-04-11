@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/FastScriptReload/Examples/Scenes/ExampleScene.unity
+    path: Assets/Examples/Scenes/ExampleScene.unity
     guid: f0864e8be0431eb4b94733fe8e9634b5
   m_configObjects: {}
