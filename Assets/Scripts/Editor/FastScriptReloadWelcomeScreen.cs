@@ -29,7 +29,7 @@ namespace FastScriptReload.Editor
         }
         public static string VersionId = "1.5";
         private static readonly string ProjectIconName = "ProductIcon64";
-        public static readonly string ProjectName = "fast-script-reload";
+        public static readonly string ProjectName = "fast-script-reload-git";
 
         private static Vector2 _WindowSizePx = new Vector2(650, 500);
         private static string _WindowTitle = "Fast Script Reload";
