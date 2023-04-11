@@ -15,9 +15,7 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
             var instance = new GameObject("instance").AddComponent<MethodAccessingNestedEnum>();
             var originalValue = (int)instance.GetType().GetField("_value", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(instance);
             
-            //TODO: how to resolve test path?
-            var filePath = @"E:\_src-unity\FastScriptReload\Assets\FastScriptReload\Tests\Runtime\Integration\CodePatterns\MethodAccessingNestedEnum.cs";
-            yield return TestCompileAndDetour(filePath, () =>
+            TestCompileAndDetour(ResolveFullTestFilePath(@"Runtime\Integration\CodePatterns\MethodAccessingNestedEnum.cs"), (compilationResult) =>
             {
                 Debug.Log("After");
                 instance.AssignNestedEnumToField();
@@ -28,6 +26,8 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
                 (o) => 2 == (int)o,
                 "Value should be set by detour"
             );
+            
+            yield return null;
         }
     }
 }

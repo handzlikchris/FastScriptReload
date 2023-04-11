@@ -5,15 +5,22 @@ using System.IO;
 using FastScriptReload.Editor.Compilation;
 using FastScriptReload.Runtime;
 using ImmersiveVRTools.Runtime.Common;
+using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.TestTools;
 using Assert = UnityEngine.Assertions.Assert;
 
 namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
 {
+    public delegate void AfterDetourTest(CompileResult compileResult);
+    
     public abstract class CompileWithRedirectTestBase : IPrebuildSetup
     {
-        protected static IEnumerator TestCompileAndDetour(string filePath, Action afterDetourTest)
+        protected static void TestCompileAndDetour(string filePath)
+            => TestCompileAndDetour(filePath, (compileResult) => { });
+        
+        protected static void TestCompileAndDetour(string filePath, AfterDetourTest afterDetourTest)
         {
             var originalSourceCode = File.ReadAllText(filePath);
             try
@@ -30,14 +37,19 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
                     throw e;
                 }
 
-                
+
                 var dynamicallyLoadedAssemblyCompilerResult = CompileCode(filePath);
-            
+
                 var assemblyChangesLoader = AssemblyChangesLoaderResolver.Instance.Resolve();
                 var options = new AssemblyChangesLoaderEditorOptionsNeededInBuild(true, false);
                 assemblyChangesLoader.DynamicallyUpdateMethodsForCreatedAssembly(dynamicallyLoadedAssemblyCompilerResult.CompiledAssembly, options);
 
-                afterDetourTest();
+                afterDetourTest(dynamicallyLoadedAssemblyCompilerResult);
+            }
+            catch (HotReloadCompilationException e)
+            {
+                Debug.Log($"Compilation Error: {e.InnerException}");
+                InternalEditorUtility.OpenFileAtLineExternal(e.SourceCodeCombinedFileCreated, 0);
             }
             finally
             {
@@ -51,8 +63,6 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
                     throw e;
                 }
             }
-
-            yield return null;
         }
 
         protected static void AssertDetourConfirmed(Type type, string methodName, Func<object, bool> compareWithResultPredicate, string assertDescription)
@@ -64,6 +74,12 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
         {
             var dispatcher = new GameObject("DispatcherInstance").AddComponent<UnityMainThreadDispatcher>();
             return DynamicAssemblyCompiler.Compile(new List<string> { filePath }, dispatcher);
+        }
+        
+        protected static string ResolveFullTestFilePath(string relativePath)
+        {
+            //TODO: how to resolve test path relative to proj dir for tests??
+            return @$"E:\_src-unity\FastScriptReload\Assets\Tests\{relativePath}";
         }
 
         public void Setup()

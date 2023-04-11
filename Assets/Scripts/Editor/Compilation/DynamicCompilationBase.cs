@@ -157,8 +157,9 @@ namespace FastScriptReload.Editor.Compilation
                 root = hotReloadCompliantRewriter.Visit(root);
                 combinedUsingStatements.AddRange(hotReloadCompliantRewriter.StrippedUsingDirectives);
 
-                root = new AllPatchedIdentifiersRewriter(DebugWriteRewriteReasonAsComment, hotReloadCompliantRewriter.OriginalIdentifiersRenamedToContainPatchedPostfix)
-                    .Visit(root);
+                //TODO: temporaliry reverted, too many cases fail - can't adjust this wide spread without good automated tests base
+                // root = new AllPatchedIdentifiersRewriter(DebugWriteRewriteReasonAsComment, hotReloadCompliantRewriter.OriginalIdentifiersRenamedToContainPatchedPostfix)
+                //     .Visit(root);
                 
                 root = new BuilderPatternFunctionsRewriter(DebugWriteRewriteReasonAsComment).Visit(root);
                 
