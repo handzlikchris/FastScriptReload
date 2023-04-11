@@ -20,25 +20,25 @@ namespace FastScriptReload.Editor.AssemblyPostProcess
         {
             if(!AdjustedAssemblyRoot.Exists)
                     AdjustedAssemblyRoot.Create();
-
+        
             using (var assembly = AssemblyDefinition.ReadAssembly(changedAssembly.Location, new ReaderParameters { ReadWrite = false }))
             {
                 var mainModule = assembly.MainModule;
-
+        
                 var attributeCtor = mainModule.ImportReference(
                     typeof(System.Runtime.CompilerServices.InternalsVisibleToAttribute).GetConstructor(new[] { typeof(string) })
                 );
-
+        
                 var attribute = new CustomAttribute(attributeCtor);
                 attribute.ConstructorArguments.Add(
                     new CustomAttributeArgument(mainModule.TypeSystem.String, visibleToAssemblyName)
                 );
-
+        
                 assembly.CustomAttributes.Add(attribute);
                 
                 var newAssemblyPath = new FileInfo(Path.Combine(AdjustedAssemblyRoot.FullName, assembly.Name.Name) + ".dll").FullName;
                 assembly.Write(newAssemblyPath);
-
+        
                 return newAssemblyPath;
             }
         }

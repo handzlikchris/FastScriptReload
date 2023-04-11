@@ -32,6 +32,10 @@ namespace FastScriptReload.Runtime
         public const string ClassnamePatchedPostfix = "__Patched_";
         public const string ON_HOT_RELOAD_METHOD_NAME = "OnScriptHotReload";
         public const string ON_HOT_RELOAD_NO_INSTANCE_STATIC_METHOD_NAME = "OnScriptHotReloadNoInstance";
+        
+        //TODO PERF: add reverse hook for performance reasons?
+        private static MethodInfo _detour;
+        private static MethodInfo DetourFn => _detour ??= AccessTools.Method("HarmonyLib.PatchTools:DetourMethod");
 
         private static readonly List<Type> ExcludeMethodsDefinedOnTypes = new List<Type>
         {
@@ -105,7 +109,8 @@ namespace FastScriptReload.Runtime
 
                                 LoggerScoped.LogDebug($"Trying to detour method, from: '{matchingMethodInExistingType.FullDescription()}' to: '{createdTypeMethodToUpdate.FullDescription()}'");
                                 DetourCrashHandler.LogDetour(matchingMethodInExistingType.ResolveFullName());
-                                Memory.DetourMethod(matchingMethodInExistingType, createdTypeMethodToUpdate);
+
+                                DetourFn.Invoke(null, new[] { matchingMethodInExistingType, createdTypeMethodToUpdate });
                             }
                             else 
                             {
@@ -186,6 +191,10 @@ namespace FastScriptReload.Runtime
                 
                 //PERF: could potentially cache, negligible overhead
                 var onScriptHotReloadFnForCreatedType = detourType.GetMethod(ON_HOT_RELOAD_METHOD_NAME, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (onScriptHotReloadFnForCreatedType == null)
+                {
+                    return;
+                }
                 var dynamicMethodDynamicallyAdded = new DynamicMethod(
                     ON_HOT_RELOAD_METHOD_NAME + "_DynamicallyAdded",
                     typeof(void), new Type[] { }
@@ -193,7 +202,7 @@ namespace FastScriptReload.Runtime
                 var gen = dynamicMethodDynamicallyAdded.GetILGenerator();
                 gen.Emit(OpCodes.Ret); //simple return to ensure IL is valid
                 
-                Memory.DetourMethod(dynamicMethodDynamicallyAdded, onScriptHotReloadFnForCreatedType);
+                DetourFn.Invoke(null, new[] { dynamicMethodDynamicallyAdded, onScriptHotReloadFnForCreatedType });
 
                 ExecuteFnOnMainThread(originalType, dynamicMethodDynamicallyAdded);
             }
