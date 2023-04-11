@@ -71,7 +71,21 @@ namespace FastScriptReload.Editor
         private static readonly ScrollViewGuiSection MainScrollViewSection = new ScrollViewGuiSection(
             "", (screen) =>
             {
-                GenerateCommonWelcomeText(FastScriptReloadPreference.ProductName, screen);
+                GUILayout.Label(
+@"Thanks for using the asset! If at any stage you got some questions or need help please let me know.
+
+Asset is released as open source and I'd like to dedicate as much time to it as possible.
+For that to happen though it needs a community around it. It's HUGE help if you can:
+
+1) Spread the word, let other devs know how you're using it
+2) Star Github Repo - it helps build visibility
+3) Donate - this allows me to spend more time on the project instead of paid client's work
+
+There are some options that you can customise, those are visible in sections on the left. 
+
+You can always get back to this screen via: 
+1) Window -> Fast Script Reload -> Start Screen 
+2) Edit -> Preferences... -> Fast Script Reload", screen.TextStyle, GUILayout.ExpandHeight(true));
 
                 GUILayout.Label("Enabled Features:", screen.LabelStyle);
                 using (LayoutHelper.LabelWidth(350))
@@ -563,19 +577,19 @@ includeSubdirectories - whether child directories should be watched as well
                 {
                     new OpenUrlButton("Documentation", $"{redirectBaseUrl}/documentation"),
                     new OpenUrlButton("Discord", $"{redirectBaseUrl}/discord"),
-                    new OpenUrlButton("Unity Forum", $"{redirectBaseUrl}/unity-forum"),
-                    new OpenUrlButton("Contact", $"{redirectBaseUrl}/contact")
+                    new OpenUrlButton("Github", $"{redirectBaseUrl}/github"),
+                    new OpenUrlButton("Donate", $"{redirectBaseUrl}/donate", "sv_icon_name3")
                 }
             );
         }
 
         private static readonly GuiSection BottomSection = new GuiSection(
             "I want to make this tool better. And I need your help!",
-            $"It'd be great if you could share your feedback (good and bad) with me. I'm very keen to make this tool better and that can only happen with your help. Please use:",
+            $"Please spread the word and star github repo. Alternatively if you're in a position to make a donation I'd hugely appreciate that. It allows me to spend more time on the tool instead of paid client projects.",
             new List<ClickableElement>
             {
-                new OpenUrlButton(" Unity Forum", $"{RedirectBaseUrl}/unity-forum"),
-                new OpenUrlButton(" or Write a Short Review", $"{RedirectBaseUrl}/asset-store-review"),
+                new OpenUrlButton(" Star on Github", $"{RedirectBaseUrl}/github"),
+                new OpenUrlButton(" Donate", $"{RedirectBaseUrl}/donate"),
             }
         );
 
