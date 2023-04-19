@@ -76,7 +76,7 @@ Won't be visible unless you make 100s of changes in same play-session.
 - Unity 2022.2
 
 ## Documentation
-[Full documentation is available here](Assets/FastScriptReload/Documentation/documentation.md)
+[Full documentation is available here](Assets/Documentation~/documentation.md)
 
 ## Few things to have in mind, limitations:
 * most limitations can be overcome with User Defined Script Overrides (see docs for more info)
