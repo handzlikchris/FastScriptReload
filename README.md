@@ -1,4 +1,10 @@
-﻿**Are you tired of waiting for full domain-reload and script compilation every time you make a small code change?**
+﻿[![Documentation](https://img.shields.io/badge/docs-blue.svg)](https://fastscriptreload.com/projects/fast-script-reload/documentation)
+[![Video Quick Start](https://img.shields.io/badge/video_tutorial-green.svg)](https://www.youtube.com/watch?v=ElzvL8M-tYw)
+[![Discord](https://img.shields.io/discord/1054303923743227925?label=Chat)](https://discord.gg/wBKuEAsKAq)
+[![License: MIT](https://img.shields.io/badge/Donate-red.svg)](https://www.patreon.com/FastScriptReload)
+
+
+**Are you tired of waiting for full domain-reload and script compilation every time you make a small code change?**
 
 Me too.
 
@@ -20,11 +26,15 @@ Works with any code editor.
 1) Download [latest FSR version](https://github.com/handzlikchris/FastScriptReload/releases/download/1.4-rc1/Fast.Script.Reload.unitypackage) and import to Unity
 > You can also install via package manager. Window -> Package Manager -> + -> Add package from Git url:
 > https://github.com/handzlikchris/FastScriptReload.git?path=Assets
+
+> Pulling other branches/commits can be done by appending branch name, eg https://github.com/handzlikchris/FastScriptReload.git?path=Assets#features/ai-code-rewrite-fixes
 3) Play
 3) Make Code Change
 4) See results
 
 **It's that simple.**
+
+[Quick start video created by Matt@SpeedTutor](https://www.youtube.com/watch?v=ElzvL8M-tYw)
 
 # Unity Asset Store Best Seller
 I was really chuffed to see FSR selling over 1000 copies on [Asset Store](https://assetstore.unity.com/packages/tools/utilities/fast-script-reload-239351?aid=1100ltZSe&pubref=github) in February - propelling it to #1 best-selling for a few days and keeping on first page for most of the month.
@@ -76,7 +86,7 @@ Won't be visible unless you make 100s of changes in same play-session.
 - Unity 2022.2
 
 ## Documentation
-[Full documentation is available here](Assets/Documentation~/documentation.md)
+[Full documentation is available here](https://fastscriptreload.com/projects/fast-script-reload/documentation)
 
 ## Few things to have in mind, limitations:
 * most limitations can be overcome with User Defined Script Overrides (see docs for more info)
@@ -136,6 +146,9 @@ I find FSR approach to hot reload very interesting (taking about being biased :)
 
 [2) Building hot reload for Unity builds / running directly on device](https://immersivevrtools.com/Blog/how-to-build-unity-hot-reload-on-device) | [Download Example Project Code](_github~/building-hot-reload-for-unity-blog-posts-example-code/02-hot-reload-on-device.zip)
 
+## Credits & Thanks
+- [Mono Mod](https://github.com/MonoMod/MonoMod) and [Harmony](https://github.com/pardeike/Harmony) - which provide runtime code detour that's at the core of hot reload approach.
+- [CatlikeCoding](https://www.youtube.com/c/CatlikeCoding) - example scene code
 
 # Support the project
 If you got this far there's a good chance you're excited about FSR and want to help make it better.
