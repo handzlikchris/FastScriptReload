@@ -1,5 +1,5 @@
 {
-    "name": "com.fastscriptreload",
+    "name": "com.handzlikchris.fastscriptreload",
     "version": "1.5.0",
     "displayName": "Fast Script Reload",
     "description": "Hot Reload implementation for Unity. Iterate on code insanely fast without breaking play session. Supports any editor. 1. Play 2. Make change 3. See results",
