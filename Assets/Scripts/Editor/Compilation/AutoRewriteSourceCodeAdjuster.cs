@@ -253,10 +253,4 @@ namespace FastScriptReload.Editor.Compilation
             return root;
         }
     }
-
-    public interface ISourceCodeAdjuster
-    {
-        CreateSourceCodeCombinedContentsResult CreateSourceCodeCombinedContents(List<string> sourceCodeFiles,
-            List<string> definedPreprocessorSymbols);
-    }
 }

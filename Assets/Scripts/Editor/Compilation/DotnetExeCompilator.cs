@@ -27,7 +27,36 @@ namespace FastScriptReload.Editor.Compilation
 
         private static string ApplicationContentsPath = EditorApplication.applicationContentsPath;
         private static readonly List<string> _createdFilesToCleanUp = new List<string>();
-        private static AutoRewriteSourceCodeAdjuster _autoRewriteSourceCodeAdjuster  =new AutoRewriteSourceCodeAdjuster();
+        private static readonly AutoRewriteSourceCodeAdjuster _autoRewriteSourceCodeAdjuster  =new AutoRewriteSourceCodeAdjuster();
+        private static bool TryFixCompilationErrorsViaChatGpt = true; //TODO: testing only, move to settings
+
+        private static readonly object HowToFixInstructions = $@"HOW TO FIX - INSTRUCTIONS:
+
+1) Open file that caused issue by looking at error log starting with: 'FSR: Compilation error: temporary files were not removed so they can be inspected: '. And click on file path to open.
+2) Look up other error in the console, which will be like 'Error When updating files:' - this one contains exact line that failed to compile (in XXX_SourceCodeGenerated.cs file). Those are same compilation errors as you see in Unity/IDE when developing.
+3) Read compiler error message as it'll help understand the issue
+
+Error could be caused by a normal compilation issue that you created in source file (eg typo), in that case please fix and it'll recompile.
+
+It's possible compilation fails due to existing limitation, in that case:
+
+<b><color='orange'>You can quickly specify custom script rewrite override for part of code that's failing.</color></b>
+
+Please use project panel to:
+1) Right-click on the original file that has compilation issue
+2) Click Fast Script Reload -> Add / Open User Script Rewrite Override
+3) Read top comment in opened file and it'll explain how to create overrides
+
+I'm continuously working on mitigating limitations.
+
+If you could please get in touch with me via 'support@immersivevrtools.com' and include error you see in the console as well as created files (from paths in previous error). This way I can get it fixed for you.
+
+You can also:
+1) Look at 'limitation' section in the docs - which will explain bit more around limitations and workarounds
+2) Move some of the code that you want to work on to different file - compilation happens on whole file, if you have multiple types there it could increase the chance of issues
+3) Have a look at compilation error, it shows error line (in the '*.SourceCodeCombined.cs' file, it's going to be something that compiler does not accept, likely easy to spot. To workaround you can change that part of code in original file. It's specific patterns that'll break it.
+
+*If you want to prevent that message from reappearing please go to Window -> Fast Script Reload -> Start Screen -> Logging -> tick off 'Log how to fix message on compilation error'*";
 
         static DotnetExeDynamicCompilation()
         {
@@ -76,49 +105,33 @@ namespace FastScriptReload.Editor.Compilation
         {
             var asmName = Guid.NewGuid().ToString().Replace("-", "");
             var sourceCodeCombinedFilePath = _tempFolder + $"{asmName}.SourceCodeCombined.cs";
-            try
+
+            var result = CompileFromFiles(filePathsWithSourceCode, asmName, sourceCodeCombinedFilePath, _autoRewriteSourceCodeAdjuster, unityMainThreadDispatcher);
+            if (result.CompiledAssembly == null)
             {
-                return CompileFromFiles(filePathsWithSourceCode, asmName, sourceCodeCombinedFilePath, _autoRewriteSourceCodeAdjuster, unityMainThreadDispatcher);
-            }
-            catch (Exception e)
-            {
+                var errorMessage = "Compiler failed to produce the assembly. Output: '" +
+                                                               string.Join(Environment.NewLine + Environment.NewLine, result.MessagesFromCompilerProcess) + "'";
+                LoggerScoped.LogError(errorMessage);
+                
                 LoggerScoped.LogError($"Compilation error: temporary files were not removed so they can be inspected: " 
-                               + string.Join(", ", _createdFilesToCleanUp
-                                   .Select(f => $"<a href=\"{f}\" line=\"1\">{f}</a>")));
+                                      + string.Join(", ", _createdFilesToCleanUp
+                                          .Select(f => $"<a href=\"{f}\" line=\"1\">{f}</a>")));
+                
+                // if (TryFixCompilationErrorsViaChatGpt)
+                // {
+                //     //TODO: ensure details provided
+                //     LoggerScoped.Log("Attempting to fix via ChatGPT");
+                // }
+                
                 if (LogHowToFixMessageOnCompilationError)
                 {
-                    LoggerScoped.LogWarning($@"HOW TO FIX - INSTRUCTIONS:
-
-1) Open file that caused issue by looking at error log starting with: 'FSR: Compilation error: temporary files were not removed so they can be inspected: '. And click on file path to open.
-2) Look up other error in the console, which will be like 'Error When updating files:' - this one contains exact line that failed to compile (in XXX_SourceCodeGenerated.cs file). Those are same compilation errors as you see in Unity/IDE when developing.
-3) Read compiler error message as it'll help understand the issue
-
-Error could be caused by a normal compilation issue that you created in source file (eg typo), in that case please fix and it'll recompile.
-
-It's possible compilation fails due to existing limitation, in that case:
-
-<b><color='orange'>You can quickly specify custom script rewrite override for part of code that's failing.</color></b>
-
-Please use project panel to:
-1) Right-click on the original file that has compilation issue
-2) Click Fast Script Reload -> Add / Open User Script Rewrite Override
-3) Read top comment in opened file and it'll explain how to create overrides
-
-I'm continuously working on mitigating limitations.
-
-If you could please get in touch with me via 'support@immersivevrtools.com' and include error you see in the console as well as created files (from paths in previous error). This way I can get it fixed for you.
-
-You can also:
-1) Look at 'limitation' section in the docs - which will explain bit more around limitations and workarounds
-2) Move some of the code that you want to work on to different file - compilation happens on whole file, if you have multiple types there it could increase the chance of issues
-3) Have a look at compilation error, it shows error line (in the '*.SourceCodeCombined.cs' file, it's going to be something that compiler does not accept, likely easy to spot. To workaround you can change that part of code in original file. It's specific patterns that'll break it.
-
-*If you want to prevent that message from reappearing please go to Window -> Fast Script Reload -> Start Screen -> Logging -> tick off 'Log how to fix message on compilation error'*");
-
+                    LoggerScoped.LogWarning(HowToFixInstructions);
                 }
                 
-                throw new HotReloadCompilationException(e.Message, e, sourceCodeCombinedFilePath);
+                throw new HotReloadCompilationException(errorMessage, sourceCodeCombinedFilePath);
             }
+
+            return result;
         }
 
         private static CompileResult CompileFromFiles(List<string> filePathsWithSourceCode, string asmName,
@@ -151,10 +164,15 @@ You can also:
                 originalAssemblyPathToAsmWithInternalsVisibleToCompiled, shouldAddUnsafeFlag);
             CreateFileAndTrackAsCleanup(rspFile, rspFileContent, _createdFilesToCleanUp);
             CreateFileAndTrackAsCleanup(assemblyAttributeFilePath, DynamicallyCreatedAssemblyAttributeSourceCode, _createdFilesToCleanUp);
-
+            
             var exitCode = ExecuteDotnetExeCompilation(_dotnetExePath, _cscDll, rspFile, outLibraryPath, out var outputMessages);
 
-            var compiledAssembly = Assembly.LoadFrom(outLibraryPath);
+            Assembly compiledAssembly = null;
+            if (File.Exists(outLibraryPath))
+            {
+                compiledAssembly = Assembly.LoadFrom(outLibraryPath);
+            }
+            
             return new CompileResult(outLibraryPath, outputMessages, exitCode, compiledAssembly,
                 createSourceCodeCombinedResult.SourceCode,
                 sourceCodeCombinedFilePath, createInternalVisibleToAsmElapsedMilliseconds);
@@ -314,10 +332,6 @@ You can also:
                 process.Close();
             }
 
-            if (!File.Exists(outLibraryPath))
-                throw new Exception("Compiler failed to produce the assembly. Output: '" +
-                                    string.Join(Environment.NewLine + Environment.NewLine, outMessages) + "'");
-
             outputMessages = new List<string>();
             outputMessages.AddRange(outMessages);
             return exitCode;
@@ -327,6 +341,11 @@ You can also:
     public class HotReloadCompilationException : Exception
     {
         public string SourceCodeCombinedFileCreated { get; }
+        
+        public HotReloadCompilationException(string message, string sourceCodeCombinedFileCreated) : base(message)
+        {
+            SourceCodeCombinedFileCreated = sourceCodeCombinedFileCreated;
+        }
 
         public HotReloadCompilationException(string message, Exception innerException, string sourceCodeCombinedFileCreated) : base(message, innerException)
         {
