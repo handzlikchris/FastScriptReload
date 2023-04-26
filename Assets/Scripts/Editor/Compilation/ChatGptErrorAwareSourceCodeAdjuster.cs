@@ -70,7 +70,7 @@ namespace FastScriptReload.Editor.Compilation
 
                 if (!string.IsNullOrEmpty(errorText))
                 {
-                    throw new Exception(errorText);
+                    throw new Exception("ChatGPT was unable to resolve compilation issue, more details:" + errorText);
                 }
                 
                 return response;

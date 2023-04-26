@@ -39,6 +39,7 @@ namespace FastScriptReload.Editor
         public static ChangeMainViewButton NewFieldsSection { get; private set; }
         public static ChangeMainViewButton UserScriptRewriteOverrides { get; private set; }
         public static ChangeMainViewButton InspectError { get; private set; }
+        public static ChangeMainViewButton ChatGPTIntegrationSection { get; private set; }
 
         public static DynamicFileHotReloadState LastInspectFileHotReloadStateError;
 
@@ -66,6 +67,11 @@ namespace FastScriptReload.Editor
         public void OpenNewFieldsSection()
         {
             NewFieldsSection.OnClick(this);
+        }
+        
+        public void OpenChatGPTIntegrationSection()
+        {
+            ChatGPTIntegrationSection.OnClick(this);
         }
         
         private static readonly ScrollViewGuiSection MainScrollViewSection = new ScrollViewGuiSection(
@@ -205,7 +211,16 @@ Choose other tab on the left.", screen.TextStyle);
                 @"Errors are usually down to compilation / rewrite issue. There are ways you can mitigate those.",
                 MessageType.Warning);
             GUILayout.Space(10);
+            
+            EditorGUILayout.HelpBox(
+                @"You can also enable ChatGPT integration in which case AI will attempt to automatically deal with compilation issue.",
+                MessageType.Info);
+            if (GUILayout.Button("Set Up ChatGPT integration"))
+            {
+                ((FastScriptReloadWelcomeScreen)screen).OpenChatGPTIntegrationSection();
+            }
 
+            GUILayout.Space(10);
             GUILayout.Label("1) Review compilation error, especially looking for specific lines that caused error:");
             EditorGUILayout.HelpBox(
                 @"For example following error below shows line 940 as causing compilation issue due to missing #endif directive.
@@ -528,14 +543,17 @@ This is to ensure dynamically created and loaded assembles are cleared out prope
                         }
                         GUILayout.Space(10);
                     })),
-                    new ChangeMainViewButton("Try fix compilation \r\nissues via ChatGPT", (screen) =>
+                    (ChatGPTIntegrationSection = new ChangeMainViewButton("Try fix compilation \r\nissues via ChatGPT", (screen) =>
                     {
                         EditorGUILayout.HelpBox(
-@"Script rewrite may sometimes cause some minor compilation issues, those can usually be dealt with by ChatGPT. You can enable integration and tool will attempt to use AI when compilation error occurs", MessageType.Info);
+@"1 - Script rewrite may sometimes cause some minor compilation issues, those can usually be dealt with by ChatGPT. You can enable integration and tool will attempt to use AI when compilation error occurs", MessageType.Info);
                         GUILayout.Space(10);
                         
                         EditorGUILayout.HelpBox(
                             @"Code file that caused compilation error will be sent to ChatGPT API alongside with compiler error. Make sure you're ok with that before turning on!", MessageType.Error);
+                        GUILayout.Space(10);
+                        
+                        EditorGUILayout.HelpBox(@"Currently big files will not be handled by GPT at all due to API limit.", MessageType.Warning);
                         GUILayout.Space(10);
                         
                         using (LayoutHelper.LabelWidth(350))
@@ -548,7 +566,7 @@ This is to ensure dynamically created and loaded assembles are cleared out prope
                         {
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.ChatGptApiKey);
                         }
-                    })
+                    }))
                 }),
                 new GuiSection("Advanced", new List<ClickableElement>
                 {
