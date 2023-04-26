@@ -527,7 +527,28 @@ This is to ensure dynamically created and loaded assembles are cleared out prope
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.TriggerDomainReloadIfOverNDynamicallyLoadedAssembles);
                         }
                         GUILayout.Space(10);
-                    }))
+                    })),
+                    new ChangeMainViewButton("Try fix compilation \r\nissues via ChatGPT", (screen) =>
+                    {
+                        EditorGUILayout.HelpBox(
+@"Script rewrite may sometimes cause some minor compilation issues, those can usually be dealt with by ChatGPT. You can enable integration and tool will attempt to use AI when compilation error occurs", MessageType.Info);
+                        GUILayout.Space(10);
+                        
+                        EditorGUILayout.HelpBox(
+                            @"Code file that caused compilation error will be sent to ChatGPT API alongside with compiler error. Make sure you're ok with that before turning on!", MessageType.Error);
+                        GUILayout.Space(10);
+                        
+                        using (LayoutHelper.LabelWidth(350))
+                        {
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.TryFixCompilationErrorsViaChatGpt);
+                        }
+                        
+                        GUILayout.Space(10);
+                        using (LayoutHelper.LabelWidth(200))
+                        {
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.ChatGptApiKey);
+                        }
+                    })
                 }),
                 new GuiSection("Advanced", new List<ClickableElement>
                 {
@@ -770,6 +791,29 @@ includeSubdirectories - whether child directories should be watched as well
         public static readonly IntProjectEditorPreferenceDefinition TriggerDomainReloadIfOverNDynamicallyLoadedAssembles = new IntProjectEditorPreferenceDefinition(
             "Trigger full domain reload after N hot-reloads (when not in play mode)", "TriggerDomainReloadIfOverNDynamicallyLoadedAssembles", 50);
         
+        public static readonly ToggleProjectEditorPreferenceDefinition TryFixCompilationErrorsViaChatGpt = new ToggleProjectEditorPreferenceDefinition(
+            "(Experimental) Attempt to fix compilation errors via ChatGTP", "TryFixCompilationErrorsViaChatGpt", true, (object newValue, object oldValue) =>
+            {
+                DotnetExeDynamicCompilation.TryFixCompilationErrorsViaChatGpt = (bool)newValue;
+            },
+            (value) =>
+            {
+                DotnetExeDynamicCompilation.TryFixCompilationErrorsViaChatGpt = (bool)value;
+            }
+        );
+        
+        public static readonly TextProjectEditorPreferenceDefinition ChatGptApiKey = new TextProjectEditorPreferenceDefinition(
+            "Your ChatGPT Api Key", "ChatGptApiKey", string.Empty, (object newValue, object oldValue) =>
+            {
+                DotnetExeDynamicCompilation.ChatGptApiKey = (string)newValue;
+            },
+            (value) =>
+            {
+                DotnetExeDynamicCompilation.ChatGptApiKey = (string)value;
+            }
+        );
+        
+        
         public static void SetCommonMaterialsShader(ShadersMode newShaderModeValue)
         {
             var rootToolFolder = AssetPathResolver.GetAssetFolderPathRelativeToScript(ScriptableObject.CreateInstance(typeof(FastScriptReloadWelcomeScreen)), 1);
@@ -821,7 +865,9 @@ includeSubdirectories - whether child directories should be watched as well
             ReferencesExcludedFromHotReload,
             EnableExperimentalEditorHotReloadSupport,
             TriggerDomainReloadIfOverNDynamicallyLoadedAssembles,
-            IsForceLockAssembliesViaCode
+            IsForceLockAssembliesViaCode,
+            TryFixCompilationErrorsViaChatGpt,
+            ChatGptApiKey
         };
 
         private static bool PrefsLoaded = false;
@@ -894,7 +940,9 @@ includeSubdirectories - whether child directories should be watched as well
                 (bool)FastScriptReloadPreference.IsDidFieldsOrPropertyCountChangedCheckDisabled.GetEditorPersistedValueOrDefault(),
                 (bool)FastScriptReloadPreference.EnableExperimentalAddedFieldsSupport.GetEditorPersistedValueOrDefault()
             );
-            
+            DotnetExeDynamicCompilation.TryFixCompilationErrorsViaChatGpt = (bool)FastScriptReloadPreference.TryFixCompilationErrorsViaChatGpt.GetEditorPersistedValueOrDefault();
+            DotnetExeDynamicCompilation.ChatGptApiKey = (string)FastScriptReloadPreference.ChatGptApiKey.GetEditorPersistedValueOrDefault();
+
             BuildDefineSymbolManager.SetBuildDefineSymbolState(FastScriptReloadPreference.BuildSymbol_DetailedDebugLogging,
                 (bool)FastScriptReloadPreference.EnableDetailedDebugLogging.GetEditorPersistedValueOrDefault()
             );

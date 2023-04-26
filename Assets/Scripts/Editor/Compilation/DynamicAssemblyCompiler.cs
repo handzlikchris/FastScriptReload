@@ -44,13 +44,15 @@ namespace FastScriptReload.Editor.Compilation
         public Assembly CompiledAssembly { get; }
         public string CompiledAssemblyPath { get; }
         public List<string> MessagesFromCompilerProcess { get; }
-        public bool IsError => string.IsNullOrEmpty(CompiledAssemblyPath);
+        public bool IsError => CompiledAssembly == null;
         public int NativeCompilerReturnValue { get; }
         public string SourceCodeCombined { get; }
         public string SourceCodeCombinedFileLocation { get; }
         public float CreatingAssemblyWithInternalsVisibleToTook { get; }
+        public List<string> TypeNamesDefinitions { get; }
 
-        public CompileResult(string compiledAssemblyPath, List<string> messagesFromCompilerProcess, int nativeCompilerReturnValue, Assembly compiledAssembly, string sourceCodeCombined, string sourceCodeCombinedFileLocation, float creatingAssemblyWithInternalsVisibleToTook)
+        public CompileResult(string compiledAssemblyPath, List<string> messagesFromCompilerProcess, int nativeCompilerReturnValue, Assembly compiledAssembly, 
+            string sourceCodeCombined, string sourceCodeCombinedFileLocation, float creatingAssemblyWithInternalsVisibleToTook, List<string> typeNamesDefinitions)
         {
             CompiledAssemblyPath = compiledAssemblyPath;
             MessagesFromCompilerProcess = messagesFromCompilerProcess;
@@ -59,6 +61,7 @@ namespace FastScriptReload.Editor.Compilation
             SourceCodeCombined = sourceCodeCombined;
             SourceCodeCombinedFileLocation = sourceCodeCombinedFileLocation;
             CreatingAssemblyWithInternalsVisibleToTook = creatingAssemblyWithInternalsVisibleToTook;
+            TypeNamesDefinitions = typeNamesDefinitions;
         }
     }
 }

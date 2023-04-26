@@ -28,7 +28,9 @@ namespace FastScriptReload.Editor.Compilation
         private static string ApplicationContentsPath = EditorApplication.applicationContentsPath;
         private static readonly List<string> _createdFilesToCleanUp = new List<string>();
         private static readonly AutoRewriteSourceCodeAdjuster _autoRewriteSourceCodeAdjuster  =new AutoRewriteSourceCodeAdjuster();
-        private static bool TryFixCompilationErrorsViaChatGpt = true; //TODO: testing only, move to settings
+        
+        public static bool TryFixCompilationErrorsViaChatGpt = true;
+        public static string ChatGptApiKey;
 
         private static readonly object HowToFixInstructions = $@"HOW TO FIX - INSTRUCTIONS:
 
@@ -106,22 +108,32 @@ You can also:
             var asmName = Guid.NewGuid().ToString().Replace("-", "");
             var sourceCodeCombinedFilePath = _tempFolder + $"{asmName}.SourceCodeCombined.cs";
 
-            var result = CompileFromFiles(filePathsWithSourceCode, asmName, sourceCodeCombinedFilePath, _autoRewriteSourceCodeAdjuster, unityMainThreadDispatcher);
-            if (result.CompiledAssembly == null)
+            var firstCompilationResult = CompileFromFiles(filePathsWithSourceCode, asmName, sourceCodeCombinedFilePath, _autoRewriteSourceCodeAdjuster, unityMainThreadDispatcher);
+            if (firstCompilationResult.IsError)
             {
                 var errorMessage = "Compiler failed to produce the assembly. Output: '" +
-                                                               string.Join(Environment.NewLine + Environment.NewLine, result.MessagesFromCompilerProcess) + "'";
+                                                               string.Join(Environment.NewLine + Environment.NewLine, firstCompilationResult.MessagesFromCompilerProcess) + "'";
                 LoggerScoped.LogError(errorMessage);
                 
                 LoggerScoped.LogError($"Compilation error: temporary files were not removed so they can be inspected: " 
                                       + string.Join(", ", _createdFilesToCleanUp
                                           .Select(f => $"<a href=\"{f}\" line=\"1\">{f}</a>")));
                 
-                // if (TryFixCompilationErrorsViaChatGpt)
-                // {
-                //     //TODO: ensure details provided
-                //     LoggerScoped.Log("Attempting to fix via ChatGPT");
-                // }
+                if (TryFixCompilationErrorsViaChatGpt)
+                {
+                    var chatGptErrorAwareAdjuster = new ChatGptErrorAwareSourceCodeAdjuster(
+                        string.Join(Environment.NewLine, firstCompilationResult.MessagesFromCompilerProcess),
+                        firstCompilationResult.TypeNamesDefinitions,
+                        ChatGptApiKey,
+                        unityMainThreadDispatcher
+                    );
+                    
+                    var chatGptFixedResult = CompileFromFiles(new List<string>() { firstCompilationResult.SourceCodeCombinedFileLocation }, asmName, sourceCodeCombinedFilePath, chatGptErrorAwareAdjuster, unityMainThreadDispatcher);
+                    if (!chatGptFixedResult.IsError)
+                    {
+                        return chatGptFixedResult;
+                    }
+                }
                 
                 if (LogHowToFixMessageOnCompilationError)
                 {
@@ -131,7 +143,7 @@ You can also:
                 throw new HotReloadCompilationException(errorMessage, sourceCodeCombinedFilePath);
             }
 
-            return result;
+            return firstCompilationResult;
         }
 
         private static CompileResult CompileFromFiles(List<string> filePathsWithSourceCode, string asmName,
@@ -175,7 +187,7 @@ You can also:
             
             return new CompileResult(outLibraryPath, outputMessages, exitCode, compiledAssembly,
                 createSourceCodeCombinedResult.SourceCode,
-                sourceCodeCombinedFilePath, createInternalVisibleToAsmElapsedMilliseconds);
+                sourceCodeCombinedFilePath, createInternalVisibleToAsmElapsedMilliseconds, createSourceCodeCombinedResult.TypeNamesDefinitions);
         }
 
         private static Dictionary<string, string> CreateAssemblyCopiesWithInternalsVisibleTo(CreateSourceCodeCombinedContentsResult createSourceCodeCombinedResult, string asmName)
