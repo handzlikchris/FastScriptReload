@@ -702,11 +702,11 @@ includeSubdirectories - whether child directories should be watched as well
         public static readonly ToggleProjectEditorPreferenceDefinition DebugWriteRewriteReasonAsComment = new ToggleProjectEditorPreferenceDefinition(
             "Write rewrite reason as comment in changed file", "DebugWriteRewriteReasonAsComment", false, (object newValue, object oldValue) =>
             {
-                DynamicCompilationBase.DebugWriteRewriteReasonAsComment = (bool)newValue;
+                AutoRewriteSourceCodeAdjuster.DebugWriteRewriteReasonAsComment = (bool)newValue;
             },
             (value) =>
             {
-                DynamicCompilationBase.DebugWriteRewriteReasonAsComment = (bool)value;
+                AutoRewriteSourceCodeAdjuster.DebugWriteRewriteReasonAsComment = (bool)value;
             });
         
         public static readonly ToggleProjectEditorPreferenceDefinition IsAutoOpenGeneratedSourceFileOnChangeEnabled = new ToggleProjectEditorPreferenceDefinition(
@@ -888,7 +888,7 @@ includeSubdirectories - whether child directories should be watched as well
             EnsureUserAwareOfAutoRefresh();
 
             DynamicCompilationBase.LogHowToFixMessageOnCompilationError = (bool)FastScriptReloadPreference.LogHowToFixMessageOnCompilationError.GetEditorPersistedValueOrDefault();
-            DynamicCompilationBase.DebugWriteRewriteReasonAsComment = (bool)FastScriptReloadPreference.DebugWriteRewriteReasonAsComment.GetEditorPersistedValueOrDefault();
+            AutoRewriteSourceCodeAdjuster.DebugWriteRewriteReasonAsComment = (bool)FastScriptReloadPreference.DebugWriteRewriteReasonAsComment.GetEditorPersistedValueOrDefault();
             DynamicCompilationBase.ReferencesExcludedFromHotReload = (List<string>)FastScriptReloadPreference.ReferencesExcludedFromHotReload.GetElements();
             FastScriptReloadManager.Instance.AssemblyChangesLoaderEditorOptionsNeededInBuild.UpdateValues(
                 (bool)FastScriptReloadPreference.IsDidFieldsOrPropertyCountChangedCheckDisabled.GetEditorPersistedValueOrDefault(),

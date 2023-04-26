@@ -27,6 +27,7 @@ namespace FastScriptReload.Editor.Compilation
 
         private static string ApplicationContentsPath = EditorApplication.applicationContentsPath;
         private static readonly List<string> _createdFilesToCleanUp = new List<string>();
+        private static AutoRewriteSourceCodeAdjuster _autoRewriteSourceCodeAdjuster  =new AutoRewriteSourceCodeAdjuster();
 
         static DotnetExeDynamicCompilation()
         {
@@ -73,42 +74,11 @@ namespace FastScriptReload.Editor.Compilation
 
         public static CompileResult Compile(List<string> filePathsWithSourceCode, UnityMainThreadDispatcher unityMainThreadDispatcher)
         {
-            var sourceCodeCombinedFilePath = string.Empty;
+            var asmName = Guid.NewGuid().ToString().Replace("-", "");
+            var sourceCodeCombinedFilePath = _tempFolder + $"{asmName}.SourceCodeCombined.cs";
             try
             {
-                var asmName = Guid.NewGuid().ToString().Replace("-", "");
-                var rspFile = _tempFolder + $"{asmName}.rsp";
-                var assemblyAttributeFilePath = _tempFolder + $"{asmName}.DynamicallyCreatedAssemblyAttribute.cs";
-                sourceCodeCombinedFilePath = _tempFolder + $"{asmName}.SourceCodeCombined.cs";
-                var outLibraryPath = $"{_tempFolder}{asmName}.dll";
-
-                var createSourceCodeCombinedResult = CreateSourceCodeCombinedContents(filePathsWithSourceCode, ActiveScriptCompilationDefines.ToList());
-                CreateFileAndTrackAsCleanup(sourceCodeCombinedFilePath, createSourceCodeCombinedResult.SourceCode, _createdFilesToCleanUp);
-#if UNITY_EDITOR
-                unityMainThreadDispatcher.Enqueue(() =>
-                {
-                    if ((bool)FastScriptReloadPreference.IsAutoOpenGeneratedSourceFileOnChangeEnabled.GetEditorPersistedValueOrDefault())
-                    {
-                        UnityEditorInternal.InternalEditorUtility.OpenFileAtLineExternal(sourceCodeCombinedFilePath, 0);
-                    }
-                });
-#endif
-
-                var originalAssemblyPathToAsmWithInternalsVisibleToCompiled = PerfMeasure.Elapsed(
-                    () => CreateAssemblyCopiesWithInternalsVisibleTo(createSourceCodeCombinedResult, asmName),
-                    out var createInternalVisibleToAsmElapsedMilliseconds);
-
-                var shouldAddUnsafeFlag = createSourceCodeCombinedResult.SourceCode.Contains("unsafe"); //TODO: not ideal as 'unsafe' can be part of comment, not code. But compiling with that flag in more cases shouldn't cause issues
-                var rspFileContent = GenerateCompilerArgsRspFileContents(outLibraryPath, sourceCodeCombinedFilePath, assemblyAttributeFilePath, 
-                    originalAssemblyPathToAsmWithInternalsVisibleToCompiled, shouldAddUnsafeFlag);
-                CreateFileAndTrackAsCleanup(rspFile, rspFileContent, _createdFilesToCleanUp);
-                CreateFileAndTrackAsCleanup(assemblyAttributeFilePath, DynamicallyCreatedAssemblyAttributeSourceCode, _createdFilesToCleanUp);
-
-                var exitCode = ExecuteDotnetExeCompilation(_dotnetExePath, _cscDll, rspFile, outLibraryPath, out var outputMessages);
-
-                var compiledAssembly = Assembly.LoadFrom(outLibraryPath);
-                return new CompileResult(outLibraryPath, outputMessages, exitCode, compiledAssembly, createSourceCodeCombinedResult.SourceCode, 
-                    sourceCodeCombinedFilePath, createInternalVisibleToAsmElapsedMilliseconds);
+                return CompileFromFiles(filePathsWithSourceCode, asmName, sourceCodeCombinedFilePath, _autoRewriteSourceCodeAdjuster, unityMainThreadDispatcher);
             }
             catch (Exception e)
             {
@@ -149,6 +119,45 @@ You can also:
                 
                 throw new HotReloadCompilationException(e.Message, e, sourceCodeCombinedFilePath);
             }
+        }
+
+        private static CompileResult CompileFromFiles(List<string> filePathsWithSourceCode, string asmName,
+            string sourceCodeCombinedFilePath, ISourceCodeAdjuster sourceCodeAdjuster, UnityMainThreadDispatcher unityMainThreadDispatcher)
+        {
+            var rspFile = _tempFolder + $"{asmName}.rsp";
+            var assemblyAttributeFilePath = _tempFolder + $"{asmName}.DynamicallyCreatedAssemblyAttribute.cs";
+            var outLibraryPath = $"{_tempFolder}{asmName}.dll";
+
+            var createSourceCodeCombinedResult = sourceCodeAdjuster.CreateSourceCodeCombinedContents(filePathsWithSourceCode, ActiveScriptCompilationDefines.ToList());
+            CreateFileAndTrackAsCleanup(sourceCodeCombinedFilePath, createSourceCodeCombinedResult.SourceCode, _createdFilesToCleanUp);
+#if UNITY_EDITOR
+            unityMainThreadDispatcher.Enqueue(() =>
+            {
+                if ((bool)FastScriptReloadPreference.IsAutoOpenGeneratedSourceFileOnChangeEnabled
+                        .GetEditorPersistedValueOrDefault())
+                {
+                    UnityEditorInternal.InternalEditorUtility.OpenFileAtLineExternal(sourceCodeCombinedFilePath, 0);
+                }
+            });
+#endif
+
+            var originalAssemblyPathToAsmWithInternalsVisibleToCompiled = PerfMeasure.Elapsed(
+                () => CreateAssemblyCopiesWithInternalsVisibleTo(createSourceCodeCombinedResult, asmName),
+                out var createInternalVisibleToAsmElapsedMilliseconds);
+
+            var shouldAddUnsafeFlag = createSourceCodeCombinedResult.SourceCode.Contains("unsafe"); //TODO: not ideal as 'unsafe' can be part of comment, not code. But compiling with that flag in more cases shouldn't cause issues
+            var rspFileContent = GenerateCompilerArgsRspFileContents(outLibraryPath, sourceCodeCombinedFilePath,
+                assemblyAttributeFilePath,
+                originalAssemblyPathToAsmWithInternalsVisibleToCompiled, shouldAddUnsafeFlag);
+            CreateFileAndTrackAsCleanup(rspFile, rspFileContent, _createdFilesToCleanUp);
+            CreateFileAndTrackAsCleanup(assemblyAttributeFilePath, DynamicallyCreatedAssemblyAttributeSourceCode, _createdFilesToCleanUp);
+
+            var exitCode = ExecuteDotnetExeCompilation(_dotnetExePath, _cscDll, rspFile, outLibraryPath, out var outputMessages);
+
+            var compiledAssembly = Assembly.LoadFrom(outLibraryPath);
+            return new CompileResult(outLibraryPath, outputMessages, exitCode, compiledAssembly,
+                createSourceCodeCombinedResult.SourceCode,
+                sourceCodeCombinedFilePath, createInternalVisibleToAsmElapsedMilliseconds);
         }
 
         private static Dictionary<string, string> CreateAssemblyCopiesWithInternalsVisibleTo(CreateSourceCodeCombinedContentsResult createSourceCodeCombinedResult, string asmName)
