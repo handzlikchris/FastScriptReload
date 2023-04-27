@@ -662,6 +662,10 @@ This is down to reimporting 'Point' prefab. Right now plugin will make sure it's
 
 To fix please go to `FastScripReload\Examples\Point\Point.prefab` and search for 'Point' shader. 
 
+### On Mac hot reload does not trigger when changing files
+It'd seem for some code editors on Mac file changes are not picked up. This seems to be down to editors not updating LastWrite property on save and file watcher can't pick up the change.
+Unfortunately right now only workaround is to use editor that does update it, eg VSCode.
+
 ## Roadmap
 - ~~add Mac/Linux support~~ (added with 1.1)
 - ~~add debugger support for hot-reloaded scripts~~ (added with 1.2)
