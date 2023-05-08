@@ -20,7 +20,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
         public AllPatchedIdentifiersRewriter(bool writeRewriteReasonAsComment, List<string> originalIdentifiersRenamedToContainPatchedPostfix, bool visitIntoStructuredTrivia = false) 
             : base(writeRewriteReasonAsComment, visitIntoStructuredTrivia)
         {
-            _originalIdentifiersRenamedToContainPatchedPostfix = originalIdentifiersRenamedToContainPatchedPostfix.ToHashSet();
+            _originalIdentifiersRenamedToContainPatchedPostfix =  new HashSet<string>(originalIdentifiersRenamedToContainPatchedPostfix);
         }
 
         public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node)
