@@ -180,22 +180,35 @@ namespace FastScriptReload.Runtime
                 ExecuteFnOnMainThread(originalType, onScriptHotReloadFnForType);
             }
             else
-            {
+            { 
                 //When OnScriptHotReload method is not present in original type reflection can not use method from new type (as instance types are not matching and will cause exception)
                 //creating dynamic method and dotouring that solves the issue
+                //On some 2020 Unity versions, eg 2020.3.27f DynamicMethod can not be resolved. Using reflection to ensure it can be compiled and potentially run if methods exist
                 
-                //PERF: could potentially cache, negligible overhead
                 var onScriptHotReloadFnForCreatedType = detourType.GetMethod(ON_HOT_RELOAD_METHOD_NAME, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                var dynamicMethodDynamicallyAdded = new DynamicMethod(
-                    ON_HOT_RELOAD_METHOD_NAME + "_DynamicallyAdded",
-                    typeof(void), new Type[] { }
-                );
-                var gen = dynamicMethodDynamicallyAdded.GetILGenerator();
-                gen.Emit(OpCodes.Ret); //simple return to ensure IL is valid
+                if (onScriptHotReloadFnForCreatedType != null)
+                {
+                    //PERF: could potentially cache, negligible overhead
+                    var dynamicMethodType = Type.GetType("System.Reflection.Emit.DynamicMethod");
+                    if (dynamicMethodType == null)
+                    {
+                        LoggerScoped.LogWarning($"Unable to find DynamicMethod, added {ON_HOT_RELOAD_METHOD_NAME} won't be called. Make sure to add method before initial compilation.");
+                        return;
+                    }
+                    
+                    var dynamicMethodCtor = dynamicMethodType.GetConstructor(new Type[] { typeof(string), typeof(Type), typeof(Type[]) });
+                    var dynamicMethodDynamicallyAdded = (MethodInfo)dynamicMethodCtor.Invoke(new object[] { ON_HOT_RELOAD_METHOD_NAME + "_DynamicallyAdded", typeof(void), new Type[] { } });
                 
-                Memory.DetourMethod(dynamicMethodDynamicallyAdded, onScriptHotReloadFnForCreatedType);
+                    var getILGeneratorMethod = dynamicMethodType.GetMethod("GetILGenerator", new Type[] { });
+                    var gen = getILGeneratorMethod.Invoke(dynamicMethodDynamicallyAdded, new object[]{ });
+                
+                    var emitMethod = gen.GetType().GetMethod("Emit", new [] { typeof(OpCode) });
+                    emitMethod.Invoke(gen, new object[] { OpCodes.Ret }); //simple return to ensure IL is valid
+                    
+                    Memory.DetourMethod(dynamicMethodDynamicallyAdded, onScriptHotReloadFnForCreatedType);
 
-                ExecuteFnOnMainThread(originalType, dynamicMethodDynamicallyAdded);
+                    ExecuteFnOnMainThread(originalType, dynamicMethodDynamicallyAdded);
+                }
             }
         }
 
