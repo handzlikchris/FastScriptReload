@@ -25,7 +25,7 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
             var originalSourceCode = File.ReadAllText(filePath);
             try
             {
-                var adjustedSourceCode = originalSourceCode.Replace(TestDetourConfirmation.ConfirmationLineStartsWithToken, string.Empty);
+                var adjustedSourceCode = originalSourceCode.Replace(TestDetourConfirmation.MockRuntimeCodeChange, string.Empty);
 
                 try
                 {

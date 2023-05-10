@@ -16,14 +16,14 @@ namespace FastScriptReload.Tests.Runtime.Integration.CodePatterns
         public void AssignNestedEnumToField()
         {
             _value = NestedEnum.Value1;
-            //<confirmation-code>// _value = NestedEnum.Value2;
-            //<confirmation-code>// TestDetourConfirmation.Confirm(this.GetType(), nameof(AssignNestedEnumToField), _value);
+            //<mock-runtime-code-change>// _value = NestedEnum.Value2;
+            //<mock-runtime-code-change>// TestDetourConfirmation.Confirm(this.GetType(), nameof(AssignNestedEnumToField), _value);
         }
         
         public void AssignValueValue1ToNestedEnumField()
         {
-            //<confirmation-code>// _value = NestedEnum.Value1;
-            //<confirmation-code>// TestDetourConfirmation.Confirm(this.GetType(), nameof(AssignValueValue1ToNestedEnumField), _value);
+            //<mock-runtime-code-change>// _value = NestedEnum.Value1;
+            //<mock-runtime-code-change>// TestDetourConfirmation.Confirm(this.GetType(), nameof(AssignValueValue1ToNestedEnumField), _value);
         }
     }
 }

@@ -10,12 +10,12 @@ namespace FastScriptReload.Tests.Runtime.Integration.CodePatterns
         public void TestInstanceFieldTypeRewritten()
         {
             instance = new AccessingIdentifierNamedSameAsMethod();
-            //<confirmation-code>// TestDetourConfirmation.Confirm(this.GetType(), nameof(TestInstanceFieldTypeRewritten), typeof(AccessingIdentifierNamedSameAsMethod__Patched_).Name);
+            //<mock-runtime-code-change>// TestDetourConfirmation.Confirm(this.GetType(), nameof(TestInstanceFieldTypeRewritten), typeof(AccessingIdentifierNamedSameAsMethod__Patched_).Name);
         }
         
         public void TestAccessingSameNamedVariableNotChanged() {
             testing = new AccessingIdentifierNamedSameAsMethodTesting();
-            //<confirmation-code>// TestDetourConfirmation.Confirm(this.GetType(), nameof(TestAccessingSameNamedVariableNotChanged), testing.AccessingIdentifierNamedSameAsMethod);
+            //<mock-runtime-code-change>// TestDetourConfirmation.Confirm(this.GetType(), nameof(TestAccessingSameNamedVariableNotChanged), testing.AccessingIdentifierNamedSameAsMethod);
         }
     }
     

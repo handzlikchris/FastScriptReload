@@ -4,7 +4,7 @@ using System.Collections.Generic;
 //no namespace on purpose, easier to access
 public static class TestDetourConfirmation
 {
-    public static string ConfirmationLineStartsWithToken = "//<confirmation-code>//";
+    public static string MockRuntimeCodeChange = "//<mock-runtime-code-change>//";
     
     private static Dictionary<string, object> ConfirmationEntries { get; } = new Dictionary<string, object>();
 
