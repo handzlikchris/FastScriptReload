@@ -9,7 +9,7 @@ PluginImporter:
   isPreloaded: 0
   isOverridable: 0
   isExplicitlyReferenced: 1
-  validateReferences: 1
+  validateReferences: 0
   platformData:
   - first:
       : Any
