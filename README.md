@@ -41,13 +41,13 @@ I was really chuffed to see FSR selling over 1000 copies on [Asset Store](https:
 
 Gaining reviews like:
 > **Goosebumps and tears of joy**
-> 
+>
 > Felt like I was underwater and that I can breathe again. Just buy this stuff for any serious project. Working around the limitations is just worth it.
 
-## Hot-Reload in development build (on device)
+## Hot-Reload on device / Live Script Reload
 You can use same hot reload functionality in actual builds / on device. Iterate quickly on deployed Android APK / standalone windows build (exe).
 
-> Currently it's a separate release pack **(that's not as up to date as main FSR)** [you can download it here](https://github.com/handzlikchris/FastScriptReload/releases/download/1.4-rc1/Live.Script.Reload.on.device.Hot-Reload.unitypackage)
+> It's a standalone, paid extension asset, if you'd like to support the product - [please consider grabbing a copy on Unity Asset Store](https://assetstore.unity.com/packages/tools/utilities/live-script-reload-on-device-hot-reload-239380?aid=1100ltZSe&pubref=fsr-github-lsr)
 
 ## One-off custom code executions on Hot-Reload
 When you need to set the stage to test your feature out.
@@ -114,7 +114,7 @@ There are some other minor limitations, please consult full list
 ## Roadmap
 > Soon whole roadmap will be published as Github project for better visibility.
 
-- more structured unit-tests, especially around script rewrite 
+- more structured unit-tests, especially around script rewrite
 - add Mac/Linux support - **(DONE, added with 1.1)**
 - add debugger support for hot-reloaded scripts **(DONE, added with 1.2)**
 - allow to add new fields (adjustable in Editor) **(DONE, added with 1.3)**
@@ -124,10 +124,10 @@ There are some other minor limitations, please consult full list
 
 ### FAQ
 - My changes no longer automatically compile / reload
-> You probably allowed tool to change auto-reload to 'disabled' and have forgotten about it. 
-> 
-> You can reload changes manually with CTRL+R 
-> 
+> You probably allowed tool to change auto-reload to 'disabled' and have forgotten about it.
+>
+> You can reload changes manually with CTRL+R
+>
 > or reenable auto-reload - please go to `Edit -> Preferences -> Asset Pipeline -> Auto Refresh`and set to `Enabled Outside of Playmode`.
 > This way FSR will work in playmode and Unity will do full recompile when you hit 'stop'.
 
@@ -159,9 +159,9 @@ Spread the word, let other devs know what it is, why is it cool and how it helps
 I'm sure once they try it they'll stay with us!
 
 ## Help building it
-Ping me on [Discord](https://discord.gg/wBKuEAsKAq) if you've got some time on your hands and would like to contribute! 
+Ping me on [Discord](https://discord.gg/wBKuEAsKAq) if you've got some time on your hands and would like to contribute!
 
-Doesn't have to be coding - there's a ton of stuff that can be done. 
+Doesn't have to be coding - there's a ton of stuff that can be done.
 Giving feedback on features, reporting issues, helping others  get started or just chatting and helping build FSR community. All that helps a lot!
 
 ## Become a patron
