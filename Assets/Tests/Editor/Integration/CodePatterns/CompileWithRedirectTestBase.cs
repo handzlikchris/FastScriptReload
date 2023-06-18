@@ -49,7 +49,9 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
             catch (HotReloadCompilationException e)
             {
                 Debug.Log($"Compilation Error: {e.InnerException}");
-                InternalEditorUtility.OpenFileAtLineExternal(e.SourceCodeCombinedFileCreated, 0);
+
+                // SourceCodeCombinedFileCreated could be null, if original source code fails to compile.
+                if (e.SourceCodeCombinedFileCreated != null) InternalEditorUtility.OpenFileAtLineExternal(e.SourceCodeCombinedFileCreated, 0);
             }
             finally
             {
