@@ -423,7 +423,7 @@ Workaround will search in all folders (under project root) and will use first fo
                     catch (Exception ex)
                     {
                         if (ex is SourceCodeHasErrorsException e)
-                            LoggerScoped.LogError(e.Message);
+                            LoggerScoped.LogError(e.Message + Environment.NewLine);
                         else
                             LoggerScoped.LogError($"Error when updating files: '{(sourceCodeFilesWithUniqueChangesAwaitingHotReload != null ? string.Join(",", sourceCodeFilesWithUniqueChangesAwaitingHotReload.Select(fn => new FileInfo(fn).Name)) : "unknown")}', {ex}");
                         
