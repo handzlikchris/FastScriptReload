@@ -360,11 +360,14 @@ namespace FastScriptReload.Editor.Compilation
 
     public class SourceCodeHasErrorsException : Exception
     {
-        public IEnumerable<Diagnostic> ErrorDiagnostics { get; }
-
-        public SourceCodeHasErrorsException(IEnumerable<Diagnostic> errorDiagnostics)
+        public SourceCodeHasErrorsException(IEnumerable<Diagnostic> errorDiagnostics) : base(MakeMessage(errorDiagnostics))
         {
-            ErrorDiagnostics = errorDiagnostics;
         }
+
+        private static string MakeMessage(IEnumerable<Diagnostic> errorDiagnostics)
+            => "Failed to compile the original source code. The compiler found the following errors:"
+            + Environment.NewLine
+            + Environment.NewLine
+            + string.Join(Environment.NewLine, errorDiagnostics.Select(d => d.ToString()));
     }
 }

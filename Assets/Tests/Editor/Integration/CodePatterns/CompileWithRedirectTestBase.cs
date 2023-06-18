@@ -46,12 +46,14 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
 
                 afterDetourTest(dynamicallyLoadedAssemblyCompilerResult);
             }
+            catch (SourceCodeHasErrorsException e)
+            {
+                Debug.Log(e.Message);
+            }
             catch (HotReloadCompilationException e)
             {
                 Debug.Log($"Compilation Error: {e.InnerException}");
-
-                // SourceCodeCombinedFileCreated could be null, if original source code fails to compile.
-                if (e.SourceCodeCombinedFileCreated != null) InternalEditorUtility.OpenFileAtLineExternal(e.SourceCodeCombinedFileCreated, 0);
+                InternalEditorUtility.OpenFileAtLineExternal(e.SourceCodeCombinedFileCreated, 0);
             }
             finally
             {

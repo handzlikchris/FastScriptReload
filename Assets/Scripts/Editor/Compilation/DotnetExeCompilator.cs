@@ -112,15 +112,9 @@ namespace FastScriptReload.Editor.Compilation
             }
             catch (SourceCodeHasErrorsException e)
             {
-                LoggerScoped.LogError("FSR failed to compile the original source code and has not attempted hot reloading. The compiler found the following errors:"
-                    + Environment.NewLine
-                    + Environment.NewLine
-                    + string.Join(Environment.NewLine, e.ErrorDiagnostics.Select(d => d.ToString())));
-
-                // We don't bother trying to build a broken file, so we don't have an output file here.
-                // It looks like passing null is okay at the callsites.
-                // A small modification has been made to a test to accommodate.
-                throw new HotReloadCompilationException(e.Message, e, null);
+                // FastScriptReloadManager has a special case for reporting SourceCodeHasErrorsException.
+                // Just pass it through.
+                throw e;
             }
             catch (Exception e)
             {
