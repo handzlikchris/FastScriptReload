@@ -74,34 +74,35 @@ namespace FastScriptReload.Editor.Compilation
         {
             var combinedUsingStatements = new List<string>();
             var typesDefined = new List<string>();
-            var errorDiagnostics = new List<Diagnostic>();
-            
-            var sourceCodeWithAdjustments = sourceCodeFiles.Select(sourceCodeFile =>
-            {
+
+            var trees = sourceCodeFiles.Select(sourceCodeFile => {
                 var fileCode = File.ReadAllText(sourceCodeFile);
-                var tree = CSharpSyntaxTree.ParseText(fileCode, new CSharpParseOptions(preprocessorSymbols: definedPreprocessorSymbols)).WithFilePath(sourceCodeFile);
+                var tree = CSharpSyntaxTree.ParseText(fileCode, new CSharpParseOptions(preprocessorSymbols: definedPreprocessorSymbols));
+                tree = tree.WithFilePath(sourceCodeFile);
+                return tree;
+            }).ToArray();
 
-                // It's important to check whether the compiler was able to correctly interpret the original code.
-                // When the compiler encounters errors, it actually continues and still produces a tree.
-                // This tree even still roundtrips to the original source code.
-                // However, because the code didn't parse correctly, the tree's structure may be wrong.
-                // If we don't detect this here, FSR continues on obliviously, applying transformations to the broken tree.
-                // This sometimes leads to correctly generated code, because the parts of the tree that FSR cared to look at happened to be correct.
-                // However, this should not be relied upon.
-                // Transformations applied to broken trees lead to weird bugs, e.g. things at wrong nesting levels.
-                // The safest thing is to bail on the whole process.
-                // 
-                // Note that this can happen with valid user code!!!
-                // This can trigger if FSR's compiler version is behind the one needed for language features in the code.
-                // The user may think their code is correct, but the compiler may disagree.
-                // In this scenario, it's particularly important to let the user know that something went wrong.
-                // Otherwise, they may expect valid output, and get nearly valid output from a broken tree.
-                // Trust me, these bugs are quite confusing when first encountered!
-                //
-                // We collect errors from all files instead of bailing immediately, for better reporting in the log message.
-                errorDiagnostics.AddRange(tree.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
-                if (errorDiagnostics.Any()) return null; // Skip work once we have errors.
-
+            // It's important to check whether the compiler was able to correctly interpret the original code.
+            // When the compiler encounters errors, it actually continues and still produces a tree.
+            // This tree even still roundtrips to the original source code.
+            // However, because the code didn't parse correctly, the tree's structure may be wrong.
+            // If we don't detect this here, FSR continues on obliviously, applying transformations to the broken tree.
+            // This sometimes leads to correctly generated code, because the parts of the tree that FSR cared to look at happened to be correct.
+            // However, this should not be relied upon.
+            // Transformations applied to broken trees lead to weird bugs, e.g. things at wrong nesting levels.
+            // The safest thing is to bail on the whole process.
+            // 
+            // Note that this can happen with valid user code!!!
+            // This can trigger if FSR's compiler version is behind the one needed for language features in the code.
+            // The user may think their code is correct, but the compiler may disagree.
+            // In this scenario, it's particularly important to let the user know that something went wrong.
+            // Otherwise, they may expect valid output, and get nearly valid output from a broken tree.
+            // Trust me, these bugs are quite confusing when first encountered!
+            var errorDiagnostics = trees.SelectMany(tree => tree.GetDiagnostics()).Where(d => d.Severity == DiagnosticSeverity.Error);
+            if (errorDiagnostics.Any()) throw new SourceCodeHasErrorsException(errorDiagnostics);
+            
+            var sourceCodeWithAdjustments = trees.Select(tree =>
+            {
                 var root = tree.GetRoot();
                 
                 //WARN: needs to walk before root class name changes, otherwise it'll resolve wrong name
@@ -187,16 +188,14 @@ namespace FastScriptReload.Editor.Compilation
                 root = new BuilderPatternFunctionsRewriter(DebugWriteRewriteReasonAsComment).Visit(root);
                 
                 //processed as last step to simply rewrite all changes made before
-                if (TryResolveUserDefinedOverridesRoot(sourceCodeFile, definedPreprocessorSymbols, out var userDefinedOverridesRoot))
+                if (TryResolveUserDefinedOverridesRoot(tree.FilePath, definedPreprocessorSymbols, out var userDefinedOverridesRoot))
                 {
-                    root = ProcessUserDefinedOverridesReplacements(sourceCodeFile, root, userDefinedOverridesRoot);
+                    root = ProcessUserDefinedOverridesReplacements(tree.FilePath, root, userDefinedOverridesRoot);
                     root = AddUserDefinedOverridenTypes(userDefinedOverridesRoot, root);
                 }
 
                 return root.ToFullString();
             }).ToList();
-
-            if (errorDiagnostics.Any()) throw new SourceCodeHasErrorsException(errorDiagnostics);
 
             var sourceCodeCombinedSb = new StringBuilder();
             sourceCodeCombinedSb.Append(DebuggingInformationComment);
