@@ -187,7 +187,7 @@ Workaround will search in all folders (under project root) and will use first fo
             // Other IDEs may be similar but different things. We want a general purpose solution, not a VS specific one.
             fileWatcher.Renamed += (source, e) =>
             {
-                if (e.OldName.EndsWith("~") && e.Name.EndsWith(".cs"))
+                if (e.Name.EndsWith(".cs"))
                     OnWatchedFileChange(source, e);
             };
         
