@@ -98,7 +98,7 @@ namespace FastScriptReload.Editor
             if (directoryHandle == null || directoryHandle.IsInvalid)
                 throw new IOException("Failed to obtain handle for directory.");
 
-            return new(directoryHandle);
+            return new InterruptibleHandle(directoryHandle);
         }
 
         private unsafe void Monitor(InterruptibleHandle handle)
@@ -173,7 +173,7 @@ namespace FastScriptReload.Editor
 
             void DispatchError(Exception ex)
             {
-                this.eventsTask = this.eventsTask.ContinueWith(_ => this.Error?.Invoke(this, new(ex)));
+                this.eventsTask = this.eventsTask.ContinueWith(_ => this.Error?.Invoke(this, new ErrorEventArgs(ex)));
             }
         }
 
@@ -208,7 +208,8 @@ namespace FastScriptReload.Editor
                             break;
 
                         case Action.RenamedNew:
-                            if (match | oldMatch) this.Renamed?.Invoke(this, new(WatcherChangeTypes.Renamed, this.Path, name.ToString(), oldName.ToString()));
+                            if (match | oldMatch)
+                                this.Renamed?.Invoke(this, new RenamedEventArgs(WatcherChangeTypes.Renamed, this.Path, name.ToString(), oldName.ToString()));
                             break;
 
                         default:
@@ -218,13 +219,13 @@ namespace FastScriptReload.Editor
                             switch (action)
                             {
                                 case Action.Added:
-                                    this.Created?.Invoke(this, new(WatcherChangeTypes.Created, this.Path, nameStr));
+                                    this.Created?.Invoke(this, new FileSystemEventArgs(WatcherChangeTypes.Created, this.Path, nameStr));
                                     break;
                                 case Action.Modified:
-                                    this.Changed?.Invoke(this, new(WatcherChangeTypes.Changed, this.Path, nameStr));
+                                    this.Changed?.Invoke(this, new FileSystemEventArgs(WatcherChangeTypes.Changed, this.Path, nameStr));
                                     break;
                                 case Action.Removed:
-                                    this.Deleted?.Invoke(this, new(WatcherChangeTypes.Deleted, this.Path, nameStr));
+                                    this.Deleted?.Invoke(this, new FileSystemEventArgs(WatcherChangeTypes.Deleted, this.Path, nameStr));
                                     break;
                             }
                             break;
@@ -232,7 +233,7 @@ namespace FastScriptReload.Editor
                 }
                 catch (Exception ex)
                 {
-                    this.Error?.Invoke(this, new(new Exception("Exception in event handler.", ex)));
+                    this.Error?.Invoke(this, new ErrorEventArgs(new Exception("Exception in event handler.", ex)));
                 }
 
                 if (nextEntryOffset == 0) break;
