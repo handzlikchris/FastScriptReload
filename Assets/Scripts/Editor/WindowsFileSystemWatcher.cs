@@ -19,9 +19,8 @@ namespace FastScriptReload.Editor
     /// This doesn't include the complete API surface of FileSystemWatcher,
     /// but those bits that are present should be compatible with FileSystemWatcher.
     /// 
-    /// Normal events will be dispatched on worker thread.
+    /// Events will be dispatched on a worker thread.
     /// They may be on different threads from each other, but they won't overlap in time.
-    /// The Error event will also run on a worker thread, but may overlap others.
     /// </summary>
     internal class WindowsFileSystemWatcher : IDisposable
     {
@@ -174,7 +173,7 @@ namespace FastScriptReload.Editor
 
             void DispatchError(Exception ex)
             {
-                Task.Run(() => this.Error?.Invoke(this, new(ex)));
+                this.eventsTask = this.eventsTask.ContinueWith(_ => this.Error?.Invoke(this, new(ex)));
             }
         }
 
