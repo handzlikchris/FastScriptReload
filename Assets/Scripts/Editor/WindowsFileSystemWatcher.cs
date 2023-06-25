@@ -213,8 +213,8 @@ namespace FastScriptReload.Editor
                             break;
 
                         default:
-                            var nameStr = name.ToString();
                             if (!match) break;
+                            var nameStr = name.ToString();
 
                             switch (action)
                             {
