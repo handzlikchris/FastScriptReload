@@ -207,9 +207,9 @@ namespace FastScriptReload.Editor
                         if (bufferPool.Count < MaxBufferPoolSize) bufferPool.Push(buffer);
                     }
                 });
-
-                handle.Dispose();
             }
+
+            handle.Dispose();
 
 
             void DispatchError(Exception ex)
