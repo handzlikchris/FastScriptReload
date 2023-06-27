@@ -101,10 +101,15 @@ namespace FastScriptReload.Editor
                 }
                 else
                 {
-                    this.currentHandle?.Close();
+                    // This cancels scheduled-but-unrun events, because they don't run if the handle is closed.
+                    this.currentHandle?.Dispose();
                     this.currentHandle = null;
-                    Task.WaitAll(this.monitorTask ?? Task.CompletedTask, this.eventsTask ?? Task.CompletedTask);
+                    this.monitorTask?.Wait();
                     this.monitorTask = null;
+                    // We don't wait for the events task, because we might be within the events task.
+                    // (Ooh, the events are coming from WITHIN THE TASK. Scary.)
+                    // This does leave a tiny chance that a single event could be triggered immediately after this,
+                    // if we're not in the events task...
                 }
             }
         }
@@ -203,7 +208,7 @@ namespace FastScriptReload.Editor
                     }
                 });
 
-                handle.Close();
+                handle.Dispose();
             }
 
 
@@ -277,7 +282,7 @@ namespace FastScriptReload.Editor
         }
 
 
-        private class InterruptibleHandle
+        private class InterruptibleHandle : IDisposable
         {
             public SafeFileHandle Handle { get; }
             public bool IsOpen => !this.closed & !this.Handle.IsInvalid & !this.Handle.IsClosed;
@@ -288,11 +293,11 @@ namespace FastScriptReload.Editor
                 this.Handle = handle;
             }
 
-            public unsafe void Close()
+            public unsafe void Dispose()
             {
                 this.closed = true;
                 if (!(this.Handle.IsInvalid | this.Handle.IsClosed)) CancelIoEx(this.Handle, null);
-                this.Handle.Close();
+                this.Handle.Dispose();
             }
 
             public static implicit operator SafeFileHandle(InterruptibleHandle handle)
