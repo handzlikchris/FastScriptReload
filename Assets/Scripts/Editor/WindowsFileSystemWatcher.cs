@@ -199,6 +199,8 @@ namespace FastScriptReload.Editor
                         if (bufferPool.Count < MaxBufferPoolSize) bufferPool.Push(buffer);
                     }
                 });
+
+                handle.Close();
             }
 
 
