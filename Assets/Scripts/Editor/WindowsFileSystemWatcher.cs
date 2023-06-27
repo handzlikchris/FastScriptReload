@@ -55,6 +55,11 @@ namespace FastScriptReload.Editor
         {
             this.EnableRaisingEvents = false;
             AppDomain.CurrentDomain.DomainUnload -= this.HandleDomainUnload;
+            this.Changed = null;
+            this.Created = null;
+            this.Deleted = null;
+            this.Renamed = null;
+            this.Error = null;
             this.disposed = true;
         }
 
