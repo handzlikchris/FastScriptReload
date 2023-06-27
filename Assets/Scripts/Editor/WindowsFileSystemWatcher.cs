@@ -30,11 +30,28 @@ namespace FastScriptReload.Editor
         public event RenamedEventHandler Renamed;
         public event ErrorEventHandler Error;
 
-        public string Path { get; set; }
         public NotifyFilters NotifyFilter { get; set; } = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
         public string Filter { get; set; } = "*.*";
         public bool IncludeSubdirectories { get; set; } = false;
+        
+        public string Path
+        {
+            get => this.path;
+            set
+            {
+                var changed = value != this.path;
+                this.path = value;
 
+                // Restart if the path changes.
+                if (changed && this.EnableRaisingEvents)
+                {
+                    this.EnableRaisingEvents = false;
+                    this.EnableRaisingEvents = true;
+                }
+            }
+        }
+
+        private string path;
         private InterruptibleHandle currentHandle;
         private Task eventsTask;
         private bool disposed = false;
