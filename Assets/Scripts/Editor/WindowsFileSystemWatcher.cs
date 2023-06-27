@@ -164,7 +164,7 @@ namespace FastScriptReload.Editor
                             lpBuffer: new HandleRef(buffer, (IntPtr)bufferPointer),
                             nBufferLength: buffer.Length,
                             bWatchSubtree: this.IncludeSubdirectories ? 1 : 0,
-                            dwNotifyFilter: (int)NotifyFilter,
+                            dwNotifyFilter: (int)this.NotifyFilter,
                             lpBytesReturned: out size,
                             overlappedPointer: null,
                             lpCompletionRoutine: new HandleRef(null, IntPtr.Zero)
