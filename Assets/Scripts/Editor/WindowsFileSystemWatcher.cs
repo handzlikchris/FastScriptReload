@@ -41,7 +41,7 @@ namespace FastScriptReload.Editor
         public WindowsFileSystemWatcher()
         {
             // Prevents us from hanging domain reload in Unity.
-            AppDomain.CurrentDomain.DomainUnload += (_, _) => this.Dispose();
+            AppDomain.CurrentDomain.DomainUnload += this.HandleDomainUnload;
             this.eventsTask = Task.CompletedTask;
         }
 
@@ -53,6 +53,12 @@ namespace FastScriptReload.Editor
         public void Dispose()
         {
             this.EnableRaisingEvents = false;
+            AppDomain.CurrentDomain.DomainUnload -= this.HandleDomainUnload;
+        }
+
+        private void HandleDomainUnload(object sender, EventArgs e)
+        {
+            this.Dispose();
         }
 
 
