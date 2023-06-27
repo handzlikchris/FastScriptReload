@@ -37,6 +37,7 @@ namespace FastScriptReload.Editor
 
         private InterruptibleHandle currentHandle;
         private Task eventsTask;
+        private bool disposed = false;
 
         public WindowsFileSystemWatcher()
         {
@@ -54,6 +55,7 @@ namespace FastScriptReload.Editor
         {
             this.EnableRaisingEvents = false;
             AppDomain.CurrentDomain.DomainUnload -= this.HandleDomainUnload;
+            this.disposed = true;
         }
 
         private void HandleDomainUnload(object sender, EventArgs e)
@@ -69,6 +71,7 @@ namespace FastScriptReload.Editor
             {
                 if (value)
                 {
+                    if (this.disposed) throw new ObjectDisposedException(nameof(WindowsFileSystemWatcher));
                     if (this.currentHandle != null) return;
                     this.currentHandle = CreateDirectoryHandle(this.Path);
                     Task.Factory.StartNew(() => this.Monitor(this.currentHandle), TaskCreationOptions.LongRunning);
