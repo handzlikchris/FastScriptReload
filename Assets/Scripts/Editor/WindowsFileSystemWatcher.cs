@@ -53,6 +53,7 @@ namespace FastScriptReload.Editor
 
         private string path;
         private InterruptibleHandle currentHandle;
+        private Task monitorTask;
         private Task eventsTask;
         private bool disposed = false;
 
@@ -96,12 +97,14 @@ namespace FastScriptReload.Editor
                     if (this.disposed) throw new ObjectDisposedException(nameof(WindowsFileSystemWatcher));
                     if (this.currentHandle != null) return;
                     this.currentHandle = CreateDirectoryHandle(this.Path);
-                    Task.Factory.StartNew(() => this.Monitor(this.currentHandle), TaskCreationOptions.LongRunning);
+                    this.monitorTask = Task.Factory.StartNew(() => this.Monitor(this.currentHandle), TaskCreationOptions.LongRunning);
                 }
                 else
                 {
                     this.currentHandle?.Close();
                     this.currentHandle = null;
+                    Task.WaitAll(this.monitorTask ?? Task.CompletedTask, this.eventsTask ?? Task.CompletedTask);
+                    this.monitorTask = null;
                 }
             }
         }
