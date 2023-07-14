@@ -90,9 +90,14 @@ You can always get back to this screen via:
                 GUILayout.Label("Enabled Features:", screen.LabelStyle);
                 using (LayoutHelper.LabelWidth(350))
                 {
-                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableAutoReloadForChangedFiles);
+                    /// When <see cref="FastScriptReloadPreference.WatchOnlySpecified"/> is enabled, <see cref="FastScriptReloadPreference.EnableAutoReloadForChangedFiles"/> state is handled automatically (disabled when empty file watcher)
+                    using (new EditorGUI.DisabledGroupScope((bool)FastScriptReloadPreference.WatchOnlySpecified.GetEditorPersistedValueOrDefault()))
+                    {
+                        ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableAutoReloadForChangedFiles);
+                    }
+                    
                     RenderSettingsWithCheckLimitationsButton(FastScriptReloadPreference.EnableExperimentalAddedFieldsSupport, true, () => ((FastScriptReloadWelcomeScreen)screen).OpenNewFieldsSection());
-                    RenderSettingsWithCheckLimitationsButton(FastScriptReloadPreference.EnableExperimentalEditorHotReloadSupport, false,  () => ((FastScriptReloadWelcomeScreen)screen).OpenEditorHotReloadSection());
+                    RenderSettingsWithCheckLimitationsButton(FastScriptReloadPreference.EnableExperimentalEditorHotReloadSupport, false, () => ((FastScriptReloadWelcomeScreen)screen).OpenEditorHotReloadSection());
                 }
             }
         );
@@ -288,9 +293,21 @@ Support pack contains:
                             screen.TextStyle
                         );
                 
+                        using (new EditorGUI.DisabledGroupScope((bool)FastScriptReloadPreference.WatchOnlySpecified.GetEditorPersistedValueOrDefault()))
                         using (LayoutHelper.LabelWidth(320))
                         {
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableAutoReloadForChangedFiles);
+                        }
+                        GUILayout.Space(sectionBreakHeight);
+
+                        using (LayoutHelper.LabelWidth(320))
+                        {
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.WatchOnlySpecified);
+                        }
+
+                        if ((bool)FastScriptReloadPreference.WatchOnlySpecified.GetEditorPersistedValueOrDefault())
+                        {
+                            EditorGUILayout.HelpBox(@"With manual watching you need to right click on file/folder in project window and select 'Watch File'", MessageType.Info);
                         }
                         GUILayout.Space(sectionBreakHeight);
                 
@@ -652,6 +669,9 @@ includeSubdirectories - whether child directories should be watched as well
         
         public const string ProductName = "Fast Script Reload";
         private static string[] ProductKeywords = new[] { "productivity", "tools" };
+        
+        /// <summary>Used to know when file watchers have changed from project window contextual menu (so when to update file watchers)</summary>
+        public static bool FileWatcherSetupEntriesChanged = false;
 
         public static readonly IntProjectEditorPreferenceDefinition BatchScriptChangesAndReloadEveryNSeconds = new IntProjectEditorPreferenceDefinition(
             "Batch script changes and reload every N seconds", "BatchScriptChangesAndReloadEveryNSeconds", 1);
@@ -747,9 +767,9 @@ includeSubdirectories - whether child directories should be watched as well
         public static readonly JsonObjectListProjectEditorPreferenceDefinition<FileWatcherSetupEntry> FileWatcherSetupEntries = new JsonObjectListProjectEditorPreferenceDefinition<FileWatcherSetupEntry>(
             "File Watchers Setup", "FileWatcherSetupEntries", new List<string>
             {
-                JsonUtility.ToJson(new FileWatcherSetupEntry("<Application.dataPath>", "*.cs", true))
+                JsonUtility.ToJson(new FileWatcherSetupEntry(FastScriptReloadManager.FileWatcherReplacementTokenForApplicationDataPath, "*.cs", true))
             }, 
-            () => new FileWatcherSetupEntry("<Application.dataPath>", "*.cs", true)
+            () => new FileWatcherSetupEntry(FastScriptReloadManager.FileWatcherReplacementTokenForApplicationDataPath, "*.cs", true)
         );
         
         public static readonly ToggleProjectEditorPreferenceDefinition EnableExperimentalAddedFieldsSupport = new ToggleProjectEditorPreferenceDefinition(
@@ -769,7 +789,11 @@ includeSubdirectories - whether child directories should be watched as well
         //TODO: potentially that's just a normal settings (also in playmode) - but in playmode user is unlikely to make this many changes
         public static readonly IntProjectEditorPreferenceDefinition TriggerDomainReloadIfOverNDynamicallyLoadedAssembles = new IntProjectEditorPreferenceDefinition(
             "Trigger full domain reload after N hot-reloads (when not in play mode)", "TriggerDomainReloadIfOverNDynamicallyLoadedAssembles", 50);
-        
+
+        public static readonly ToggleProjectEditorPreferenceDefinition WatchOnlySpecified = new ToggleProjectEditorPreferenceDefinition(
+            "Specify watched files/folders manually", "WatchOnlySpecified", false);
+
+
         public static void SetCommonMaterialsShader(ShadersMode newShaderModeValue)
         {
             var rootToolFolder = AssetPathResolver.GetAssetFolderPathRelativeToScript(ScriptableObject.CreateInstance(typeof(FastScriptReloadWelcomeScreen)), 1);
