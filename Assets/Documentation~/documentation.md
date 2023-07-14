@@ -255,6 +255,15 @@ You can also manually manage reload, to do so:
 
 > You can also use Editor -> Hotkeys to bind Force Reload to specific key.
 
+
+### Watch only specific files or folders
+By default FSR watches all files (as specified in global file watcher) - if you want to limit that behaviour to specific files 
+please tick 'Specify watched folders/files manually' in 'Reload tab'.
+
+Then you can right click on folder/file in project window and select 'Fast Script Reload -> Watch File / Folder'.
+
+> Technically this adds another File Watcher behind the scenes, you can always adjust those on File Watchers tab. 
+
 ### [Live-Reload] Hot-Reload over Network
 With on-device build, your code changes will be distributed over the network in real-time.
 
