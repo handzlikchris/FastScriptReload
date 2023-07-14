@@ -675,6 +675,12 @@ To fix please go to `FastScripReload\Examples\Point\Point.prefab` and search for
 It'd seem for some code editors on Mac file changes are not picked up. This seems to be down to editors not updating LastWrite property on save and file watcher can't pick up the change.
 Unfortunately right now only workaround is to use editor that does update it, eg VSCode.
 
+### I removed FSR but my scripts are still not reloading
+FSR initially asks if you want to disable Unity auto-reload. If you select yes, then it'll let you know you should now trigger full reload with CTRL + R.
+That's a Unity setting and it does not change back when removing asset.
+
+> To change go to 'Edit -> Preferences -> Asset Pipeline -> Auto Refresh -> Enabled'
+
 ## Roadmap
 - ~~add Mac/Linux support~~ (added with 1.1)
 - ~~add debugger support for hot-reloaded scripts~~ (added with 1.2)
