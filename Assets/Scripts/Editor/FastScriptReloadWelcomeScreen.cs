@@ -753,9 +753,9 @@ includeSubdirectories - whether child directories should be watched as well
         public static readonly JsonObjectListProjectEditorPreferenceDefinition<FileWatcherSetupEntry> FileWatcherSetupEntries = new JsonObjectListProjectEditorPreferenceDefinition<FileWatcherSetupEntry>(
             "File Watchers Setup", "FileWatcherSetupEntries", new List<string>
             {
-                JsonUtility.ToJson(new FileWatcherSetupEntry("<Application.dataPath>", "*.cs", true))
+                JsonUtility.ToJson(new FileWatcherSetupEntry(FastScriptReloadManager.FileWatcherReplacementTokenForApplicationDataPath, "*.cs", true))
             }, 
-            () => new FileWatcherSetupEntry("<Application.dataPath>", "*.cs", true)
+            () => new FileWatcherSetupEntry(FastScriptReloadManager.FileWatcherReplacementTokenForApplicationDataPath, "*.cs", true)
         );
         
         public static readonly ToggleProjectEditorPreferenceDefinition EnableExperimentalAddedFieldsSupport = new ToggleProjectEditorPreferenceDefinition(
