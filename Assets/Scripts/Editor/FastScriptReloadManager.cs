@@ -173,7 +173,6 @@ Workaround will search in all folders (under project root) and will use first fo
                 SessionState.SetBool("NEED_EDITOR_SESSION_INIT", false);
 
                 FastScriptReloadPreference.EnableAutoReloadForChangedFiles.SetEditorPersistedValue(false);
-                FastScriptReloadPreference.GlobalPrefKeyToValueMap[FastScriptReloadPreference.EnableAutoReloadForChangedFiles.PreferenceKey] = false;
 
                 ClearFileWatchersEntries();
             }
