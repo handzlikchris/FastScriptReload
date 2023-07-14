@@ -37,8 +37,13 @@ namespace FastScriptReload.Editor
         }
 
         private static string DataPath = Application.dataPath;
+        
 
         public const string FileWatcherReplacementTokenForApplicationDataPath = "<Application.dataPath>";
+        private const int BaseMenuItemPriority_ManualScriptOverride = 100;
+        private const int BaseMenuItemPriority_Exclusions = 200;
+        private const int BaseMenuItemPriority_FileWatcher = 300;
+        
         public Dictionary<string, Func<string>> FileWatcherTokensToResolvePathFn = new Dictionary<string, Func<string>>
         {
             [FileWatcherReplacementTokenForApplicationDataPath] = () => DataPath
@@ -192,8 +197,8 @@ Workaround will search in all folders (under project root) and will use first fo
             }
         }
 
-        private const int BaseMenuItemPriority_FileWatcher = 0;
-        [MenuItem("Assets/Fast Script Reload/Watch Files", true, BaseMenuItemPriority_FileWatcher + 1)]
+
+        [MenuItem("Assets/Fast Script Reload/Watch File", true, BaseMenuItemPriority_FileWatcher + 1)]
         public static bool ToggleSelectionFileWatchersSetupValidation()
         {
             Menu.SetChecked("Assets/Fast Script Reload/Watch Files", false);
@@ -310,7 +315,7 @@ Workaround will search in all folders (under project root) and will use first fo
             ClearFileWatchers();
         }
 
-        private const int BaseMenuItemPriority_ManualScriptOverride = 100;
+
         [MenuItem("Assets/Fast Script Reload/Add \\ Open User Script Rewrite Override", false, BaseMenuItemPriority_ManualScriptOverride + 1)]
         public static void AddHotReloadManualScriptOverride()
         {
@@ -356,7 +361,6 @@ Workaround will search in all folders (under project root) and will use first fo
             window.OpenUserScriptRewriteOverridesSection();
         }
         
-        private const int BaseMenuItemPriority_Exclusions = 200;
         [MenuItem("Assets/Fast Script Reload/Add Hot-Reload Exclusion", false, BaseMenuItemPriority_Exclusions + 1)]
         public static void AddFileAsExcluded()
         {
