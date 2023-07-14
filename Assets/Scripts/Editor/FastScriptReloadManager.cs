@@ -199,6 +199,11 @@ Workaround will search in all folders (under project root) and will use first fo
         [MenuItem(WatchSpecificFileOrFolderMenuItemName, true, BaseMenuItemPriority_FileWatcher + 1)]
         public static bool ToggleSelectionFileWatchersSetupValidation()
         {
+            if (!(bool)FastScriptReloadPreference.WatchOnlySpecified.GetEditorPersistedValueOrDefault())
+            {
+                return false;
+            }
+            
             Menu.SetChecked(WatchSpecificFileOrFolderMenuItemName, false);
 
             var isSelectionContaininingFolderOrScript = false;
@@ -280,11 +285,12 @@ Workaround will search in all folders (under project root) and will use first fo
         [MenuItem("Assets/Fast Script Reload/Clear Watched Files", true, BaseMenuItemPriority_FileWatcher + 2)]
         public static bool ClearFastScriptReloadValidation()
         {
-            foreach (var item in FastScriptReloadPreference.FileWatcherSetupEntries.GetElements())
+            if (!(bool)FastScriptReloadPreference.WatchOnlySpecified.GetEditorPersistedValueOrDefault())
             {
-                return true;
+                return false;
             }
-            return false;
+
+            return FastScriptReloadPreference.FileWatcherSetupEntries.GetElements().Any();
         }
         [MenuItem("Assets/Fast Script Reload/Clear Watched Files", false, BaseMenuItemPriority_FileWatcher + 2)]
         public static void ClearFileWatchersEntries()
