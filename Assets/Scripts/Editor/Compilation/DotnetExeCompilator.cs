@@ -27,7 +27,7 @@ namespace FastScriptReload.Editor.Compilation
 
         private static string ApplicationContentsPath = EditorApplication.applicationContentsPath;
         private static readonly List<string> _createdFilesToCleanUp = new List<string>();
-        private static readonly Dictionary<string, Assembly> _typeNameAssemblyCache = new(16);
+        private static readonly Dictionary<string, Assembly> _typeNameAssemblyCache = new Dictionary<string, Assembly>(16);
 
         static DotnetExeDynamicCompilation()
         {
