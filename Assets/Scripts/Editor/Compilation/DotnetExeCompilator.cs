@@ -110,6 +110,12 @@ namespace FastScriptReload.Editor.Compilation
                 return new CompileResult(outLibraryPath, outputMessages, exitCode, compiledAssembly, createSourceCodeCombinedResult.SourceCode, 
                     sourceCodeCombinedFilePath, createInternalVisibleToAsmElapsedMilliseconds);
             }
+            catch (SourceCodeHasErrorsException e)
+            {
+                // FastScriptReloadManager has a special case for reporting SourceCodeHasErrorsException.
+                // Just pass it through.
+                throw e;
+            }
             catch (Exception e)
             {
                 LoggerScoped.LogError($"Compilation error: temporary files were not removed so they can be inspected: " 
