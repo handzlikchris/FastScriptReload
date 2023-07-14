@@ -1,6 +1,8 @@
 1.6 (unreleased)
 - Added Watch Only Specific Files and Folders mode (contributed by GhatSmith)
 - Added better Odin support for dynamically added fields (contributed by GhatSmith)
+- Updated Roslyn lib version to 4.6.0 for better code parsing (contributed by SamPruden)
+- Improved error handling for code parsing (contributed by SamPruden)
 
 1.5
 - you can now import FSR as a package from github page
