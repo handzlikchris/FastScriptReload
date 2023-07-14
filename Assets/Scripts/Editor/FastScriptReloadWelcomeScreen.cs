@@ -95,10 +95,9 @@ You can always get back to this screen via:
                     {
                         ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableAutoReloadForChangedFiles);
                     }
+                    
                     RenderSettingsWithCheckLimitationsButton(FastScriptReloadPreference.EnableExperimentalAddedFieldsSupport, true, () => ((FastScriptReloadWelcomeScreen)screen).OpenNewFieldsSection());
                     RenderSettingsWithCheckLimitationsButton(FastScriptReloadPreference.EnableExperimentalEditorHotReloadSupport, false, () => ((FastScriptReloadWelcomeScreen)screen).OpenEditorHotReloadSection());
-
-                    ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.WatchOnlySpecified);
                 }
             }
         );
@@ -294,9 +293,21 @@ Support pack contains:
                             screen.TextStyle
                         );
                 
+                        using (new EditorGUI.DisabledGroupScope((bool)FastScriptReloadPreference.WatchOnlySpecified.GetEditorPersistedValueOrDefault()))
                         using (LayoutHelper.LabelWidth(320))
                         {
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableAutoReloadForChangedFiles);
+                        }
+                        GUILayout.Space(sectionBreakHeight);
+
+                        using (LayoutHelper.LabelWidth(320))
+                        {
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.WatchOnlySpecified);
+                        }
+
+                        if ((bool)FastScriptReloadPreference.WatchOnlySpecified.GetEditorPersistedValueOrDefault())
+                        {
+                            EditorGUILayout.HelpBox(@"With manual watching you need to right click on file/folder in project window and select 'Watch File'", MessageType.Info);
                         }
                         GUILayout.Space(sectionBreakHeight);
                 
@@ -658,6 +669,9 @@ includeSubdirectories - whether child directories should be watched as well
         
         public const string ProductName = "Fast Script Reload";
         private static string[] ProductKeywords = new[] { "productivity", "tools" };
+        
+        /// <summary>Used to know when file watchers have changed from project window contextual menu (so when to update file watchers)</summary>
+        public static bool FileWatcherSetupEntriesChanged = false;
 
         public static readonly IntProjectEditorPreferenceDefinition BatchScriptChangesAndReloadEveryNSeconds = new IntProjectEditorPreferenceDefinition(
             "Batch script changes and reload every N seconds", "BatchScriptChangesAndReloadEveryNSeconds", 1);
@@ -776,13 +790,8 @@ includeSubdirectories - whether child directories should be watched as well
         public static readonly IntProjectEditorPreferenceDefinition TriggerDomainReloadIfOverNDynamicallyLoadedAssembles = new IntProjectEditorPreferenceDefinition(
             "Trigger full domain reload after N hot-reloads (when not in play mode)", "TriggerDomainReloadIfOverNDynamicallyLoadedAssembles", 50);
 
-
         public static readonly ToggleProjectEditorPreferenceDefinition WatchOnlySpecified = new ToggleProjectEditorPreferenceDefinition(
-            "Watch Only Specified", "WatchOnlySpecified", false);
-
-
-        /// <summary>Used to know when file watchers have changed from project window contextual menu (so when to update file watchers)</summary>
-        public static bool FileWatcherSetupEntriesChanged = false;
+            "Specify watched files/folders manually", "WatchOnlySpecified", false);
 
 
         public static void SetCommonMaterialsShader(ShadersMode newShaderModeValue)

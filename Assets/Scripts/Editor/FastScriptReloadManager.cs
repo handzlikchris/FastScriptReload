@@ -177,9 +177,6 @@ Workaround will search in all folders (under project root) and will use first fo
             if ((bool)FastScriptReloadPreference.WatchOnlySpecified.GetEditorPersistedValueOrDefault() && SessionState.GetBool("NEED_EDITOR_SESSION_INIT", true))
             {
                 SessionState.SetBool("NEED_EDITOR_SESSION_INIT", false);
-
-                FastScriptReloadPreference.EnableAutoReloadForChangedFiles.SetEditorPersistedValue(false);
-
                 ClearFileWatchersEntries();
             }
         }
@@ -198,11 +195,11 @@ Workaround will search in all folders (under project root) and will use first fo
             }
         }
 
-
-        [MenuItem("Assets/Fast Script Reload/Watch File", true, BaseMenuItemPriority_FileWatcher + 1)]
+        private const string WatchSpecificFileOrFolderMenuItemName = "Assets/Fast Script Reload/Watch File\\Folder";
+        [MenuItem(WatchSpecificFileOrFolderMenuItemName, true, BaseMenuItemPriority_FileWatcher + 1)]
         public static bool ToggleSelectionFileWatchersSetupValidation()
         {
-            Menu.SetChecked("Assets/Fast Script Reload/Watch Files", false);
+            Menu.SetChecked(WatchSpecificFileOrFolderMenuItemName, false);
 
             var isSelectionContaininingFolderOrScript = false;
             for (var i = 0; i < Selection.count; i++)
@@ -213,7 +210,7 @@ Workaround will search in all folders (under project root) and will use first fo
 
                     if (IsFileWatcherSetupEntryAlreadyPresent(selectedMonoScript))
                     {
-                        Menu.SetChecked("Assets/Fast Script Reload/Watch Files", true);
+                        Menu.SetChecked(WatchSpecificFileOrFolderMenuItemName, true);
                         break;
                     }
                 }
@@ -223,7 +220,7 @@ Workaround will search in all folders (under project root) and will use first fo
 
                     if (IsFileWatcherSetupEntryAlreadyPresent(selectedAsset))
                     {
-                        Menu.SetChecked("Assets/Fast Script Reload/Watch Files", true);
+                        Menu.SetChecked(WatchSpecificFileOrFolderMenuItemName, true);
                         break;
                     }
                 }
@@ -233,7 +230,7 @@ Workaround will search in all folders (under project root) and will use first fo
         }
 
         /// <summary>Used to add/remove scripts/folders to the <see cref="FastScriptReloadPreference.FileWatcherSetupEntries"/></summary>
-        [MenuItem("Assets/Fast Script Reload/Watch Files", false, BaseMenuItemPriority_FileWatcher + 1)]
+        [MenuItem(WatchSpecificFileOrFolderMenuItemName, false, BaseMenuItemPriority_FileWatcher + 1)]
         public static void ToggleSelectionFileWatchersSetup()
         {
             var isFileWatchersChange = false;
@@ -296,9 +293,9 @@ Workaround will search in all folders (under project root) and will use first fo
             {
                 FastScriptReloadPreference.FileWatcherSetupEntries.RemoveElement(item);
             }
+            Debug.LogWarning("File Watcher Setup has been cleared - make sure to add some.");
 
             FastScriptReloadPreference.EnableAutoReloadForChangedFiles.SetEditorPersistedValue(false);
-            FastScriptReloadPreference.GlobalPrefKeyToValueMap[FastScriptReloadPreference.EnableAutoReloadForChangedFiles.PreferenceKey] = false;
 
             ClearFileWatchers();
         }
@@ -625,11 +622,12 @@ Workaround will search in all folders (under project root) and will use first fo
         private static void EnsureInitialized()
         {
             if (!(bool)FastScriptReloadPreference.EnableAutoReloadForChangedFiles.GetEditorPersistedValueOrDefault()
-                && !(bool)FastScriptReloadPreference.EnableOnDemandReload.GetEditorPersistedValueOrDefault())
+                && !(bool)FastScriptReloadPreference.EnableOnDemandReload.GetEditorPersistedValueOrDefault()
+                && !(bool)FastScriptReloadPreference.WatchOnlySpecified.GetEditorPersistedValueOrDefault())
             {
                 if (!HotReloadDisabled_WarningMessageShownAlready)
                 {
-                    LoggerScoped.LogWarning($"Both auto hot reload and on-demand reload are disabled, file watchers will not be initialized. Please adjust settings and restart if you want hot reload to work.");
+                    LoggerScoped.LogWarning($"Neither auto hot reload / on-demand reload / or watch specific is specified, file watchers will not be initialized. Please adjust settings and restart if you want hot reload to work.");
                     HotReloadDisabled_WarningMessageShownAlready = true;
                 }
                 return;
@@ -640,7 +638,7 @@ Workaround will search in all folders (under project root) and will use first fo
                 FastScriptReloadPreference.FileWatcherSetupEntriesChanged = false;
 
                 var fileWatcherSetupEntries = FastScriptReloadPreference.FileWatcherSetupEntries.GetElementsTyped();
-                if (fileWatcherSetupEntries.Count == 0 && !(bool)FastScriptReloadPreference.WatchOnlySpecified.GetEditorPersistedValueOrDefault())
+                if (fileWatcherSetupEntries.Count == 0)
                 {
                     LoggerScoped.LogWarning($"There are no file watcher setup entries. Tool will not be able to pick changes automatically");
                 }
