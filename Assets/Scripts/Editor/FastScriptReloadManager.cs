@@ -207,7 +207,7 @@ Workaround will search in all folders (under project root) and will use first fo
             Menu.SetChecked(WatchSpecificFileOrFolderMenuItemName, false);
 
             var isSelectionContaininingFolderOrScript = false;
-            for (var i = 0; i < Selection.count; i++)
+            for (var i = 0; i < Selection.objects.Length; i++)
             {
                 if (Selection.objects[i] is MonoScript selectedMonoScript)
                 {
@@ -239,7 +239,7 @@ Workaround will search in all folders (under project root) and will use first fo
         public static void ToggleSelectionFileWatchersSetup()
         {
             var isFileWatchersChange = false;
-            for (var i = 0; i < Selection.count; i++)
+            for (var i = 0; i < Selection.objects.Length; i++)
             {
                 if (Selection.objects[i] is MonoScript selectedMonoScript)
                 {
