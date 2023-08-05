@@ -106,8 +106,9 @@ public class CustomFileWatcher : EditorWindow
     // Just handles watching one directory
     public static void InitializeSingularFilewatcher(string directoryPath, string searchPattern, bool includeSubdirectories)
     {
+#if ImmersiveVrTools_DebugEnabled
         Debug.Log("Initializing hashes for directory: " + directoryPath);
-
+#endif
 
         // Delegate all this to a thread too!
         Thread thread = new Thread(() =>
@@ -139,14 +140,20 @@ public class CustomFileWatcher : EditorWindow
             var hashes = fileHashes[directoryPath].hashes;
 
             // Time profiling: Start the stopwatch for Directory.GetFiles
+#if ImmersiveVrTools_DebugEnabled
+
             System.Diagnostics.Stopwatch getFilesStopwatch = new System.Diagnostics.Stopwatch();
             getFilesStopwatch.Start();
+#endif
 
             string[] files = Directory.GetFiles(directoryPath, searchPattern, includeSubdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+
+#if ImmersiveVrTools_DebugEnabled
 
             // Time profiling: Stop the stopwatch for Directory.GetFiles and log the elapsed time
             getFilesStopwatch.Stop();
             Debug.Log("Directory.GetFiles elapsed time: " + getFilesStopwatch.ElapsedMilliseconds + " ms");
+#endif
 
             // Check if files were created or modified
             // Time profiling: Start the stopwatch for file creation/modification
@@ -158,21 +165,27 @@ public class CustomFileWatcher : EditorWindow
                 if (!hashes.ContainsKey(file))
                 {
                     // New file
+#if ImmersiveVrTools_DebugEnabled
                     Debug.Log("New file: " + file);
+#endif
                     continue;
                 }
 
                 else if (hashes[file] != GetFileHash(file))
                 {
                     // File changed
+#if ImmersiveVrTools_DebugEnabled
                     Debug.Log("File changed: " + file);
+#endif
                     RecordChange(file);
                 }
             }
 
+#if ImmersiveVrTools_DebugEnabled
             // Time profiling: Stop the stopwatch for file creation/modification and log the elapsed time
             fileChangeStopwatch.Stop();
             Debug.Log("File creation/modification elapsed time: " + fileChangeStopwatch.ElapsedMilliseconds + " ms");
+#endif
 
             // Check if any files were deleted
             // Time profiling: Start the stopwatch for file deletion
@@ -183,13 +196,17 @@ public class CustomFileWatcher : EditorWindow
             {
                 if (!File.Exists(kvp.Key))
                 {
+#if ImmersiveVrTools_DebugEnabled
                     Debug.Log("File deleted: " + kvp.Key);
+#endif
                 }
             }
 
             // Time profiling: Stop the stopwatch for file deletion and log the elapsed time
+#if ImmersiveVrTools_DebugEnabled
             fileDeletionStopwatch.Stop();
             Debug.Log("File deletion elapsed time: " + fileDeletionStopwatch.ElapsedMilliseconds + " ms");
+#endif
 
             // Update hashes
             hashes.Clear();
@@ -226,7 +243,9 @@ public class CustomFileWatcher : EditorWindow
 
         if (!instance._isEditorModeHotReloadEnabled && instance._lastPlayModeStateChange != PlayModeStateChange.EnteredPlayMode)
         {
+#if ImmersiveVrTools_DebugEnabled
             Debug.Log("Application not playing, change to: " + path + " won't be compiled and hot reloaded");
+#endif
             return;
         }
 
