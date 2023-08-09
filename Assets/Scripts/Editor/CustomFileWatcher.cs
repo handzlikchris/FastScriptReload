@@ -236,22 +236,13 @@ public class CustomFileWatcher : EditorWindow
         }
     }
 
-    // This baby is thread-safe
     private static void RecordChange(string path)
     {
-        FastScriptReloadManager instance = FastScriptReloadManager.Instance;
+        if (FastScriptReloadManager.Instance.ShouldIgnoreFileChange()) return;
 
-        if (!instance._isEditorModeHotReloadEnabled && instance._lastPlayModeStateChange != PlayModeStateChange.EnteredPlayMode)
+        lock (listLock)
         {
-#if ImmersiveVrTools_DebugEnabled
-            Debug.Log("Application not playing, change to: " + path + " won't be compiled and hot reloaded");
-#endif
-            return;
-        }
-
-        lock (listLock) // Lock the list before modifying it
-        {
-            instance._dynamicFileHotReloadStateEntries.Add(new DynamicFileHotReloadState(path, DateTime.UtcNow));
+            FastScriptReloadManager.Instance.AddFileChangeToProcess(path);
         }
     }
 
