@@ -11,13 +11,12 @@ using System.Threading;
 [InitializeOnLoad]
 public class CustomFileWatcher : EditorWindow
 {
-
     public class HashEntry
     {
         public Dictionary<string, string> hashes = new Dictionary<string, string>();
 
         // Some metadata for the update function to use
-        // Note this data isn't exactly synced up or anything. It just reads it in when the filewatcher is initialized.
+        // WARN: Note this data isn't exactly synced up or anything. It just reads it in when the filewatcher is initialized.
         public string searchPattern;
         public bool includeSubdirectories;
 
@@ -36,33 +35,15 @@ public class CustomFileWatcher : EditorWindow
     private static Thread livewatcherThread;
 
     public static bool initSignaled = false;
+    private static readonly int watcherThreadRunEveryNSeconds = 500; //TODO: expose in settings
 
     static CustomFileWatcher()
     {
-        // Setting default vals here to avoid some kinda weird race condition with the thread enabler
         fileHashes = new Dictionary<string, HashEntry>();
         listLock = new object();
         livewatcherThread = null;
-
-        // Initialize the filewatcher on startup
-        TryEnableLivewatching();
     }
-
-    // Menu hook, actual functionality driven by various methods
-    [MenuItem("Window/Fast Script Reload/Initialize Filewatcher")]
-    public static void InitializeFileWatchers()
-    {
-        var fileWatcherSetupEntries = FastScriptReloadPreference.FileWatcherSetupEntries.GetElementsTyped();
-
-        foreach (var fileWatcherSetupEntry in fileWatcherSetupEntries)
-        {
-            string directoryPath = PathFromSetupEntry(fileWatcherSetupEntry);
-
-            InitializeSingularFilewatcher(directoryPath, fileWatcherSetupEntry.filter, fileWatcherSetupEntry.includeSubdirectories);
-        }
-    }
-
-    [MenuItem("Window/Fast Script Reload/Update Filewatcher")]
+    
     private static void UpdateFileWatcher()
     {
         if (fileHashes.Count > 0)
@@ -77,8 +58,7 @@ public class CustomFileWatcher : EditorWindow
             Debug.LogError("File watcher has not been initialized yet. Please initialize first.");
         }
     }
-
-    [MenuItem("Window/Fast Script Reload/Begin Livewatching")]
+    
     public static void TryEnableLivewatching()
     {
         if (livewatcherThread != null)
@@ -90,18 +70,16 @@ public class CustomFileWatcher : EditorWindow
         // Run on a separate thread every 1 second
         livewatcherThread = new Thread(() =>
         {
-            Timer timer = new Timer((state) =>
+            var timer = new Timer((state) =>
             {
                 // Go at it if we've initialized
                 if (fileHashes.Count > 0)
                     UpdateFileWatcher();
-            }, null, 0, 1000); // 1000 ms = 1 second
+            }, null, 0, watcherThreadRunEveryNSeconds);
         });
 
         livewatcherThread.Start();
     }
-
-
 
     // Just handles watching one directory
     public static void InitializeSingularFilewatcher(string directoryPath, string searchPattern, bool includeSubdirectories)
@@ -111,17 +89,16 @@ public class CustomFileWatcher : EditorWindow
 #endif
 
         // Delegate all this to a thread too!
-        Thread thread = new Thread(() =>
+        var thread = new Thread(() =>
         {
-
             lock (stateLock)
             {
                 var hashes = new Dictionary<string, string>();
-                string[] files = Directory.GetFiles(directoryPath, searchPattern, includeSubdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+                var files = Directory.GetFiles(directoryPath, searchPattern, includeSubdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
 
-                foreach (string filePath in files)
+                foreach (var filePath in files)
                 {
-                    string hash = GetFileHash(filePath);
+                    var hash = GetFileHash(filePath);
                     hashes[filePath] = hash;
                 }
 
@@ -221,18 +198,16 @@ public class CustomFileWatcher : EditorWindow
 
     private static string GetFileHash(string filePath)
     {
-        using (var md5 = MD5.Create())
+        using var md5 = MD5.Create();
+        using (var stream = File.OpenRead(filePath))
         {
-            using (var stream = File.OpenRead(filePath))
+            var hashBytes = md5.ComputeHash(stream);
+            var sb = new StringBuilder();
+            for (var i = 0; i < hashBytes.Length; i++)
             {
-                byte[] hashBytes = md5.ComputeHash(stream);
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < hashBytes.Length; i++)
-                {
-                    sb.Append(hashBytes[i].ToString("x2"));
-                }
-                return sb.ToString();
+                sb.Append(hashBytes[i].ToString("x2"));
             }
+            return sb.ToString();
         }
     }
 

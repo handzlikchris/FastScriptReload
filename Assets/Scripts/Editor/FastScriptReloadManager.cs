@@ -128,7 +128,7 @@ namespace FastScriptReload.Editor
             return false;
         }
 
-        public void StartWatchingDirectoryAndSubdirectories(string directoryPath, string filter, bool includeSubdirectories) 
+        private void StartWatchingDirectoryAndSubdirectories(string directoryPath, string filter, bool includeSubdirectories) 
         {
             foreach (var kv in FileWatcherTokensToResolvePathFn)
             {
@@ -136,31 +136,30 @@ namespace FastScriptReload.Editor
             }
             
             var directoryInfo = new DirectoryInfo(directoryPath);
-
             if (!directoryInfo.Exists)
             {
                 LoggerScoped.LogWarning($"FastScriptReload: Directory: '{directoryPath}' does not exist, make sure file-watcher setup is correct. You can access via: Window -> Fast Script Reload -> File Watcher (Advanced Setup)");
             }
-
-            // We hack these together
-            bool usingCustomFileWatcher = (bool)FastScriptReloadPreference.EnableCustomFileWatcher.GetEditorPersistedValueOrDefault();
-            if (usingCustomFileWatcher)
+            
+            var isUsingCustomFileWatcher = (bool)FastScriptReloadPreference.EnableCustomFileWatcher.GetEditorPersistedValueOrDefault();
+            if (isUsingCustomFileWatcher)
             {
                 CustomFileWatcher.InitializeSingularFilewatcher(directoryPath, filter, includeSubdirectories);
-                return; // Early return
             }
-            
-            var fileWatcher = new FileSystemWatcher();
+            else
+            {
+                var fileWatcher = new FileSystemWatcher();
 
-            fileWatcher.Path = directoryInfo.FullName;
-            fileWatcher.IncludeSubdirectories = includeSubdirectories;
-            fileWatcher.Filter =  filter;
-            fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
-            fileWatcher.Changed += OnWatchedFileChange;
+                fileWatcher.Path = directoryInfo.FullName;
+                fileWatcher.IncludeSubdirectories = includeSubdirectories;
+                fileWatcher.Filter =  filter;
+                fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
+                fileWatcher.Changed += OnWatchedFileChange;
         
-            fileWatcher.EnableRaisingEvents = true;
+                fileWatcher.EnableRaisingEvents = true;
         
-            _fileWatchers.Add(fileWatcher);
+                _fileWatchers.Add(fileWatcher);
+            }
         }
 
         static FastScriptReloadManager()
@@ -673,31 +672,42 @@ Workaround will search in all folders (under project root) and will use first fo
                 return;
             }
             
-            bool customFileWatcherEnabled = (bool)FastScriptReloadPreference.EnableCustomFileWatcher.GetEditorPersistedValueOrDefault();
-            bool initialized = customFileWatcherEnabled && CustomFileWatcher.initSignaled || !customFileWatcherEnabled && Instance._fileWatchers.Count > 0;
-
-            if (!initialized || FastScriptReloadPreference.FileWatcherSetupEntriesChanged)
+            var isUsingCustomFileWatchers = (bool)FastScriptReloadPreference.EnableCustomFileWatcher.GetEditorPersistedValueOrDefault();
+            if (!isUsingCustomFileWatchers)
             {
-                FastScriptReloadPreference.FileWatcherSetupEntriesChanged = false;
+                if (Instance._fileWatchers.Count == 0 || FastScriptReloadPreference.FileWatcherSetupEntriesChanged)
+                {
+                    FastScriptReloadPreference.FileWatcherSetupEntriesChanged = false;
 
-                var fileWatcherSetupEntries = FastScriptReloadPreference.FileWatcherSetupEntries.GetElementsTyped();
-                if (fileWatcherSetupEntries.Count == 0)
-                {
-                    LoggerScoped.LogWarning($"There are no file watcher setup entries. Tool will not be able to pick changes automatically");
-                }
-                
-                foreach (var fileWatcherSetupEntry in fileWatcherSetupEntries)
-                {
-                    Instance.StartWatchingDirectoryAndSubdirectories(fileWatcherSetupEntry.path, fileWatcherSetupEntry.filter, fileWatcherSetupEntry.includeSubdirectories);
-                }
-
-                if (customFileWatcherEnabled)
-                {
-                    CustomFileWatcher.initSignaled = true;
+                    InitializeFromFileWatcherSetupEntries();
                 }
             }
+            else if(!CustomFileWatcher.initSignaled)
+            {
+                CustomFileWatcher.TryEnableLivewatching();
+                InitializeFromFileWatcherSetupEntries();
+                CustomFileWatcher.initSignaled = true;
+            }
         }
-        
+
+        private static void InitializeFromFileWatcherSetupEntries()
+        {
+            var fileWatcherSetupEntries = FastScriptReloadPreference.FileWatcherSetupEntries.GetElementsTyped();
+            if (fileWatcherSetupEntries.Count == 0)
+            {
+                LoggerScoped.LogWarning($"There are no file watcher setup entries. Tool will not be able to pick changes automatically");
+            }
+
+            foreach (var fileWatcherSetupEntry in fileWatcherSetupEntries)
+            {
+                Instance.StartWatchingDirectoryAndSubdirectories(
+                    fileWatcherSetupEntry.path,
+                    fileWatcherSetupEntry.filter,
+                    fileWatcherSetupEntry.includeSubdirectories
+                );
+            }
+        }
+
         private static bool IsFileWatcherSetupEntryAlreadyPresent(FileWatcherSetupEntry fileWatcherSetupEntry)
         {
             //TODO: could be a bit of a per hit, GetElementsTypes will parse json every time
