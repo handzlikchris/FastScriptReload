@@ -564,13 +564,14 @@ includeSubdirectories - whether child directories should be watched as well
                             , MessageType.Info);
                         
                         EditorGUILayout.HelpBox("Recompile after making changes for file watchers to re-load.", MessageType.Warning);
-                                                EditorGUILayout.HelpBox(@"If Unity's built in file watcher is experiencing issues, try our custom file watcher implementation. A reload is required for this to take effect.", MessageType.Info);
                         GUILayout.Space(10);
 
-                        using (LayoutHelper.LabelWidth(320))
+                        using (LayoutHelper.LabelWidth(240))
                         {
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableCustomFileWatcher);
                         }
+                        EditorGUILayout.HelpBox(@"On some Unity verions FileWatcher API could be very slow or not trigger at all.
+Tick this box to use custom implementation.", MessageType.Info);
 
                         ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.FileWatcherSetupEntries);
                     }),
@@ -794,8 +795,7 @@ includeSubdirectories - whether child directories should be watched as well
             "(Experimental) Enable Hot-Reload outside of play mode", "EnableExperimentalEditorHotReloadSupport", false);
         
         public static readonly ToggleProjectEditorPreferenceDefinition EnableCustomFileWatcher = new ToggleProjectEditorPreferenceDefinition(
-            "(Experimental) Custom filewatcher engine in case the Unity built-in filewatcher is experiencing issues", "EnableCustomFileWatcher", false);
-
+            "(Experimental) Use custom file watchers", "EnableCustomFileWatcher", false);
 
         //TODO: potentially that's just a normal settings (also in playmode) - but in playmode user is unlikely to make this many changes
         public static readonly IntProjectEditorPreferenceDefinition TriggerDomainReloadIfOverNDynamicallyLoadedAssembles = new IntProjectEditorPreferenceDefinition(
