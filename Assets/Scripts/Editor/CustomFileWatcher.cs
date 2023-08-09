@@ -13,44 +13,47 @@ public class CustomFileWatcher : EditorWindow
 {
     public class HashEntry
     {
-        public Dictionary<string, string> hashes = new Dictionary<string, string>();
-
+        private Dictionary<string, string> _hashes = new Dictionary<string, string>();
         // Some metadata for the update function to use
         // WARN: Note this data isn't exactly synced up or anything. It just reads it in when the filewatcher is initialized.
-        public string searchPattern;
-        public bool includeSubdirectories;
+        private string _searchPattern;
+        private bool _includeSubdirectories;
+        
+        public Dictionary<string, string> Hashes => _hashes;
+        public string SearchPattern => _searchPattern;
+        public bool IncludeSubdirectories => _includeSubdirectories;
 
         public HashEntry(Dictionary<string, string> hashes, string searchPattern, bool includeSubdirectories)
         {
-            this.hashes = hashes;
-            this.searchPattern = searchPattern;
-            this.includeSubdirectories = includeSubdirectories;
+            _hashes = hashes;
+            _searchPattern = searchPattern;
+            _includeSubdirectories = includeSubdirectories;
         }
     }
 
-    public static Dictionary<string, HashEntry> fileHashes;
-    private static object stateLock = new object();
+    private static Dictionary<string, HashEntry> FileHashes;
+    private static object StateLock = new object();
 
-    private static object listLock; // Shared lock object
-    private static Thread livewatcherThread;
+    private static object ListLock; // Shared lock object
+    private static Thread LivewatcherThread;
 
-    public static bool initSignaled = false;
-    private static readonly int watcherThreadRunEveryNSeconds = 500; //TODO: expose in settings
+    public static bool InitSignaled = false;
+    private static readonly int WatcherThreadRunEveryNSeconds = 500; //TODO: expose in settings
 
     static CustomFileWatcher()
     {
-        fileHashes = new Dictionary<string, HashEntry>();
-        listLock = new object();
-        livewatcherThread = null;
+        FileHashes = new Dictionary<string, HashEntry>();
+        ListLock = new object();
+        LivewatcherThread = null;
     }
     
     private static void UpdateFileWatcher()
     {
-        if (fileHashes.Count > 0)
+        if (FileHashes.Count > 0)
         {
-            foreach (var kvp in fileHashes)
+            foreach (var kvp in FileHashes)
             {
-                CheckForChanges(kvp.Key, kvp.Value.searchPattern, kvp.Value.includeSubdirectories);
+                CheckForChanges(kvp.Key, kvp.Value.SearchPattern, kvp.Value.IncludeSubdirectories);
             }
         }
         else
@@ -61,37 +64,35 @@ public class CustomFileWatcher : EditorWindow
     
     public static void TryEnableLivewatching()
     {
-        if (livewatcherThread != null)
+        if (LivewatcherThread != null)
         {
             Debug.LogWarning("Livewatcher is already running.");
             return;
         }
 
         // Run on a separate thread every 1 second
-        livewatcherThread = new Thread(() =>
+        LivewatcherThread = new Thread(() =>
         {
             var timer = new Timer((state) =>
             {
                 // Go at it if we've initialized
-                if (fileHashes.Count > 0)
+                if (FileHashes.Count > 0)
                     UpdateFileWatcher();
-            }, null, 0, watcherThreadRunEveryNSeconds);
+            }, null, 0, WatcherThreadRunEveryNSeconds);
         });
 
-        livewatcherThread.Start();
+        LivewatcherThread.Start();
     }
-
-    // Just handles watching one directory
+    
     public static void InitializeSingularFilewatcher(string directoryPath, string searchPattern, bool includeSubdirectories)
     {
 #if ImmersiveVrTools_DebugEnabled
         Debug.Log("Initializing hashes for directory: " + directoryPath);
 #endif
 
-        // Delegate all this to a thread too!
         var thread = new Thread(() =>
         {
-            lock (stateLock)
+            lock (StateLock)
             {
                 var hashes = new Dictionary<string, string>();
                 var files = Directory.GetFiles(directoryPath, searchPattern, includeSubdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
@@ -102,7 +103,7 @@ public class CustomFileWatcher : EditorWindow
                     hashes[filePath] = hash;
                 }
 
-                fileHashes[directoryPath] = new HashEntry(hashes, searchPattern, includeSubdirectories);
+                FileHashes[directoryPath] = new HashEntry(hashes, searchPattern, includeSubdirectories);
             }
         });
         thread.Start();
@@ -110,11 +111,10 @@ public class CustomFileWatcher : EditorWindow
 
     private static void CheckForChanges(string directoryPath, string searchPattern, bool includeSubdirectories)
     {
-
-        // Not really sure if this nuclear locking treatment is right but oh well
-        lock (stateLock)
+        // Not really sure if this nuclear locking is needed
+        lock (StateLock)
         {
-            var hashes = fileHashes[directoryPath].hashes;
+            var hashes = FileHashes[directoryPath].Hashes;
 
             // Time profiling: Start the stopwatch for Directory.GetFiles
 #if ImmersiveVrTools_DebugEnabled
@@ -134,10 +134,10 @@ public class CustomFileWatcher : EditorWindow
 
             // Check if files were created or modified
             // Time profiling: Start the stopwatch for file creation/modification
-            System.Diagnostics.Stopwatch fileChangeStopwatch = new System.Diagnostics.Stopwatch();
+            var fileChangeStopwatch = new System.Diagnostics.Stopwatch();
             fileChangeStopwatch.Start();
 
-            foreach (string file in files)
+            foreach (var file in files)
             {
                 if (!hashes.ContainsKey(file))
                 {
@@ -166,7 +166,7 @@ public class CustomFileWatcher : EditorWindow
 
             // Check if any files were deleted
             // Time profiling: Start the stopwatch for file deletion
-            System.Diagnostics.Stopwatch fileDeletionStopwatch = new System.Diagnostics.Stopwatch();
+            var fileDeletionStopwatch = new System.Diagnostics.Stopwatch();
             fileDeletionStopwatch.Start();
 
             foreach (var kvp in hashes)
@@ -187,9 +187,9 @@ public class CustomFileWatcher : EditorWindow
 
             // Update hashes
             hashes.Clear();
-            foreach (string file in files)
+            foreach (var file in files)
             {
-                string hash = GetFileHash(file);
+                var hash = GetFileHash(file);
                 hashes[file] = hash;
             }
         }
@@ -215,29 +215,9 @@ public class CustomFileWatcher : EditorWindow
     {
         if (FastScriptReloadManager.Instance.ShouldIgnoreFileChange()) return;
 
-        lock (listLock)
+        lock (ListLock)
         {
             FastScriptReloadManager.Instance.AddFileChangeToProcess(path);
         }
-    }
-
-
-    private static string PathFromSetupEntry(FileWatcherSetupEntry fileWatcherSetupEntry)
-    {
-        // Replace tokens for path
-        string directoryPath = fileWatcherSetupEntry.path;
-        foreach (var kv in FastScriptReloadManager.Instance.FileWatcherTokensToResolvePathFn)
-        {
-            directoryPath = directoryPath.Replace(kv.Key, kv.Value());
-        }
-
-        var directoryInfo = new DirectoryInfo(directoryPath);
-
-        if (!directoryInfo.Exists)
-        {
-            Debug.Log($"FastScriptReload: Directory: '{directoryPath}' does not exist, make sure file-watcher setup is correct. You can access via: Window -> Fast Script Reload -> File Watcher (Advanced Setup)");
-        }
-
-        return directoryPath;
     }
 }

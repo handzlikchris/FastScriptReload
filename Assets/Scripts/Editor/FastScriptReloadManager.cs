@@ -682,11 +682,11 @@ Workaround will search in all folders (under project root) and will use first fo
                     InitializeFromFileWatcherSetupEntries();
                 }
             }
-            else if(!CustomFileWatcher.initSignaled)
+            else if(!CustomFileWatcher.InitSignaled)
             {
                 CustomFileWatcher.TryEnableLivewatching();
                 InitializeFromFileWatcherSetupEntries();
-                CustomFileWatcher.initSignaled = true;
+                CustomFileWatcher.InitSignaled = true;
             }
         }
 
