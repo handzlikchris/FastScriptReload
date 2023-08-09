@@ -56,7 +56,7 @@ namespace FastScriptReload.Editor
         public event Action<List<DynamicFileHotReloadState>> HotReloadSucceeded;
 
         private bool _wasLockReloadAssembliesCalled;
-        private PlayModeStateChange _lastPlayModeStateChange;
+        public PlayModeStateChange _lastPlayModeStateChange;
         private List<FileSystemWatcher> _fileWatchers = new List<FileSystemWatcher>();
         private IEnumerable<string> _currentFileExclusions;
         private int _triggerDomainReloadIfOverNDynamicallyLoadedAssembles = 100;
@@ -66,11 +66,11 @@ namespace FastScriptReload.Editor
 
 #pragma warning restore 0618
 
-        private List<DynamicFileHotReloadState> _dynamicFileHotReloadStateEntries = new List<DynamicFileHotReloadState>();
+        public List<DynamicFileHotReloadState> _dynamicFileHotReloadStateEntries = new List<DynamicFileHotReloadState>();
 
         private DateTime _lastTimeChangeBatchRun = default(DateTime);
         private bool _assemblyChangesLoaderResolverResolutionAlreadyCalled;
-        private bool _isEditorModeHotReloadEnabled;
+        public bool _isEditorModeHotReloadEnabled;
         private int _hotReloadPerformedCount = 0;
         private bool _isOnDemandHotReloadEnabled;
 
@@ -152,6 +152,14 @@ Workaround will search in all folders (under project root) and will use first fo
             if (!directoryInfo.Exists)
             {
                 LoggerScoped.LogWarning($"FastScriptReload: Directory: '{directoryPath}' does not exist, make sure file-watcher setup is correct. You can access via: Window -> Fast Script Reload -> File Watcher (Advanced Setup)");
+            }
+
+            // We hack these together
+            bool usingCustomFileWatcher = (bool)FastScriptReloadPreference.EnableCustomFileWatcher.GetEditorPersistedValueOrDefault();
+            if (usingCustomFileWatcher)
+            {
+                CustomFileWatcher.InitializeSingularFilewatcher(directoryPath, filter, includeSubdirectories);
+                return; // Early return
             }
             
             var fileWatcher = new FileSystemWatcher();
@@ -643,7 +651,10 @@ Workaround will search in all folders (under project root) and will use first fo
                 return;
             }
             
-            if (Instance._fileWatchers.Count == 0 || FastScriptReloadPreference.FileWatcherSetupEntriesChanged)
+            bool customFileWatcherEnabled = (bool)FastScriptReloadPreference.EnableCustomFileWatcher.GetEditorPersistedValueOrDefault();
+            bool initialized = customFileWatcherEnabled && CustomFileWatcher.initSignaled || !customFileWatcherEnabled && Instance._fileWatchers.Count > 0;
+
+            if (!initialized || FastScriptReloadPreference.FileWatcherSetupEntriesChanged)
             {
                 FastScriptReloadPreference.FileWatcherSetupEntriesChanged = false;
 
@@ -656,6 +667,11 @@ Workaround will search in all folders (under project root) and will use first fo
                 foreach (var fileWatcherSetupEntry in fileWatcherSetupEntries)
                 {
                     Instance.StartWatchingDirectoryAndSubdirectories(fileWatcherSetupEntry.path, fileWatcherSetupEntry.filter, fileWatcherSetupEntry.includeSubdirectories);
+                }
+
+                if (customFileWatcherEnabled)
+                {
+                    CustomFileWatcher.initSignaled = true;
                 }
             }
         }

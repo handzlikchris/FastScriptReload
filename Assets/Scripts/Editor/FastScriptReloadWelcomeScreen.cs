@@ -564,7 +564,14 @@ includeSubdirectories - whether child directories should be watched as well
                             , MessageType.Info);
                         
                         EditorGUILayout.HelpBox("Recompile after making changes for file watchers to re-load.", MessageType.Warning);
-                        
+                                                EditorGUILayout.HelpBox(@"If Unity's built in file watcher is experiencing issues, try our custom file watcher implementation. A reload is required for this to take effect.", MessageType.Info);
+                        GUILayout.Space(10);
+
+                        using (LayoutHelper.LabelWidth(320))
+                        {
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableCustomFileWatcher);
+                        }
+
                         ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.FileWatcherSetupEntries);
                     }),
                     new ChangeMainViewButton("Exclude References", (screen) =>
@@ -786,6 +793,10 @@ includeSubdirectories - whether child directories should be watched as well
         public static readonly ToggleProjectEditorPreferenceDefinition EnableExperimentalEditorHotReloadSupport = new ToggleProjectEditorPreferenceDefinition(
             "(Experimental) Enable Hot-Reload outside of play mode", "EnableExperimentalEditorHotReloadSupport", false);
         
+        public static readonly ToggleProjectEditorPreferenceDefinition EnableCustomFileWatcher = new ToggleProjectEditorPreferenceDefinition(
+            "(Experimental) Custom filewatcher engine in case the Unity built-in filewatcher is experiencing issues", "EnableCustomFileWatcher", false);
+
+
         //TODO: potentially that's just a normal settings (also in playmode) - but in playmode user is unlikely to make this many changes
         public static readonly IntProjectEditorPreferenceDefinition TriggerDomainReloadIfOverNDynamicallyLoadedAssembles = new IntProjectEditorPreferenceDefinition(
             "Trigger full domain reload after N hot-reloads (when not in play mode)", "TriggerDomainReloadIfOverNDynamicallyLoadedAssembles", 50);
