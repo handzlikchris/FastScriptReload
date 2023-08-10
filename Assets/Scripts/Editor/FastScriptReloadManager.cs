@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,11 +10,9 @@ using FastScriptReload.Runtime;
 using ImmersiveVRTools.Editor.Common.Utilities;
 using ImmersiveVRTools.Runtime.Common;
 using ImmersiveVrToolsCommon.Runtime.Logging;
-using MonoMod.Utils;
 using UnityEditor;
 using UnityEditor.Compilation;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace FastScriptReload.Editor
 {
@@ -76,71 +73,62 @@ namespace FastScriptReload.Editor
 
         private void OnWatchedFileChange(object source, FileSystemEventArgs e)
         {
-            if (!_isEditorModeHotReloadEnabled && _lastPlayModeStateChange != PlayModeStateChange.EnteredPlayMode)
-            {
-#if ImmersiveVrTools_DebugEnabled
-            LoggerScoped.Log($"Application not playing, change to: {e.Name} won't be compiled and hot reloaded");
-#endif
-                return;
-            }
+            if (ShouldIgnoreFileChange()) return;
 
             var filePathToUse = e.FullPath;
             if (!File.Exists(filePathToUse))
             {
-                LoggerScoped.LogWarning(@"Fast Script Reload - Unity File Path Bug - Warning!
-Path for changed file passed by Unity does not exist. This is a known editor bug, more info: https://issuetracker.unity3d.com/issues/filesystemwatcher-returns-bad-file-path
-                    
-Best course of action is to update editor as issue is already fixed in newer (minor and major) versions.
-                    
-As a workaround asset will try to resolve paths via directory search.
-                    
-Workaround will search in all folders (under project root) and will use first found file. This means it's possible it'll pick up wrong file as there's no directory information available.");
-                
-                var changedFileName = new FileInfo(filePathToUse).Name;
-                //TODO: try to look in all file watcher configured paths, some users might have code outside of assets, eg packages
-                // var fileFoundInAssets = FastScriptReloadPreference.FileWatcherSetupEntries.GetElementsTyped().SelectMany(setupEntries => Directory.GetFiles(DataPath, setupEntries.path, SearchOption.AllDirectories)).ToList();
-                    
-                var fileFoundInAssets = Directory.GetFiles(DataPath, changedFileName, SearchOption.AllDirectories);
-                if (fileFoundInAssets.Length == 0)
-                {
-                    LoggerScoped.LogError($"FileWatcherBugWorkaround: Unable to find file '{changedFileName}', changes will not be reloaded. Please update unity editor.");
+                if (!TryWorkaroundForUnityFileWatcherBug(e, ref filePathToUse)) 
                     return;
-                }
-                else if(fileFoundInAssets.Length  == 1)
-                {
-                    LoggerScoped.Log($"FileWatcherBugWorkaround: Original Unity passed file path: '{e.FullPath}' adjusted to found: '{fileFoundInAssets[0]}'");
-                    filePathToUse = fileFoundInAssets[0];
-                }
-                else
-                {
-                    LoggerScoped.LogWarning($"FileWatcherBugWorkaround: Multiple files found. Original Unity passed file path: '{e.FullPath}' adjusted to found: '{fileFoundInAssets[0]}'");
-                    filePathToUse = fileFoundInAssets[0];
-                }
             }
+            
+            AddFileChangeToProcess(filePathToUse);
+        }
 
-            if (_currentFileExclusions != null && _currentFileExclusions.Any(fp => filePathToUse.Replace("\\", "/").EndsWith(fp)))
+        public void AddFileChangeToProcess(string filePath)
+        {
+            if (!File.Exists(filePath))
             {
-                LoggerScoped.LogWarning($"FastScriptReload: File: '{filePathToUse}' changed, but marked as exclusion. Hot-Reload will not be performed. You can manage exclusions via" +
-                                 $"\r\nRight click context menu (Fast Script Reload > Add / Remove Hot-Reload exclusion)" +
-                                 $"\r\nor via Window -> Fast Script Reload -> Start Screen -> Exclusion menu");
+                LoggerScoped.LogWarning($"Specified file: '{filePath}' does not exist. Hot-Reload will not be performed.");
+                return;
+            }
+            
+            if (_currentFileExclusions != null && _currentFileExclusions.Any(fp => filePath.Replace("\\", "/").EndsWith(fp)))
+            {
+                LoggerScoped.LogWarning($"FastScriptReload: File: '{filePath}' changed, but marked as exclusion. Hot-Reload will not be performed. You can manage exclusions via" +
+                                        $"\r\nRight click context menu (Fast Script Reload > Add / Remove Hot-Reload exclusion)" +
+                                        $"\r\nor via Window -> Fast Script Reload -> Start Screen -> Exclusion menu");
             
                 return;
             }
             
             const int msThresholdToConsiderSameChangeFromDifferentFileWatchers = 500;
             var isDuplicatedChangesComingFromDifferentFileWatcher = _dynamicFileHotReloadStateEntries
-                .Any(f => f.FullFileName == filePathToUse
+                .Any(f => f.FullFileName == filePath
                           && (DateTime.UtcNow - f.FileChangedOn).TotalMilliseconds < msThresholdToConsiderSameChangeFromDifferentFileWatchers);
             if (isDuplicatedChangesComingFromDifferentFileWatcher)
             {
-                LoggerScoped.LogWarning($"FastScriptReload: Looks like change to: {filePathToUse} have already been added for processing. This can happen if you have multiple file watchers set in a way that they overlap.");
+                LoggerScoped.LogWarning($"FastScriptReload: Looks like change to: {filePath} have already been added for processing. This can happen if you have multiple file watchers set in a way that they overlap.");
                 return;
             }
-
-            _dynamicFileHotReloadStateEntries.Add(new DynamicFileHotReloadState(filePathToUse, DateTime.UtcNow));
+            
+            _dynamicFileHotReloadStateEntries.Add(new DynamicFileHotReloadState(filePath, DateTime.UtcNow));
         }
 
-        public void StartWatchingDirectoryAndSubdirectories(string directoryPath, string filter, bool includeSubdirectories) 
+        public bool ShouldIgnoreFileChange()
+        {
+            if (!_isEditorModeHotReloadEnabled && _lastPlayModeStateChange != PlayModeStateChange.EnteredPlayMode)
+            {
+#if ImmersiveVrTools_DebugEnabled
+            LoggerScoped.Log($"Application not playing, change to: {e.Name} won't be compiled and hot reloaded");
+#endif
+                return true;
+            }
+
+            return false;
+        }
+
+        private void StartWatchingDirectoryAndSubdirectories(string directoryPath, string filter, bool includeSubdirectories) 
         {
             foreach (var kv in FileWatcherTokensToResolvePathFn)
             {
@@ -148,23 +136,30 @@ Workaround will search in all folders (under project root) and will use first fo
             }
             
             var directoryInfo = new DirectoryInfo(directoryPath);
-
             if (!directoryInfo.Exists)
             {
                 LoggerScoped.LogWarning($"FastScriptReload: Directory: '{directoryPath}' does not exist, make sure file-watcher setup is correct. You can access via: Window -> Fast Script Reload -> File Watcher (Advanced Setup)");
             }
             
-            var fileWatcher = new FileSystemWatcher();
+            var isUsingCustomFileWatcher = (bool)FastScriptReloadPreference.EnableCustomFileWatcher.GetEditorPersistedValueOrDefault();
+            if (isUsingCustomFileWatcher)
+            {
+                CustomFileWatcher.InitializeSingularFilewatcher(directoryPath, filter, includeSubdirectories);
+            }
+            else
+            {
+                var fileWatcher = new FileSystemWatcher();
 
-            fileWatcher.Path = directoryInfo.FullName;
-            fileWatcher.IncludeSubdirectories = includeSubdirectories;
-            fileWatcher.Filter =  filter;
-            fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
-            fileWatcher.Changed += OnWatchedFileChange;
+                fileWatcher.Path = directoryInfo.FullName;
+                fileWatcher.IncludeSubdirectories = includeSubdirectories;
+                fileWatcher.Filter =  filter;
+                fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
+                fileWatcher.Changed += OnWatchedFileChange;
         
-            fileWatcher.EnableRaisingEvents = true;
+                fileWatcher.EnableRaisingEvents = true;
         
-            _fileWatchers.Add(fileWatcher);
+                _fileWatchers.Add(fileWatcher);
+            }
         }
 
         static FastScriptReloadManager()
@@ -626,9 +621,43 @@ Workaround will search in all folders (under project root) and will use first fo
                 _wasLockReloadAssembliesCalled = false;
             }
         }
+        
+                private static bool TryWorkaroundForUnityFileWatcherBug(FileSystemEventArgs e, ref string filePathToUse)
+        {
+            LoggerScoped.LogWarning(@"Fast Script Reload - Unity File Path Bug - Warning!
+Path for changed file passed by Unity does not exist. This is a known editor bug, more info: https://issuetracker.unity3d.com/issues/filesystemwatcher-returns-bad-file-path
+                    
+Best course of action is to update editor as issue is already fixed in newer (minor and major) versions.
+                    
+As a workaround asset will try to resolve paths via directory search.
+                    
+Workaround will search in all folders (under project root) and will use first found file. This means it's possible it'll pick up wrong file as there's no directory information available.");
+
+            var changedFileName = new FileInfo(filePathToUse).Name;
+            //TODO: try to look in all file watcher configured paths, some users might have code outside of assets, eg packages
+            // var fileFoundInAssets = FastScriptReloadPreference.FileWatcherSetupEntries.GetElementsTyped().SelectMany(setupEntries => Directory.GetFiles(DataPath, setupEntries.path, SearchOption.AllDirectories)).ToList();
+
+            var fileFoundInAssets = Directory.GetFiles(DataPath, changedFileName, SearchOption.AllDirectories);
+            if (fileFoundInAssets.Length == 0)
+            {
+                LoggerScoped.LogError($"FileWatcherBugWorkaround: Unable to find file '{changedFileName}', changes will not be reloaded. Please update unity editor.");
+                return false;
+            }
+            else if (fileFoundInAssets.Length == 1)
+            {
+                LoggerScoped.Log($"FileWatcherBugWorkaround: Original Unity passed file path: '{e.FullPath}' adjusted to found: '{fileFoundInAssets[0]}'");
+                filePathToUse = fileFoundInAssets[0];
+                return true;
+            }
+            else
+            {
+                LoggerScoped.LogWarning($"FileWatcherBugWorkaround: Multiple files found. Original Unity passed file path: '{e.FullPath}' adjusted to found: '{fileFoundInAssets[0]}'");
+                filePathToUse = fileFoundInAssets[0];
+                return true;
+            }
+        }
 
         private static bool HotReloadDisabled_WarningMessageShownAlready;
-
         private static void EnsureInitialized()
         {
             if (!(bool)FastScriptReloadPreference.EnableAutoReloadForChangedFiles.GetEditorPersistedValueOrDefault()
@@ -643,23 +672,42 @@ Workaround will search in all folders (under project root) and will use first fo
                 return;
             }
             
-            if (Instance._fileWatchers.Count == 0 || FastScriptReloadPreference.FileWatcherSetupEntriesChanged)
+            var isUsingCustomFileWatchers = (bool)FastScriptReloadPreference.EnableCustomFileWatcher.GetEditorPersistedValueOrDefault();
+            if (!isUsingCustomFileWatchers)
             {
-                FastScriptReloadPreference.FileWatcherSetupEntriesChanged = false;
+                if (Instance._fileWatchers.Count == 0 || FastScriptReloadPreference.FileWatcherSetupEntriesChanged)
+                {
+                    FastScriptReloadPreference.FileWatcherSetupEntriesChanged = false;
 
-                var fileWatcherSetupEntries = FastScriptReloadPreference.FileWatcherSetupEntries.GetElementsTyped();
-                if (fileWatcherSetupEntries.Count == 0)
-                {
-                    LoggerScoped.LogWarning($"There are no file watcher setup entries. Tool will not be able to pick changes automatically");
-                }
-                
-                foreach (var fileWatcherSetupEntry in fileWatcherSetupEntries)
-                {
-                    Instance.StartWatchingDirectoryAndSubdirectories(fileWatcherSetupEntry.path, fileWatcherSetupEntry.filter, fileWatcherSetupEntry.includeSubdirectories);
+                    InitializeFromFileWatcherSetupEntries();
                 }
             }
+            else if(!CustomFileWatcher.InitSignaled)
+            {
+                CustomFileWatcher.TryEnableLivewatching();
+                InitializeFromFileWatcherSetupEntries();
+                CustomFileWatcher.InitSignaled = true;
+            }
         }
-        
+
+        private static void InitializeFromFileWatcherSetupEntries()
+        {
+            var fileWatcherSetupEntries = FastScriptReloadPreference.FileWatcherSetupEntries.GetElementsTyped();
+            if (fileWatcherSetupEntries.Count == 0)
+            {
+                LoggerScoped.LogWarning($"There are no file watcher setup entries. Tool will not be able to pick changes automatically");
+            }
+
+            foreach (var fileWatcherSetupEntry in fileWatcherSetupEntries)
+            {
+                Instance.StartWatchingDirectoryAndSubdirectories(
+                    fileWatcherSetupEntry.path,
+                    fileWatcherSetupEntry.filter,
+                    fileWatcherSetupEntry.includeSubdirectories
+                );
+            }
+        }
+
         private static bool IsFileWatcherSetupEntryAlreadyPresent(FileWatcherSetupEntry fileWatcherSetupEntry)
         {
             //TODO: could be a bit of a per hit, GetElementsTypes will parse json every time
