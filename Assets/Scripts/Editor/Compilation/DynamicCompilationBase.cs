@@ -175,15 +175,13 @@ namespace FastScriptReload.Editor.Compilation
                     root = new CreateNewFieldInitMethodRewriter(typeToNewFieldDeclarations, DebugWriteRewriteReasonAsComment).Visit(root);
                 }
                 
+                root = new RedundantTypeNameQualifierRewriter(DebugWriteRewriteReasonAsComment).Visit(root);
+                
                 root = new ConstructorRewriter(adjustCtorOnlyForNonNestedTypes: true, DebugWriteRewriteReasonAsComment).Visit(root);
                 
                 var hotReloadCompliantRewriter = new HotReloadCompliantRewriter(DebugWriteRewriteReasonAsComment);
                 root = hotReloadCompliantRewriter.Visit(root);
                 combinedUsingStatements.AddRange(hotReloadCompliantRewriter.StrippedUsingDirectives);
-
-                //TODO: temporaliry reverted, too many cases fail - can't adjust this wide spread without good automated tests base
-                // root = new AllPatchedIdentifiersRewriter(DebugWriteRewriteReasonAsComment, hotReloadCompliantRewriter.OriginalIdentifiersRenamedToContainPatchedPostfix)
-                //     .Visit(root);
                 
                 root = new BuilderPatternFunctionsRewriter(DebugWriteRewriteReasonAsComment).Visit(root);
                 
