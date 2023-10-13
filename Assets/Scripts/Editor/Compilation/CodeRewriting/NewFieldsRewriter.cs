@@ -69,6 +69,15 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 					{
 						if (allNewFieldNamesForClass.Contains(fieldName))
 						{
+							if(node.Parent is MemberAccessExpressionSyntax memberAccessExpressionSyntax)
+							{
+								//for member access expressions only rewrite if used with .this, eg this.NewField, that prevents rewriting of static class fields with same name
+								if (!memberAccessExpressionSyntax.ToString().StartsWith("this."))
+								{
+									return base.VisitIdentifierName(node);
+								}
+							}
+							
 							var isNameOfExpression = node.Ancestors().OfType<InvocationExpressionSyntax>().Any(e => e.Expression.ToString() == "nameof");
 							if (!isNameOfExpression) //nameof expression will be rewritten via VisitInvocationExpression
 							{
