@@ -1,4 +1,4 @@
-1.6 (unreleased)
+1.6
 - Added more Unit Tests to ensure various code patterns can be rewritten correctly
 - Added Watch Only Specific Files and Folders mode (contributed by GhatSmith)
 - Added better Odin support for dynamically added fields (contributed by GhatSmith)
