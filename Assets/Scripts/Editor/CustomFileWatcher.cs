@@ -198,7 +198,7 @@ public class CustomFileWatcher : EditorWindow
 
     private static string GetFileHash(string filePath)
     {
-        using var md5 = MD5.Create();
+        using (var md5 = MD5.Create())
         using (var stream = File.OpenRead(filePath))
         {
             var hashBytes = md5.ComputeHash(stream);
