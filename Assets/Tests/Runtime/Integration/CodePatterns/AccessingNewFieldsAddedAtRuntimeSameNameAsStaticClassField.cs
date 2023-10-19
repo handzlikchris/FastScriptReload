@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace FastScriptReload.Tests.Runtime.Integration.CodePatterns
 {
