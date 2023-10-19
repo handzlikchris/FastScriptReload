@@ -29,7 +29,7 @@ namespace FastScriptReload.Editor.Compilation
         public static List<string> ReferencesExcludedFromHotReload = new List<string>();
 
         public const string DebuggingInformationComment = 
-            @"// DEBUGGING READ-ME " +
+            @"// DEBUGGING READ-ME: DO NOT EDIT THIS AUTO-GENERATED FILE AS IT'LL BE DELETED " +
 #if !UNITY_2021_1_OR_NEWER
 "WARN: on Unity versions prior to 2021, opening files in that manner can cause static values to be reinitialized"
 #else
