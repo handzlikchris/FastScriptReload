@@ -1,4 +1,5 @@
 1.6 (unreleased)
+- Added more Unit Tests to ensure various code patterns can be rewritten correctly
 - Added Watch Only Specific Files and Folders mode (contributed by GhatSmith)
 - Added better Odin support for dynamically added fields (contributed by GhatSmith)
 - Updated Roslyn lib version to 4.6.0 for better code parsing (contributed by SamPruden)
