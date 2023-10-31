@@ -37,6 +37,13 @@ namespace FastScriptReload.Editor.NewFields
 #endif
             }
         }
+        
+#if ODIN_INSPECTOR
+        private static void DrawOdinInspector(UnityEditor.Editor __instance)
+        {
+            RenderNewlyAddedFields(__instance);
+        }
+#endif
 
         private static void OnOptimizedInspectorGUI(Rect contentRect, UnityEditor.Editor __instance)
         {
