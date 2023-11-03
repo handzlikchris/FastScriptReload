@@ -21,8 +21,25 @@ namespace FastScriptReload.Editor
     /// 
     /// Events will be dispatched on a worker thread.
     /// They may be on different threads from each other, but they won't overlap in time.
+    /// 
+    /// There is an issue where there's a (small) chance that events may be missed.
+    /// 
+    /// Firstly, this can happen if the event occurs in the brief time when previous events
+    /// are being recorded, before listening can start again.
+    /// This is not unique to this implementation - the Microsoft version has the same problem.
+    /// The issue should actually be a little less bad here. Microsoft fires its events on the 
+    /// monitoring thread, and relies on the user to be smart about offloading them.
+    /// We fire our events on a dedicated event thread. Long running handlers shouldn't 
+    /// pose a problem.
+    /// 
+    /// Secondly, this can also happen if the internal buffer used by the Windows API overflows.
+    /// It's set to the maximum size (which is larger than the Microsoft implementation default)
+    /// but it could theoretically happen.
+    /// 
+    /// The solution to both of these things, if we want to be completely robust, is to combine
+    /// the file watcher with polling to catch rare missed events.
     /// </summary>
-    internal class WindowsFileSystemWatcher : IDisposable
+    internal sealed class WindowsFileSystemWatcher : IDisposable
     {
         public event FileSystemEventHandler Changed;
         public event FileSystemEventHandler Created;
@@ -56,14 +73,25 @@ namespace FastScriptReload.Editor
         private Task monitorTask;
         private Task eventsTask;
         private bool disposed = false;
+        private readonly WeakDisposer weakDisposer;
+
 
         public WindowsFileSystemWatcher()
         {
-            // Prevents us from hanging domain reload in Unity.
-            AppDomain.CurrentDomain.DomainUnload += this.HandleDomainUnload;
             this.eventsTask = Task.CompletedTask;
+            this.weakDisposer = new(this);
+
+            AppDomain.CurrentDomain.DomainUnload += this.weakDisposer.Dispose;
+
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.quitting += this.weakDisposer.Dispose;
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload += this.weakDisposer.Dispose;
+#endif
         }
 
+        // Note that the GC shouldn't ever destroy the FSW while it's running,
+        // even if no references to it are retained by the user.
+        // The monitoring thread holds a reference.
         ~WindowsFileSystemWatcher()
         {
             this.Dispose();
@@ -71,19 +99,23 @@ namespace FastScriptReload.Editor
 
         public void Dispose()
         {
+            if (this.disposed) return;
+            this.disposed = true;
+            GC.SuppressFinalize(this);
+
             this.EnableRaisingEvents = false;
-            AppDomain.CurrentDomain.DomainUnload -= this.HandleDomainUnload;
             this.Changed = null;
             this.Created = null;
             this.Deleted = null;
             this.Renamed = null;
             this.Error = null;
-            this.disposed = true;
-        }
 
-        private void HandleDomainUnload(object sender, EventArgs e)
-        {
-            this.Dispose();
+            AppDomain.CurrentDomain.DomainUnload -= this.weakDisposer.Dispose;
+
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.quitting -= this.weakDisposer.Dispose;
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload -= this.weakDisposer.Dispose;
+#endif
         }
 
 
@@ -104,12 +136,13 @@ namespace FastScriptReload.Editor
                     // This cancels scheduled-but-unrun events, because they don't run if the handle is closed.
                     this.currentHandle?.Dispose();
                     this.currentHandle = null;
-                    this.monitorTask?.Wait();
+                    this.monitorTask?.Wait(10_000);
                     this.monitorTask = null;
                     // We don't wait for the events task, because we might be within the events task.
                     // (Ooh, the events are coming from WITHIN THE TASK. Scary.)
                     // This does leave a tiny chance that a single event could be triggered immediately after this,
                     // if we're not in the events task...
+                    // TODO: Maybe fix this
                 }
             }
         }
@@ -178,6 +211,7 @@ namespace FastScriptReload.Editor
                     // The directory handle could be disposed from another thread.
                     // That's fine, we'll just end.
                     catch (ObjectDisposedException) { }
+                    catch (ArgumentNullException) { }
                     catch (Exception ex)
                     {
                         DispatchError(ex);
@@ -298,12 +332,33 @@ namespace FastScriptReload.Editor
                 this.closed = true;
                 if (!(this.Handle.IsInvalid | this.Handle.IsClosed)) CancelIoEx(this.Handle, null);
                 this.Handle.Dispose();
+                GC.SuppressFinalize(this);
             }
 
             public static implicit operator SafeFileHandle(InterruptibleHandle handle)
             {
                 return handle.Handle;
             }
+        }
+
+        /// <summary>
+        /// Dispose handles are setup via weak references.
+        /// We don't want the domain reload stuff to keep the FSW alive.
+        /// Note that the FSW shouldn't be collected whilst running anyway.
+        /// </summary>
+        private sealed class WeakDisposer
+        {
+            private readonly WeakReference<WindowsFileSystemWatcher> fsw;
+
+            public WeakDisposer(WindowsFileSystemWatcher fsw)
+                => this.fsw = new(fsw);
+
+            public void Dispose()
+            {
+                if (this.fsw.TryGetTarget(out var fsw)) fsw.Dispose();
+            }
+
+            public void Dispose(object _, EventArgs __) => this.Dispose();
         }
 
 
