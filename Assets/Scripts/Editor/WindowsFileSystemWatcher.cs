@@ -136,7 +136,7 @@ namespace FastScriptReload.Editor
                     // This cancels scheduled-but-unrun events, because they don't run if the handle is closed.
                     this.currentHandle?.Dispose();
                     this.currentHandle = null;
-                    this.monitorTask?.Wait(10_000);
+                    this.monitorTask?.Wait();
                     this.monitorTask = null;
                     // We don't wait for the events task, because we might be within the events task.
                     // (Ooh, the events are coming from WITHIN THE TASK. Scary.)
@@ -327,10 +327,14 @@ namespace FastScriptReload.Editor
                 this.Handle = handle;
             }
 
+            ~InterruptibleHandle() {
+                this.Dispose();
+            }
+
             public unsafe void Dispose()
             {
                 this.closed = true;
-                if (!(this.Handle.IsInvalid | this.Handle.IsClosed)) CancelIoEx(this.Handle, null);
+                if (!(this.Handle.IsClosed)) CancelIoEx(this.Handle, null);
                 this.Handle.Dispose();
                 GC.SuppressFinalize(this);
             }
