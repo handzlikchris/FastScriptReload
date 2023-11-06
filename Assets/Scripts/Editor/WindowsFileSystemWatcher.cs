@@ -400,7 +400,7 @@ namespace FastScriptReload.Editor
         );
 
         [DllImport("__Internal")]
-        internal static extern unsafe bool CancelIoEx(SafeHandle handle, NativeOverlapped* lpOverlapped);
+        private static extern unsafe bool CancelIoEx(SafeHandle handle, NativeOverlapped* lpOverlapped);
 
         private class SECURITY_ATTRIBUTES { }
         #endregion
