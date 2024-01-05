@@ -441,6 +441,10 @@ BREAKPOINTS IN ORIGINAL FILE WON'T BE HIT!", MessageType.Error);
                         using (LayoutHelper.LabelWidth(350))
                         {
                             ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.IsAutoOpenGeneratedSourceFileOnChangeEnabled);
+                            if ((bool)FastScriptReloadPreference.IsAutoOpenGeneratedSourceFileOnChangeEnabled.GetEditorPersistedValueOrDefault())
+                            {
+                                EditorGUILayout.HelpBox(@"Do not edit debug file created. It'll be removed.", MessageType.Error);
+                            }
                         }
 
                         GUILayout.Space(20);
