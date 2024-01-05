@@ -14,6 +14,14 @@ using UnityEditor;
 using UnityEditor.Compilation;
 using UnityEngine;
 
+
+#if UNITY_EDITOR_WIN
+using FileSystemWatcher = FastScriptReload.Editor.WindowsFileSystemWatcher;
+#else
+using FileSystemWatcher = System.IO.FileSystemWatcher;
+#endif
+
+
 namespace FastScriptReload.Editor
 {
     [InitializeOnLoad]
@@ -148,13 +156,64 @@ namespace FastScriptReload.Editor
             }
             else
             {
-                var fileWatcher = new FileSystemWatcher();
-
-                fileWatcher.Path = directoryInfo.FullName;
-                fileWatcher.IncludeSubdirectories = includeSubdirectories;
-                fileWatcher.Filter =  filter;
-                fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
+                // On Windows, this is a WindowsFileSystemWatcher.
+                // On other platforms, it's the default Mono implementation.
+                // The WindowsFileSystemWatcher has much lower latency on Windows.
+                // However, there's a small issue:
+                // The WindowsFileSystemWatcher can, theoretically, miss events.
+                // This is true in Microsoft's implementation as well as ours.
+                // (Actually, ours should be slightly better.)
+                // This can happen if a change occurs during the brief moment
+                // during which the previous batch of changes are being
+                // recorded and queued.
+                // It can also happen if too many changes occur at once, overwhelming
+                // the buffer.
+                // People seem to routinely use the basic MS filewatcher and ignore
+                // these issues, treating them as acceptably unlikely.
+                // Our current implementation here does that too, but we may want
+                // to look at eliminating this issue.
+                // Unfortunately, it's a limitation of the Windows API, and to
+                // my knowledge can't be avoided directly.
+                // The solution is to combine the file watcher with a polling
+                // mechanism which can (slowly, but reliably) catch any missed events.
+                var fileWatcher = new FileSystemWatcher
+                {
+                    Path = directoryInfo.FullName,
+                    IncludeSubdirectories = includeSubdirectories,
+                    Filter = filter,
+                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName
+                };
                 fileWatcher.Changed += OnWatchedFileChange;
+
+                // Visual Studio is annoying.
+                // It doesn't actually trigger a nice Changed event.
+                // Instead, it goes through some elaborate procedure.
+                // When changing player.cs, it does:
+                // CREATE: Code\ua4tt1aw.4ae~
+                // CHANGE: Code\ua4tt1aw.4ae~
+                // CREATE: Code\Player.cs~RF70560f7.TMP
+                // REMOVE: Code\Player.cs~RF70560f7.TMP
+                // RENAME: Code\Player.cs -> Code\Player.cs~RF70560f7.TMP
+                // RENAME: Code\ua4tt1aw.4ae~ -> Code\Player.cs
+                // REMOVE: Code\Player.cs~RF70560f7.TMP - again, somehow?
+                //
+                // This was fine before, because the watcher implementation was polling.
+                // I guess this usually happens fast between polls, so it just looks like a change.
+                // Note that that may mean there's a potential bug if polling happens in the middle of this procedure.
+                //
+                // This fix is a temporary measure.
+                // We should probably think more seriously about maybe being able to catch file additions and renames.
+                // If we dealt with those extra events smoothly, this would probably just work.
+                //
+                // Other IDEs may do similar but different things. We want a general purpose solution, not a VS specific one.
+                // Perhaps the approach should be to keep track of touched files, then do some diff procedure to work out what's happened to them?
+                // This could, perhaps, be integrated into the file watcher robustness polling solution discussed above.
+                // The two systems share a need for some type of event debouncing.
+                fileWatcher.Renamed += (source, e) =>
+                {
+                    if (e.Name.EndsWith(".cs"))
+                        OnWatchedFileChange(source, e);
+                };
         
                 fileWatcher.EnableRaisingEvents = true;
         
