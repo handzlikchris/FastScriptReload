@@ -12,6 +12,8 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
         [UnityTest]
         public IEnumerator AssignNestedEnumToField_ValueAssignedDirectly_CorrectValueOnOriginalInstance()
         {
+            //TODO: nested enums were broken as code-adjustments were too wide, need to retarget just to enums
+            
             var instance = new GameObject("instance").AddComponent<MethodAccessingNestedEnum>();
             var originalValue = (int)instance.GetType().GetField("_value", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(instance);
             

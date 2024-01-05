@@ -1,3 +1,16 @@
 {
-	"name": "FastScriptReload.Tests.Runtime"
+    "name": "FastScriptReload.Tests.Runtime",
+    "rootNamespace": "",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "FAST_SCRIPT_RELOAD_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

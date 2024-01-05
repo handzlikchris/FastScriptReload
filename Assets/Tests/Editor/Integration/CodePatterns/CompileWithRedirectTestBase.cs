@@ -46,6 +46,10 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
 
                 afterDetourTest(dynamicallyLoadedAssemblyCompilerResult);
             }
+            catch (SourceCodeHasErrorsException e)
+            {
+                Debug.Log(e.Message);
+            }
             catch (HotReloadCompilationException e)
             {
                 Debug.Log($"Compilation Error: {e.InnerException}");

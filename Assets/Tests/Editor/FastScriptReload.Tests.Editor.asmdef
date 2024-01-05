@@ -21,7 +21,7 @@
     ],
     "autoReferenced": true,
     "defineConstraints": [
-        "UNITY_INCLUDE_TESTS"
+        "FAST_SCRIPT_RELOAD_INCLUDE_TESTS"
     ],
     "versionDefines": [],
     "noEngineReferences": false

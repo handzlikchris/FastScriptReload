@@ -27,6 +27,7 @@ namespace FastScriptReload.Editor.Compilation
 
         private static string ApplicationContentsPath = EditorApplication.applicationContentsPath;
         private static readonly List<string> _createdFilesToCleanUp = new List<string>();
+        private static readonly Dictionary<string, Assembly> _typeNameAssemblyCache = new Dictionary<string, Assembly>(16);
 
         static DotnetExeDynamicCompilation()
         {
@@ -110,6 +111,12 @@ namespace FastScriptReload.Editor.Compilation
                 return new CompileResult(outLibraryPath, outputMessages, exitCode, compiledAssembly, createSourceCodeCombinedResult.SourceCode, 
                     sourceCodeCombinedFilePath, createInternalVisibleToAsmElapsedMilliseconds);
             }
+            catch (SourceCodeHasErrorsException e)
+            {
+                // FastScriptReloadManager has a special case for reporting SourceCodeHasErrorsException.
+                // Just pass it through.
+                throw e;
+            }
             catch (Exception e)
             {
                 LoggerScoped.LogError($"Compilation error: temporary files were not removed so they can be inspected: " 
@@ -157,13 +164,10 @@ You can also:
             try
             {
                 var assembliesForTypesInCombinedFile = createSourceCodeCombinedResult.TypeNamesDefinitions
-                    .Select(t => AccessTools.TypeByName(t))
+                    .Select(GetAssemblyByTypeName)
                     .Where(t => t != null)
-                    .Select(t => t.Assembly)
-                    .GroupBy(a => a)
-                    .Select(g => g.First())
-                    .ToList();
-                
+                    .Distinct();
+
                 foreach (var assemblyForTypesInCombinedFile in assembliesForTypesInCombinedFile)
                 {
                     var createdAssemblyWithInternalsVisibleToNewlyCompiled = AddInternalsVisibleToForAllUserAssembliesPostProcess.CreateAssemblyWithInternalsContentsVisibleTo(
@@ -184,6 +188,22 @@ You can also:
         {
             File.WriteAllText(filePath, contents);
             createdFilesToCleanUp.Add(filePath);
+        }
+
+        private static Assembly GetAssemblyByTypeName(string typeName)
+        {
+            // This cache is barely worth it on my machine - it's ~1ms without, ~0ms with.
+            // However, the number of assemblies to search is technically unbounded
+            //  - so this might be more important for somebody else.
+            if (_typeNameAssemblyCache.TryGetValue(typeName, out var assembly)) return assembly;
+
+            // FSR (via Harmony) originally did this search by enumerating assembly.GetTypes().
+            // I can't see anything in the documentation suggesting the assembly.GetType(typeName) version misses any cases.
+            // It's much faster.
+            assembly = AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(asm => asm.GetType(typeName, false) != null);
+
+            if (assembly != null) _typeNameAssemblyCache.Add(typeName, assembly);
+            return assembly;
         }
 
         private static string GenerateCompilerArgsRspFileContents(string outLibraryPath, string sourceCodeCombinedFilePath, string assemblyAttributeFilePath, 
