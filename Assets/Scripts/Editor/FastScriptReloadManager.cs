@@ -741,7 +741,8 @@ Workaround will search in all folders (under project root) and will use first fo
                 return;
             }
             
-            var isUsingCustomFileWatchers = (bool)FastScriptReloadPreference.EnableCustomFileWatcher.GetEditorPersistedValueOrDefault();
+            var isUsingCustomFileWatchers = (FileWatcherImplementation)FastScriptReloadPreference.FileWatcherImplementationInUse.GetEditorPersistedValueOrDefault() 
+                                            == FileWatcherImplementation.CustomPolling;
             if (!isUsingCustomFileWatchers)
             {
                 if (Instance._fileWatchers.Count == 0 || FastScriptReloadPreference.FileWatcherSetupEntriesChanged)
