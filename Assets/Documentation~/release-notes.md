@@ -1,3 +1,7 @@
+1.7
+- File watching can be done via direct WindowsAPI (contributed by SamPruden)
+- Extended UI to allow for easy choice of file watcher implementation
+
 1.6
 - Added more Unit Tests to ensure various code patterns can be rewritten correctly
 - Added Watch Only Specific Files and Folders mode (contributed by GhatSmith)
