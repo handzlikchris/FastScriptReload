@@ -568,10 +568,12 @@ includeSubdirectories - whether child directories should be watched as well
 
                         using (LayoutHelper.LabelWidth(240))
                         {
-                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.EnableCustomFileWatcher);
+                            ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.FileWatcherImplementationInUse);
                         }
-                        EditorGUILayout.HelpBox(@"On some Unity verions FileWatcher API could be very slow or not trigger at all.
-Tick this box to use custom implementation.", MessageType.Info);
+                        EditorGUILayout.HelpBox(
+@"DefaultUnity - on some editor versions it could be slow or not trigger at all 
+DirectWindowsApi - (experimental) uses Windows API directly, faster (symlinks not supported)
+CustomPolling - (experimental) watches files by manual polling for changes, slowest. Make sure to narrow down watchers scope to script folders", MessageType.Info);
 
                         ProductPreferenceBase.RenderGuiAndPersistInput(FastScriptReloadPreference.FileWatcherSetupEntries);
                     }),
@@ -794,8 +796,12 @@ Tick this box to use custom implementation.", MessageType.Info);
         public static readonly ToggleProjectEditorPreferenceDefinition EnableExperimentalEditorHotReloadSupport = new ToggleProjectEditorPreferenceDefinition(
             "(Experimental) Enable Hot-Reload outside of play mode", "EnableExperimentalEditorHotReloadSupport", false);
         
+        [Obsolete("Use EnableExperimentalEditorHotReloadSupport instead")]
         public static readonly ToggleProjectEditorPreferenceDefinition EnableCustomFileWatcher = new ToggleProjectEditorPreferenceDefinition(
             "(Experimental) Use custom file watchers", "EnableCustomFileWatcher", false);
+        
+        public static readonly EnumProjectEditorPreferenceDefinition FileWatcherImplementationInUse = new EnumProjectEditorPreferenceDefinition(
+            "File Watcher implementation", "FileWatcherImplementationInUse", FileWatcherImplementation.UnityDefault, typeof(FileWatcherImplementation));
 
         //TODO: potentially that's just a normal settings (also in playmode) - but in playmode user is unlikely to make this many changes
         public static readonly IntProjectEditorPreferenceDefinition TriggerDomainReloadIfOverNDynamicallyLoadedAssembles = new IntProjectEditorPreferenceDefinition(
@@ -910,10 +916,22 @@ Tick this box to use custom implementation.", MessageType.Info);
                 (isFirstRun) =>
                 {
                     AutoDetectAndSetShaderMode();
+                    MigrateObsoleteEnableCustomFileWatcherPreference();
                 }
             );
             
             InitCommon();
+        }
+
+        private static void MigrateObsoleteEnableCustomFileWatcherPreference()
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+            if ((bool)FastScriptReloadPreference.EnableCustomFileWatcher.GetEditorPersistedValueOrDefault())
+            {
+                FastScriptReloadPreference.FileWatcherImplementationInUse.SetEditorPersistedValue(FileWatcherImplementation.CustomPolling);
+                FastScriptReloadPreference.EnableCustomFileWatcher.SetEditorPersistedValue(false);
+            }
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 #endif
         

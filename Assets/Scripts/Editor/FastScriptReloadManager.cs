@@ -14,14 +14,6 @@ using UnityEditor;
 using UnityEditor.Compilation;
 using UnityEngine;
 
-
-#if UNITY_EDITOR_WIN
-using FileSystemWatcher = FastScriptReload.Editor.WindowsFileSystemWatcher;
-#else
-using FileSystemWatcher = System.IO.FileSystemWatcher;
-#endif
-
-
 namespace FastScriptReload.Editor
 {
     [InitializeOnLoad]
@@ -62,7 +54,7 @@ namespace FastScriptReload.Editor
 
         private bool _wasLockReloadAssembliesCalled;
         private PlayModeStateChange _lastPlayModeStateChange;
-        private List<FileSystemWatcher> _fileWatchers = new List<FileSystemWatcher>();
+        private List<IDisposable> _fileWatchers = new List<IDisposable>();
         private IEnumerable<string> _currentFileExclusions;
         private int _triggerDomainReloadIfOverNDynamicallyLoadedAssembles = 100;
         public bool EnableExperimentalThisCallLimitationFix { get; private set; }
@@ -148,15 +140,25 @@ namespace FastScriptReload.Editor
             {
                 LoggerScoped.LogWarning($"FastScriptReload: Directory: '{directoryPath}' does not exist, make sure file-watcher setup is correct. You can access via: Window -> Fast Script Reload -> File Watcher (Advanced Setup)");
             }
-            
-            var isUsingCustomFileWatcher = (bool)FastScriptReloadPreference.EnableCustomFileWatcher.GetEditorPersistedValueOrDefault();
-            if (isUsingCustomFileWatcher)
+
+            switch ((FileWatcherImplementation)FastScriptReloadPreference.FileWatcherImplementationInUse.GetEditorPersistedValueOrDefault())
             {
-                CustomFileWatcher.InitializeSingularFilewatcher(directoryPath, filter, includeSubdirectories);
-            }
-            else
-            {
-                // On Windows, this is a WindowsFileSystemWatcher.
+                case FileWatcherImplementation.UnityDefault:
+                    var fileWatcher = new FileSystemWatcher();
+
+                    fileWatcher.Path = directoryInfo.FullName;
+                    fileWatcher.IncludeSubdirectories = includeSubdirectories;
+                    fileWatcher.Filter =  filter;
+                    fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
+                    fileWatcher.Changed += OnWatchedFileChange;
+        
+                    fileWatcher.EnableRaisingEvents = true;
+        
+                    _fileWatchers.Add(fileWatcher);
+                    
+                    break;
+                case FileWatcherImplementation.DirectWindowsApi:
+                                    // On Windows, this is a WindowsFileSystemWatcher.
                 // On other platforms, it's the default Mono implementation.
                 // The WindowsFileSystemWatcher has much lower latency on Windows.
                 // However, there's a small issue:
@@ -176,14 +178,14 @@ namespace FastScriptReload.Editor
                 // my knowledge can't be avoided directly.
                 // The solution is to combine the file watcher with a polling
                 // mechanism which can (slowly, but reliably) catch any missed events.
-                var fileWatcher = new FileSystemWatcher
+                var windowsFileSystemWatcher = new WindowsFileSystemWatcher()
                 {
                     Path = directoryInfo.FullName,
                     IncludeSubdirectories = includeSubdirectories,
                     Filter = filter,
                     NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName
                 };
-                fileWatcher.Changed += OnWatchedFileChange;
+                windowsFileSystemWatcher.Changed += OnWatchedFileChange;
 
                 // Visual Studio is annoying.
                 // It doesn't actually trigger a nice Changed event.
@@ -209,15 +211,23 @@ namespace FastScriptReload.Editor
                 // Perhaps the approach should be to keep track of touched files, then do some diff procedure to work out what's happened to them?
                 // This could, perhaps, be integrated into the file watcher robustness polling solution discussed above.
                 // The two systems share a need for some type of event debouncing.
-                fileWatcher.Renamed += (source, e) =>
+                windowsFileSystemWatcher.Renamed += (source, e) =>
                 {
                     if (e.Name.EndsWith(".cs"))
                         OnWatchedFileChange(source, e);
                 };
         
-                fileWatcher.EnableRaisingEvents = true;
-        
-                _fileWatchers.Add(fileWatcher);
+                windowsFileSystemWatcher.EnableRaisingEvents = true;
+                                    
+                _fileWatchers.Add(windowsFileSystemWatcher);
+                break;
+                
+                case FileWatcherImplementation.CustomPolling:
+                    CustomFileWatcher.InitializeSingularFilewatcher(directoryPath, filter, includeSubdirectories);
+                    break;
+                
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -835,5 +845,14 @@ Workaround will search in all folders (under project root) and will use first fo
             FullFileName = fullFileName;
             FileChangedOn = fileChangedOn;
         }
+    }
+
+    public enum FileWatcherImplementation
+    {
+        UnityDefault = 0,
+#if UNITY_EDITOR_WIN
+        DirectWindowsApi = 1,
+#endif
+        CustomPolling = 2
     }
 }
