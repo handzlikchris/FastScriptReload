@@ -49,6 +49,7 @@ namespace FastScriptReload.Editor.Compilation
                     
                     foreach (var fileToCleanup in _createdFilesToCleanUp)
                     {
+                        new FileInfo(fileToCleanup).IsReadOnly = false;
                         File.Delete(fileToCleanup);
                     }
                     _createdFilesToCleanUp.Clear();
@@ -187,6 +188,7 @@ You can also:
         private static void CreateFileAndTrackAsCleanup(string filePath, string contents, List<string> createdFilesToCleanUp)
         {
             File.WriteAllText(filePath, contents);
+            new FileInfo(filePath).IsReadOnly = true;
             createdFilesToCleanUp.Add(filePath);
         }
 
