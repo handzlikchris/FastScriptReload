@@ -1,4 +1,6 @@
-﻿using Microsoft.Win32.SafeHandles;
+﻿#if UNITY_2021_1_OR_NEWER
+
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -79,7 +81,7 @@ namespace FastScriptReload.Editor
         public WindowsFileSystemWatcher()
         {
             this.eventsTask = Task.CompletedTask;
-            this.weakDisposer = new(this);
+            this.weakDisposer = new WeakDisposer(this);
 
             AppDomain.CurrentDomain.DomainUnload += this.weakDisposer.Dispose;
 
@@ -355,7 +357,7 @@ namespace FastScriptReload.Editor
             private readonly WeakReference<WindowsFileSystemWatcher> fsw;
 
             public WeakDisposer(WindowsFileSystemWatcher fsw)
-                => this.fsw = new(fsw);
+                => this.fsw = new WeakReference<WindowsFileSystemWatcher>(fsw);
 
             public void Dispose()
             {
@@ -406,3 +408,4 @@ namespace FastScriptReload.Editor
         #endregion
     }
 }
+#endif

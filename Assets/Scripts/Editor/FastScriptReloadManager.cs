@@ -157,8 +157,9 @@ namespace FastScriptReload.Editor
                     _fileWatchers.Add(fileWatcher);
                     
                     break;
-                case FileWatcherImplementation.DirectWindowsApi:
-                                    // On Windows, this is a WindowsFileSystemWatcher.
+#if UNITY_2021_1_OR_NEWER
+                case FileWatcherImplementation.DirectWindowsApi: 
+                // On Windows, this is a WindowsFileSystemWatcher.
                 // On other platforms, it's the default Mono implementation.
                 // The WindowsFileSystemWatcher has much lower latency on Windows.
                 // However, there's a small issue:
@@ -221,6 +222,7 @@ namespace FastScriptReload.Editor
                                     
                 _fileWatchers.Add(windowsFileSystemWatcher);
                 break;
+#endif
                 
                 case FileWatcherImplementation.CustomPolling:
                     CustomFileWatcher.InitializeSingularFilewatcher(directoryPath, filter, includeSubdirectories);
@@ -851,7 +853,7 @@ Workaround will search in all folders (under project root) and will use first fo
     public enum FileWatcherImplementation
     {
         UnityDefault = 0,
-#if UNITY_EDITOR_WIN
+#if UNITY_EDITOR_WIN && UNITY_2021_1_OR_NEWER
         DirectWindowsApi = 1,
 #endif
         CustomPolling = 2
