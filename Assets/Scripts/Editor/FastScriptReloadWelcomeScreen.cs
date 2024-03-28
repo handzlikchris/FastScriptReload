@@ -919,7 +919,6 @@ CustomPolling - (experimental) watches files by manual polling for changes, slow
                 new List<ProjectEditorPreferenceDefinitionBase>(),
                 (isFirstRun) =>
                 {
-                    AutoDetectAndSetShaderMode();
                     MigrateObsoleteEnableCustomFileWatcherPreference();
                 }
             );
@@ -955,6 +954,8 @@ CustomPolling - (experimental) watches files by manual polling for changes, slow
             BuildDefineSymbolManager.SetBuildDefineSymbolState(FastScriptReloadPreference.BuildSymbol_DetailedDebugLogging,
                 (bool)FastScriptReloadPreference.EnableDetailedDebugLogging.GetEditorPersistedValueOrDefault()
             );
+            
+            AutoDetectAndSetShaderMode();
         }
 
         private static void EnsureUserAwareOfAutoRefresh()
