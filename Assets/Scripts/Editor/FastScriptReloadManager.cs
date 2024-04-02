@@ -157,7 +157,7 @@ namespace FastScriptReload.Editor
                     _fileWatchers.Add(fileWatcher);
                     
                     break;
-#if UNITY_2021_1_OR_NEWER
+#if UNITY_2021_1_OR_NEWER && UNITY_EDITOR_WIN
                 case FileWatcherImplementation.DirectWindowsApi: 
                 // On Windows, this is a WindowsFileSystemWatcher.
                 // On other platforms, it's the default Mono implementation.
