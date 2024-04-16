@@ -13,7 +13,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 		private readonly Dictionary<string, List<string>> _typeToNewFieldDeclarations;
 		private static readonly string NewFieldsToCreateValueFnDictionaryFieldName = "__Patched_NewFieldNameToInitialValueFn";
 		private static readonly string NewFieldsToGetTypeFnDictionaryFieldName = "__Patched_NewFieldsToGetTypeFnDictionaryFieldName";
-		private static readonly string DictionaryFullNamespaceTypeName = "System.Collections.Generic.Dictionary";
+		private static readonly string DictionaryFullNamespaceTypeName = "global::System.Collections.Generic.Dictionary";
 
 		public static Dictionary<string, Func<object>> ResolveNewFieldsToCreateValueFn(Type forType)
 		{
@@ -99,7 +99,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 														SyntaxFactory.Token(SyntaxKind.StringKeyword)),
 													SyntaxFactory.Token(SyntaxKind.CommaToken),
 													SyntaxFactory.GenericName(
-															SyntaxFactory.Identifier("System.Func"))
+															SyntaxFactory.Identifier("global::System.Func"))
 														.WithTypeArgumentList(
 															SyntaxFactory.TypeArgumentList(
 																SyntaxFactory.SingletonSeparatedList<TypeSyntax>(
@@ -124,7 +124,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 																				SyntaxFactory.Token(SyntaxKind.StringKeyword)),
 																			SyntaxFactory.Token(SyntaxKind.CommaToken),
 																			SyntaxFactory.QualifiedName(
-																				SyntaxFactory.IdentifierName("System"),
+																				SyntaxFactory.IdentifierName("global::System"),
 																				SyntaxFactory.GenericName(
 																						SyntaxFactory.Identifier("Func"))
 																					.WithTypeArgumentList(
