@@ -220,16 +220,22 @@ You can also:
                 rspContents.AppendLine($"-define:{symbol}");
             }
 
+            Dictionary<string, bool> nameLoaded = new Dictionary<string, bool>();
             foreach (var referenceToAdd in ResolveReferencesToAdd(new List<string>()))
             {
-                if (originalAssemblyPathToAsmWithInternalsVisibleToCompiled.TryGetValue(referenceToAdd, out var asmWithInternalsVisibleTo))
+                string key = Path.GetFileName(referenceToAdd);
+                if (!nameLoaded.ContainsKey(key)) // Avoid duplicates of the same assembly
                 {
-                    //Changed assembly have InternalsVisibleTo added to it to avoid any issues where types are defined internal
-                    rspContents.AppendLine($"-r:\"{asmWithInternalsVisibleTo}\"");
-                }
-                else
-                {
-                    rspContents.AppendLine($"-r:\"{referenceToAdd}\"");
+                    if (originalAssemblyPathToAsmWithInternalsVisibleToCompiled.TryGetValue(referenceToAdd, out var asmWithInternalsVisibleTo))
+                    {
+                        //Changed assembly have InternalsVisibleTo added to it to avoid any issues where types are defined internal
+                        rspContents.AppendLine($"-r:\"{asmWithInternalsVisibleTo}\"");
+                    }
+                    else
+                    {
+                        rspContents.AppendLine($"-r:\"{referenceToAdd}\"");
+                    }
+                    nameLoaded.Add(key, true);
                 }
             }
 
