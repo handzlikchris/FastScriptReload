@@ -12,29 +12,27 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
 {
     public class MergePartialClassesTest
     {
-        private string tempPath;
+        private string _tempPath;
 
         [SetUp]
         public void SetUp()
         {
-            tempPath = Path.Combine(Path.GetTempPath(), "PartialSyntaxTreeTests");
-            Directory.CreateDirectory(tempPath);
+            _tempPath = Path.Combine(Path.GetTempPath(), "PartialSyntaxTreeTests");
+            Directory.CreateDirectory(_tempPath);
         }
 
         [TearDown]
         public void TearDown()
         {
-            if (Directory.Exists(tempPath))
-            {
-                Directory.Delete(tempPath, true);
-            }
+            if (Directory.Exists(_tempPath))
+                Directory.Delete(_tempPath, true);
         }
 
         [UnityTest]
         public IEnumerator Partials_MergePartialClasses()
         {
             // Arrange
-            var partialClass1 = @"
+            const string partialClass1 = @"
             using System;
             namespace TestNamespace
             {
@@ -44,7 +42,7 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
                 }
             }";
 
-            var partialClass2 = @"
+            const string partialClass2 = @"
             using System.Collections.Generic;
             namespace TestNamespace
             {
@@ -54,8 +52,8 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
                 }
             }";
 
-            var path1 = Path.Combine(tempPath, "PartialClass1.cs");
-            var path2 = Path.Combine(tempPath, "PartialClass2.cs");
+            var path1 = Path.Combine(_tempPath, "PartialClass1.cs");
+            var path2 = Path.Combine(_tempPath, "PartialClass2.cs");
             File.WriteAllText(path1, partialClass1);
             File.WriteAllText(path2, partialClass2);
 
@@ -69,7 +67,7 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
                     "DEBUG", "UNITY_EDITOR"
             };
 
-            var result = trees.CombinePartials(definedPreprocessorSymbols, out var typesDefined);
+            var result = trees.MergePartials(definedPreprocessorSymbols);
 
             Assert.AreEqual(1, result.Count(), "Should result in a single combined tree");
 
@@ -79,17 +77,17 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
             var classDeclaration = root.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ClassDeclarationSyntax>().First();
             Assert.AreEqual("TestClass", classDeclaration.Identifier.Text, "Class name should be TestClass");
 
+            //Test Methods
             var methods = classDeclaration.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax>().ToList();
             Assert.AreEqual(2, methods.Count, "Combined class should have two methods");
             Assert.IsTrue(methods.Any(m => m.Identifier.Text == "Method1"), "Combined class should contain Method1");
             Assert.IsTrue(methods.Any(m => m.Identifier.Text == "Method2"), "Combined class should contain Method2");
 
+            //Test Usings
             var usingDirectives = root.Usings;
             Assert.AreEqual(2, usingDirectives.Count, "Should have two using directives");
             Assert.IsTrue(usingDirectives.Any(u => u.Name.ToString() == "System"), "Should have using System");
             Assert.IsTrue(usingDirectives.Any(u => u.Name.ToString() == "System.Collections.Generic"), "Should have using System.Collections.Generic");
-
-            Assert.IsTrue(typesDefined.Contains("TestClass"), "TestClass should be in typesDefined");
 
             yield return null;
         }

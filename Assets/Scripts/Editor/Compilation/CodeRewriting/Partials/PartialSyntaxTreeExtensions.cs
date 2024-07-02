@@ -9,20 +9,17 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 {
     public static class PartialSyntaxTreeExtensions
     {
-        public static IEnumerable<SyntaxTree> CombinePartials(
+        /**
+         * if the syntax tree contains partial definitions, searches for other partials definitions in the same directory and merge them into a single syntax tree.
+         */
+        public static IEnumerable<SyntaxTree> MergePartials(
                 this IEnumerable<SyntaxTree> trees,
-                IEnumerable<string> definedPreprocessorSymbols,
-                out HashSet<string> typesDefined)
+                IEnumerable<string> definedPreprocessorSymbols)
         {
-            var processedTrees = trees
+            return trees
                     .Select(tree => ProcessPartialTree(tree, definedPreprocessorSymbols))
                     .ToList();
-
-            typesDefined = ExtractTypesDefined(processedTrees);
-
-            return processedTrees.Select(info => info);
         }
-
 
         private static SyntaxTree ProcessPartialTree(SyntaxTree tree, IEnumerable<string> definedPreprocessorSymbols)
         {
@@ -31,20 +28,12 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
                 return tree;
             }
 
-            //Note: we are looking for partials only in the same directory and max depth of 5
+            //Note: we are looking for partials in the same directory and with max depth of 5
             const int fileSearchMaxDepth = 5;
             return PartialClassFinder.FindPartialClassFilesInDirectory(tree.FilePath, fileSearchMaxDepth)
                     .Select(File.ReadAllText)
                     .SourceToSyntaxTree(tree.FilePath)
                     .Aggregate((left, right) => CombineSyntaxTreePartials(left, right, definedPreprocessorSymbols));
-        }
-
-        private static HashSet<string> ExtractTypesDefined(IEnumerable<SyntaxTree> processedTrees)
-        {
-            return processedTrees
-                    .SelectMany(tree => tree.GetCompilationUnitRoot().DescendantNodes().OfType<TypeDeclarationSyntax>())
-                    .Select(GetFullyQualifiedName)
-                    .ToHashSet();
         }
 
         private static bool HasPartialTypes(SyntaxTree tree)
