@@ -82,10 +82,8 @@ namespace FastScriptReload.Editor.Compilation
                         var tree = CSharpSyntaxTree.ParseText(fileCode, new CSharpParseOptions(preprocessorSymbols: definedPreprocessorSymbols));
                         return tree.WithFilePath(sourceCodeFile);
                     })
-                    .CombinePartials(definedPreprocessorSymbols, out var typesDefinedHashSet)
+                    .MergePartials(definedPreprocessorSymbols)
                     .ToList();
-
-            typesDefined.AddRange(typesDefinedHashSet);
 
             // It's important to check whether the compiler was able to correctly interpret the original code.
             // When the compiler encounters errors, it actually continues and still produces a tree.
