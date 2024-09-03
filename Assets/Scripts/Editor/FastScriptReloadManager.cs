@@ -58,6 +58,7 @@ namespace FastScriptReload.Editor
         private IEnumerable<string> _currentFileExclusions;
         private int _triggerDomainReloadIfOverNDynamicallyLoadedAssembles = 100;
         public bool EnableExperimentalThisCallLimitationFix { get; private set; }
+        public bool IsPartialClassSupportEnabled { get; private set; }
 #pragma warning disable 0618
         public AssemblyChangesLoaderEditorOptionsNeededInBuild AssemblyChangesLoaderEditorOptionsNeededInBuild { get; private set; } = new AssemblyChangesLoaderEditorOptionsNeededInBuild();
 
@@ -524,6 +525,7 @@ namespace FastScriptReload.Editor
                 (bool)FastScriptReloadPreference.IsDidFieldsOrPropertyCountChangedCheckDisabled.GetEditorPersistedValueOrDefault(),
                 (bool)FastScriptReloadPreference.EnableExperimentalAddedFieldsSupport.GetEditorPersistedValueOrDefault()
             );
+            IsPartialClassSupportEnabled = (bool)FastScriptReloadPreference.IsPartialClassSupportEnabled.GetEditorPersistedValueOrDefault();
         }
 
         public void TriggerReloadForChangedFiles()

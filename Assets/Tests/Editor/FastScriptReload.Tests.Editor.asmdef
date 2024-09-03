@@ -17,7 +17,9 @@
     "precompiledReferences": [
         "ImmersiveVRTools.Common.Editor.dll",
         "ImmersiveVRTools.Common.Runtime.dll",
-        "0Harmony.dll"
+        "0Harmony.dll",
+        "Microsoft.CodeAnalysis.CSharp.dll",
+        "Microsoft.CodeAnalysis.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [

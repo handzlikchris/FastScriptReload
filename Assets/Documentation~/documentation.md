@@ -605,7 +605,17 @@ Once breakpoint has been hit it'll stop asset from hot-reloading in that play-se
 Asset runs based on specific .NET functionality, IL2CPP builds will not be supported. Although as this is development workflow aid you can build your APK with Mono backend (android) and change later.
 
 ### Partial classes
-Partial classes are not yet supported
+Experimental support (on by default). Potentially could have some performance implications as it's file-read heavy in current state. Can be disabled in options if needed.
+
+Your partial class file needs to share name with actual class. eg
+`public class PartialClass`
+
+Needs to be in files
+**PartialClass**XYZ
+
+eg.
+- PartialClass.1.cs
+- PartialClass.2.cs
 
 ## FAQ
 ### How is this asset different than Live Script Reload?
