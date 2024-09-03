@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -82,8 +82,12 @@ namespace FastScriptReload.Editor.Compilation
                         var tree = CSharpSyntaxTree.ParseText(fileCode, new CSharpParseOptions(preprocessorSymbols: definedPreprocessorSymbols));
                         return tree.WithFilePath(sourceCodeFile);
                     })
-                    .MergePartials(definedPreprocessorSymbols)
                     .ToList();
+
+            if (FastScriptReloadManager.Instance.IsPartialClassSupportEnabled)
+            {
+                trees = trees.MergePartials(definedPreprocessorSymbols).ToList();
+            }
 
             // It's important to check whether the compiler was able to correctly interpret the original code.
             // When the compiler encounters errors, it actually continues and still produces a tree.
