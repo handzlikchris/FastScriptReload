@@ -6,6 +6,7 @@ using UnityEngine;
 
 public static class PartialClassFinder
 {
+    //TODO: optimize lookup, currently this loads all files in directory and checks if they have 'partial' string in them. For directories with many files this will not be sufficient
     public static IEnumerable<string> FindPartialClassFilesInDirectory(string filePath, int maxDepth = int.MaxValue)
     {
         if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
