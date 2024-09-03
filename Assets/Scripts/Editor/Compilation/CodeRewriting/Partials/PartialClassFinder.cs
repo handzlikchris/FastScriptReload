@@ -81,6 +81,6 @@ public static class PartialClassFinder
         if (partialClassDeclaration == null)
             return string.Empty;
 
-        return partialClassDeclaration.TrimStart().Split(new[] { ' ', '{', ':' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+        return partialClassDeclaration.TrimStart().Split(new[] { ' ', '{', ':' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault().Trim();
     }
 }
