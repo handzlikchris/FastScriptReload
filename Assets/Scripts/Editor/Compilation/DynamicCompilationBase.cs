@@ -199,6 +199,7 @@ namespace FastScriptReload.Editor.Compilation
                 
                 root = new BuilderPatternFunctionsRewriter(DebugWriteRewriteReasonAsComment).Visit(root);
                 root = new RecordeRewriter(DebugWriteRewriteReasonAsComment).Visit(root);
+                root = new ExtensionMethodsCallingOtherExtensionMethodsInSameFileRewriter(DebugWriteRewriteReasonAsComment).Visit(root);
                 
                 //processed as last step to simply rewrite all changes made before
                 if (TryResolveUserDefinedOverridesRoot(tree.FilePath, definedPreprocessorSymbols, out var userDefinedOverridesRoot))
