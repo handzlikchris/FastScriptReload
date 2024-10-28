@@ -75,12 +75,19 @@ namespace FastScriptReload.Editor.Compilation
             var combinedUsingStatements = new List<string>();
             var typesDefined = new List<string>();
 
-            var trees = sourceCodeFiles.Select(sourceCodeFile => {
-                var fileCode = File.ReadAllText(sourceCodeFile);
-                var tree = CSharpSyntaxTree.ParseText(fileCode, new CSharpParseOptions(preprocessorSymbols: definedPreprocessorSymbols));
-                tree = tree.WithFilePath(sourceCodeFile);
-                return tree;
-            }).ToArray();
+            var trees = sourceCodeFiles
+                    .Select(sourceCodeFile =>
+                    {
+                        var fileCode = File.ReadAllText(sourceCodeFile);
+                        var tree = CSharpSyntaxTree.ParseText(fileCode, new CSharpParseOptions(preprocessorSymbols: definedPreprocessorSymbols));
+                        return tree.WithFilePath(sourceCodeFile);
+                    })
+                    .ToList();
+
+            if (FastScriptReloadManager.Instance.IsPartialClassSupportEnabled)
+            {
+                trees = trees.MergePartials(definedPreprocessorSymbols).ToList();
+            }
 
             // It's important to check whether the compiler was able to correctly interpret the original code.
             // When the compiler encounters errors, it actually continues and still produces a tree.
@@ -103,6 +110,13 @@ namespace FastScriptReload.Editor.Compilation
             
             var sourceCodeWithAdjustments = trees.Select(tree =>
             {
+                //skip if tree.FilePath null or empty
+                if (string.IsNullOrEmpty(tree.FilePath))
+                {
+                    LoggerScoped.LogError($"Skipping file as it has no path: {tree.FilePath}");
+                    return tree.GetRoot().ToFullString();
+                }
+
                 var root = tree.GetRoot();
                 
                 //WARN: needs to walk before root class name changes, otherwise it'll resolve wrong name
@@ -184,6 +198,8 @@ namespace FastScriptReload.Editor.Compilation
                 combinedUsingStatements.AddRange(hotReloadCompliantRewriter.StrippedUsingDirectives);
                 
                 root = new BuilderPatternFunctionsRewriter(DebugWriteRewriteReasonAsComment).Visit(root);
+                root = new RecordeRewriter(DebugWriteRewriteReasonAsComment).Visit(root);
+                root = new ExtensionMethodsCallingOtherExtensionMethodsInSameFileRewriter(DebugWriteRewriteReasonAsComment).Visit(root);
                 
                 //processed as last step to simply rewrite all changes made before
                 if (TryResolveUserDefinedOverridesRoot(tree.FilePath, definedPreprocessorSymbols, out var userDefinedOverridesRoot))

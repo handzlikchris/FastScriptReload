@@ -1,8 +1,10 @@
 1.7
 - File watching can be done via direct WindowsAPI (contributed by SamPruden)
 - Extended UI to allow for easy choice of file watcher implementation
+- Added partial class rewriting support (contributed by Jlabarca)
+- Calls in extension method to another extension method in same file will be rewritten to use static-call instead of instance call
 
-1.6
+- 1.6
 - Added more Unit Tests to ensure various code patterns can be rewritten correctly
 - Added Watch Only Specific Files and Folders mode (contributed by GhatSmith)
 - Added better Odin support for dynamically added fields (contributed by GhatSmith)
