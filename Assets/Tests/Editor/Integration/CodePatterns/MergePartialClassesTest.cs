@@ -58,6 +58,28 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
             yield return MergeAndTest_CSharpPartialClass(partialClass1, partialClass2);
         }
 
+        [UnityTest]
+        public IEnumerator Partials_ClassMergeWithoutNamespaceTest()
+        {
+            const string partialClass1 = @"
+            using System;
+            public partial class TestClass
+            {
+                private int _field1;
+                public void Method1() { }
+            }";
+
+            const string partialClass2 = @"
+            using System.Collections.Generic;
+            public partial class TestClass
+            {
+                private int _field2;
+                public void Method2() { }
+            }";
+
+            yield return MergeAndTest_CSharpPartialClass(partialClass1, partialClass2, hasNamespace: false);
+        }
+
 
         [UnityTest]
         public IEnumerator Partials_StructMergeTest()
@@ -117,7 +139,8 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
             yield return MergeAndTest_CSharpPartialClass(partialClass1, partialClass2);
         }
 
-        private IEnumerator MergeAndTest_CSharpPartialClass(string partialClass1, string partialClass2)
+        private IEnumerator MergeAndTest_CSharpPartialClass(string partialClass1, string partialClass2,
+            bool hasNamespace = true)
         {
             var path1 = Path.Combine(_tempPath, "PartialClass1.cs");
             var path2 = Path.Combine(_tempPath, "PartialClass2.cs");
@@ -139,10 +162,12 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
             var combinedTree = result.First();
             var root = combinedTree.GetCompilationUnitRoot();
 
-            //Test Namespace
-            var namespaceDeclaration = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
-            Assert.IsNotNull(namespaceDeclaration, "Namespace should exist");
-            Assert.AreEqual("TestNamespace", namespaceDeclaration.Name.ToString(), "Namespace should be TestNamespace");
+            if (hasNamespace) {
+                //Test Namespace
+                var namespaceDeclaration = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+                Assert.IsNotNull(namespaceDeclaration, "Namespace should exist");
+                Assert.AreEqual("TestNamespace", namespaceDeclaration.Name.ToString(), "Namespace should be TestNamespace");
+            }
 
             var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
             Assert.AreEqual("TestClass", classDeclaration.Identifier.Text, "Class name should be TestClass");

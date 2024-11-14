@@ -7,7 +7,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 {
     internal static class NamespaceHelper
     {
-        internal static string GetFullyQualifiedName(TypeDeclarationSyntax typeDeclaration)
+        internal static string GetNamespaceName(TypeDeclarationSyntax typeDeclaration)
         {
             var namespaces = new List<string>();
             var currentNode = typeDeclaration.Parent;
@@ -20,10 +20,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
                 currentNode = currentNode.Parent;
             }
             namespaces.Reverse();
-            var namespaceName = string.Join(".", namespaces);
-            return string.IsNullOrEmpty(namespaceName)
-                    ? typeDeclaration.Identifier.Text
-                    : $"{namespaceName}.{typeDeclaration.Identifier.Text}";
+            return string.Join(".", namespaces);
         }
     }
 

@@ -30,7 +30,8 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
                 return tree;
             }
 
-            var combinedTypes = new Dictionary<string, List<TypeDeclarationSyntax>>();
+            // root key is namespace, inner key is type
+            var combinedTypes = new Dictionary<string, Dictionary<string, List<TypeDeclarationSyntax>>>();
             var combinedUsingDirectives = new HashSet<UsingDirectiveSyntax>();
 
             ProcessTree(tree, combinedTypes, combinedUsingDirectives);
@@ -45,9 +46,27 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
                 ProcessTree(partialTree, combinedTypes, combinedUsingDirectives);
             }
 
-            var combinedTypeDeclarations = combinedTypes
-                    .Select(kvp => PartialTypeCombiner.CombinePartialType(kvp.Value))
+            var combinedTypeDeclarations = new List<MemberDeclarationSyntax>();
+            foreach (var (namespaceName, types) in combinedTypes)
+            {
+                var typesInNamespace = types
+                    .Select(type => PartialTypeCombiner.CombinePartialType(type.Value))
                     .ToList<MemberDeclarationSyntax>();
+
+                if (string.IsNullOrEmpty(namespaceName))
+                {
+                    combinedTypeDeclarations.AddRange(typesInNamespace);
+                }
+                else
+                {
+                    var namespaceDeclaration = SyntaxFactory
+                        .NamespaceDeclaration(SyntaxFactory.ParseName(namespaceName))
+                        .NormalizeWhitespace()
+                        .WithMembers(SyntaxFactory.List(typesInNamespace));
+
+                    combinedTypeDeclarations.Add(namespaceDeclaration);
+                }
+            }
 
             var newRoot = SyntaxFactory.CompilationUnit()
                     .WithUsings(SyntaxFactory.List(combinedUsingDirectives))
@@ -66,7 +85,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 
         private static void ProcessTree(
                 SyntaxTree tree,
-                Dictionary<string, List<TypeDeclarationSyntax>> combinedTypes,
+                Dictionary<string, Dictionary<string, List<TypeDeclarationSyntax>>> combinedTypes,
                 HashSet<UsingDirectiveSyntax> combinedUsingDirectives)
         {
             var root = tree.GetCompilationUnitRoot();
@@ -75,14 +94,21 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 
             foreach (var typeDecl in root.DescendantNodes().OfType<TypeDeclarationSyntax>())
             {
-                var fullName = NamespaceHelper.GetFullyQualifiedName(typeDecl);
+                var namespaceName = NamespaceHelper.GetNamespaceName(typeDecl);
+                var typeName = typeDecl.Identifier.Text;
 
-                if (!combinedTypes.TryGetValue(fullName, out var declarations))
+                if (!combinedTypes.TryGetValue(namespaceName, out var typesInNamespace))
                 {
-                    declarations = new List<TypeDeclarationSyntax>();
-                    combinedTypes[fullName] = declarations;
+                    typesInNamespace = new Dictionary<string, List<TypeDeclarationSyntax>>();
+                    combinedTypes[namespaceName] = typesInNamespace;
                 }
-                declarations.Add(typeDecl);
+
+                if (!typesInNamespace.TryGetValue(typeName, out var typeList))
+                {
+                    typeList = new List<TypeDeclarationSyntax>();
+                    typesInNamespace[typeName] = typeList;
+                }
+                typeList.Add(typeDecl);
             }
         }
     }
