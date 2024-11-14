@@ -94,6 +94,11 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 
             foreach (var typeDecl in root.DescendantNodes().OfType<TypeDeclarationSyntax>())
             {
+                if (!typeDecl.Modifiers.Any(SyntaxKind.PublicKeyword))
+                {
+                    continue;
+                }
+
                 var namespaceName = NamespaceHelper.GetNamespaceName(typeDecl);
                 var typeName = typeDecl.Identifier.Text;
 

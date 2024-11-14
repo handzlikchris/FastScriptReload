@@ -387,5 +387,67 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
 
             yield return null;
         }
+
+        [UnityTest]
+        public IEnumerator Partials_IgnoreInnerTypesTest()
+        {
+            // Arrange
+            const string partialClass1 = @"
+            using System;
+            namespace TestNamespace
+            {
+                public partial class TestClass
+                {
+                    private int _field1;
+
+                    private class InnerClass
+                    {
+                        public int innerField;
+                    }
+                }
+            }";
+
+            const string partialClass2 = @"
+            using System.Collections.Generic;
+            namespace TestNamespace
+            {
+                public partial class TestClass
+                {
+                    private string _field2;
+
+                    private struct InnerStruct
+                    {
+                        public int innerField;
+                    }
+                }
+            }";
+
+            var path1 = Path.Combine(_tempPath, "PartialClass1.cs");
+            var path2 = Path.Combine(_tempPath, "PartialClass2.cs");
+            File.WriteAllText(path1, partialClass1);
+            File.WriteAllText(path2, partialClass2);
+
+            var tree1 = CSharpSyntaxTree.ParseText(partialClass1, path: path1);
+            var tree2 = CSharpSyntaxTree.ParseText(partialClass2, path: path1);
+            var trees = new List<SyntaxTree>
+            {
+                tree1, tree2
+            };
+
+            // Act
+            var result = trees.MergePartials(new List<string> { "DEBUG", "UNITY_EDITOR" });
+
+            // Assert
+            var combinedTree = result.First();
+            var root = combinedTree.GetCompilationUnitRoot();
+
+            var classDeclarations = root.DescendantNodes().OfType<ClassDeclarationSyntax>().ToList();
+            Assert.That(classDeclarations.Count, Is.EqualTo(2), "Should have two class declarations");
+
+            var structDeclarations = root.DescendantNodes().OfType<StructDeclarationSyntax>().ToList();
+            Assert.That(structDeclarations.Count, Is.EqualTo(1), "Should have one struct declaration");
+
+            yield return null;
+        }
     }
 }
