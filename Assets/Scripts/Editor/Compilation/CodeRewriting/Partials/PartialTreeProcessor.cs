@@ -32,7 +32,8 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 
             // root key is namespace, inner key is type
             var combinedTypes = new Dictionary<string, Dictionary<string, List<TypeDeclarationSyntax>>>();
-            var combinedUsings = new HashSet<string>();
+            (HashSet<string>, HashSet<UsingDirectiveSyntax> syntaxes) combinedUsings =
+                (new HashSet<string>(), new HashSet<UsingDirectiveSyntax>());
 
             ProcessTree(tree, combinedTypes, combinedUsings);
 
@@ -67,11 +68,8 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
                 }
             }
 
-            var uniqueUsingDirectives = combinedUsings
-                .Select(it => SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(it)));
-
             var newRoot = SyntaxFactory.CompilationUnit()
-                    .WithUsings(SyntaxFactory.List(uniqueUsingDirectives))
+                    .WithUsings(SyntaxFactory.List(combinedUsings.syntaxes))
                     .WithMembers(SyntaxFactory.List(combinedTypeDeclarations))
                     .WithAdditionalAnnotations(new SyntaxAnnotation("PreprocessorSymbols", string.Join(",", definedPreprocessorSymbols)))
                     .NormalizeWhitespace();
@@ -89,13 +87,16 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
         private static void ProcessTree(
                 SyntaxTree tree,
                 Dictionary<string, Dictionary<string, List<TypeDeclarationSyntax>>> combinedTypes,
-                HashSet<string> combinedUsings)
+                (HashSet<string> strings, HashSet<UsingDirectiveSyntax> syntaxes) combinedUsings)
         {
             var root = tree.GetCompilationUnitRoot();
 
             foreach (var usingDirective in root.Usings)
             {
-                combinedUsings.Add(usingDirective.Name!.ToString());
+                if (combinedUsings.strings.Add(usingDirective.Name!.ToString()))
+                {
+                    combinedUsings.syntaxes.Add(usingDirective);
+                }
             }
 
             foreach (var typeDecl in root.DescendantNodes().OfType<TypeDeclarationSyntax>())
