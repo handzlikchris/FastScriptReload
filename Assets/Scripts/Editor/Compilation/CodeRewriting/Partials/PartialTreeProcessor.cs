@@ -61,7 +61,6 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
                 {
                     var namespaceDeclaration = SyntaxFactory
                         .NamespaceDeclaration(SyntaxFactory.ParseName(namespaceName))
-                        .NormalizeWhitespace()
                         .WithMembers(SyntaxFactory.List(typesInNamespace));
 
                     combinedTypeDeclarations.Add(namespaceDeclaration);
@@ -74,7 +73,8 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
             var newRoot = SyntaxFactory.CompilationUnit()
                     .WithUsings(SyntaxFactory.List(uniqueUsingDirectives))
                     .WithMembers(SyntaxFactory.List(combinedTypeDeclarations))
-                    .WithAdditionalAnnotations(new SyntaxAnnotation("PreprocessorSymbols", string.Join(",", definedPreprocessorSymbols)));
+                    .WithAdditionalAnnotations(new SyntaxAnnotation("PreprocessorSymbols", string.Join(",", definedPreprocessorSymbols)))
+                    .NormalizeWhitespace();
 
             return CSharpSyntaxTree.Create(newRoot, null, tree.FilePath)
                     .AddInternalsVisibleToAttribute();
