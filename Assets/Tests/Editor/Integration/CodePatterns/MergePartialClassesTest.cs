@@ -86,15 +86,15 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
 
             // Assert
             var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
-            Assert.AreEqual("TestClass", classDeclaration.Identifier.Text, "Class name should be TestClass");
+            Assert.That("TestClass", Is.EqualTo(classDeclaration.Identifier.Text));
 
             // Test Fields
             var fields = classDeclaration.DescendantNodes().OfType<FieldDeclarationSyntax>().ToList();
-            Assert.AreEqual(2, fields.Count, "Combined class should have two fields");
+            Assert.That(fields.Count, Is.EqualTo(2));
 
             // Test Usings
             var usingDirectives = root.Usings;
-            Assert.AreEqual(2, usingDirectives.Count, "Should have two using directives");
+            Assert.That(usingDirectives.Count, Is.EqualTo(2));
             Assert.IsTrue(usingDirectives.Any(u => u.Name!.ToString() == "System"), "Should have using System");
             Assert.IsTrue(usingDirectives.Any(u => u.Name!.ToString() == "System.Collections.Generic"),
                 "Should have using System.Collections.Generic");
@@ -139,25 +139,25 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
             // Assert
             // Test Namespace
             var namespaceDeclaration = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
-            Assert.IsNotNull(namespaceDeclaration, "Namespace should exist");
-            Assert.AreEqual("TestNamespace", namespaceDeclaration.Name.ToString(), "Namespace should be TestNamespace");
+            Assert.That(namespaceDeclaration, Is.Not.Null);
+            Assert.That(namespaceDeclaration.Name.ToString(), Is.EqualTo("TestNamespace"));
 
             var structDeclaration = root.DescendantNodes().OfType<StructDeclarationSyntax>().First();
-            Assert.AreEqual("TestStruct", structDeclaration.Identifier.Text, "Struct name should be TestStruct");
+            Assert.That(structDeclaration.Identifier.Text, Is.EqualTo("TestStruct"));
 
             // Test Fields
             var fields = structDeclaration.DescendantNodes().OfType<FieldDeclarationSyntax>().ToList();
-            Assert.AreEqual(2, fields.Count, "Combined class should have two fields");
+            Assert.That(fields.Count, Is.EqualTo(2));
 
             // Test Methods
             var methods = structDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>().ToList();
-            Assert.AreEqual(2, methods.Count, "Combined class should have two methods");
+            Assert.That(methods.Count, Is.EqualTo(2));
             Assert.IsTrue(methods.Any(m => m.Identifier.Text == "Method1"), "Combined class should contain Method1");
             Assert.IsTrue(methods.Any(m => m.Identifier.Text == "Method2"), "Combined class should contain Method2");
 
             // Test Usings
             var usingDirectives = root.Usings;
-            Assert.AreEqual(2, usingDirectives.Count, "Should have two using directives");
+            Assert.That(usingDirectives.Count, Is.EqualTo(2));
             Assert.IsTrue(usingDirectives.Any(u => u.Name!.ToString() == "System"), "Should have using System");
             Assert.IsTrue(usingDirectives.Any(u => u.Name!.ToString() == "System.Collections.Generic"),
                 "Should have using System.Collections.Generic");
@@ -207,25 +207,25 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
             // Assert
             // Test Namespace
             var namespaceDeclaration = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
-            Assert.IsNotNull(namespaceDeclaration, "Namespace should exist");
-            Assert.AreEqual("TestNamespace", namespaceDeclaration.Name.ToString(), "Namespace should be TestNamespace");
+            Assert.That(namespaceDeclaration, Is.Not.Null);
+            Assert.That(namespaceDeclaration.Name.ToString(), Is.EqualTo("TestNamespace"));
 
             var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
-            Assert.AreEqual("TestClass", classDeclaration.Identifier.Text, "Class name should be TestClass");
+            Assert.That(classDeclaration.Identifier.Text, Is.EqualTo("TestClass"));
 
             // Test Fields
             var fields = classDeclaration.DescendantNodes().OfType<FieldDeclarationSyntax>().ToList();
-            Assert.AreEqual(2, fields.Count, "Combined class should have two fields");
+            Assert.That(fields.Count, Is.EqualTo(2));
 
             // Test Methods
             var methods = classDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>().ToList();
-            Assert.AreEqual(2, methods.Count, "Combined class should have two methods");
+            Assert.That(methods.Count, Is.EqualTo(2));
             Assert.IsTrue(methods.Any(m => m.Identifier.Text == "Method1"), "Combined class should contain Method1");
             Assert.IsTrue(methods.Any(m => m.Identifier.Text == "Method2"), "Combined class should contain Method2");
 
             // Test Usings
             var usingDirectives = root.Usings;
-            Assert.AreEqual(2, usingDirectives.Count, "Should have two using directives");
+            Assert.That(usingDirectives.Count, Is.EqualTo(2));
             Assert.IsTrue(usingDirectives.Any(u => u.Name!.ToString() == "System"), "Should have using System");
             Assert.IsTrue(usingDirectives.Any(u => u.Name!.ToString() == "System.Collections.Generic"),
                 "Should have using System.Collections.Generic");
@@ -262,7 +262,7 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
 
             // Test Usings
             var usingDirectives = root.Usings;
-            Assert.AreEqual(1, usingDirectives.Count, "Should have one using directive");
+            Assert.That(usingDirectives.Count, Is.EqualTo(1));
             Assert.IsTrue(usingDirectives.Any(u => u.Name!.ToString() == "System"), "Should have using System");
 
             yield return null;
@@ -308,16 +308,15 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
 
             // Test Namespace
             var namespaceDeclaration = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
-            Assert.IsNotNull(namespaceDeclaration, "Namespace should exist");
-            Assert.AreEqual("TestNamespace", namespaceDeclaration.Name.ToString(), "Namespace should be TestNamespace");
+            Assert.That(namespaceDeclaration, Is.Not.Null);
+            Assert.That(namespaceDeclaration.Name.ToString(), Is.EqualTo("TestNamespace"));
 
             var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
-            Assert.AreEqual("TestClassWithFields", classDeclaration.Identifier.Text,
-                "Class name should be TestClassWithFields");
+            Assert.That(classDeclaration.Identifier.Text, Is.EqualTo("TestClassWithFields"));
 
             // Test Fields
             var fields = classDeclaration.DescendantNodes().OfType<FieldDeclarationSyntax>().ToList();
-            Assert.AreEqual(6, fields.Count, "Combined class should have six fields");
+            Assert.That(fields.Count, Is.EqualTo(6));
 
             // Test specific fields
             Assert.IsTrue(
@@ -349,7 +348,7 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
 
             // Test Usings
             var usingDirectives = root.Usings;
-            Assert.AreEqual(2, usingDirectives.Count, "Should have two using directives");
+            Assert.That(usingDirectives.Count, Is.EqualTo(2));
             Assert.IsTrue(usingDirectives.Any(u => u.Name!.ToString() == "System"), "Should have using System");
             Assert.IsTrue(usingDirectives.Any(u => u.Name!.ToString() == "System.Collections.Generic"),
                 "Should have using System.Collections.Generic");
@@ -390,15 +389,15 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
 
             // Test Namespace
             var namespaceDeclaration = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
-            Assert.IsNotNull(namespaceDeclaration, "Namespace should exist");
-            Assert.AreEqual("TestNamespace", namespaceDeclaration.Name.ToString(), "Namespace should be TestNamespace");
+            Assert.That(namespaceDeclaration, Is.Not.Null);
+            Assert.That(namespaceDeclaration.Name.ToString(), Is.EqualTo("TestNamespace"));
 
             var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
-            Assert.AreEqual("TestClass", classDeclaration.Identifier.Text, "Class name should be TestClass");
+            Assert.That(classDeclaration.Identifier.Text, Is.EqualTo("TestClass"));
 
             // Test Fields
             var fields = classDeclaration.DescendantNodes().OfType<FieldDeclarationSyntax>().ToList();
-            Assert.AreEqual(2, fields.Count, "Combined class should have two fields");
+            Assert.That(fields.Count, Is.EqualTo(2));
             Assert.IsTrue(fields.Any(f => f.Declaration.Variables.Any(v => v.Identifier.Text == "_field1")),
                 "Should have _field1");
             Assert.IsTrue(fields.Any(f => f.Declaration.Variables.Any(v => v.Identifier.Text == "_field2")),
@@ -406,20 +405,20 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
 
             // Test Methods
             var methods = classDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>().ToList();
-            Assert.AreEqual(2, methods.Count, "Combined class should have two methods");
+            Assert.That(methods.Count, Is.EqualTo(2));
             Assert.IsTrue(methods.Any(m => m.Identifier.Text == "Method1"), "Combined class should contain Method1");
             Assert.IsTrue(methods.Any(m => m.Identifier.Text == "Method2"), "Combined class should contain Method2");
 
             // Test Usings
             var usingDirectives = root.Usings;
-            Assert.AreEqual(2, usingDirectives.Count, "Should have two using directives");
+            Assert.That(usingDirectives.Count, Is.EqualTo(2));
             Assert.IsTrue(usingDirectives.Any(u => u.Name!.ToString() == "System"), "Should have using System");
             Assert.IsTrue(usingDirectives.Any(u => u.Name!.ToString() == "System.Collections.Generic"),
                 "Should have using System.Collections.Generic");
 
             // Test that there's only one class declaration
             var classDeclarations = root.DescendantNodes().OfType<ClassDeclarationSyntax>().ToList();
-            Assert.AreEqual(1, classDeclarations.Count, "Should only have one class declaration after merging");
+            Assert.That(classDeclarations.Count, Is.EqualTo(1));
 
             yield return null;
         }
@@ -468,10 +467,10 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
             var root = combinedTree.GetCompilationUnitRoot();
 
             var classDeclarations = root.DescendantNodes().OfType<ClassDeclarationSyntax>().ToList();
-            Assert.That(classDeclarations.Count, Is.EqualTo(2), "Should have two class declarations");
+            Assert.That(classDeclarations.Count, Is.EqualTo(2));
 
             var structDeclarations = root.DescendantNodes().OfType<StructDeclarationSyntax>().ToList();
-            Assert.That(structDeclarations.Count, Is.EqualTo(1), "Should have one struct declaration");
+            Assert.That(structDeclarations.Count, Is.EqualTo(1));
 
             yield return null;
         }
@@ -505,7 +504,7 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
 
             // Test Usings
             var usingDirectives = root.Usings;
-            Assert.AreEqual(2, usingDirectives.Count, "Should have two using directives");
+            Assert.That(usingDirectives.Count, Is.EqualTo(2));
             Assert.IsTrue(usingDirectives.Any(u => u.Name!.ToString() == "System"), "Should have using System");
             Assert.IsTrue(usingDirectives.Any(u =>
                     u.Alias != null && u.Alias.Name.ToString() == "StringList" &&
