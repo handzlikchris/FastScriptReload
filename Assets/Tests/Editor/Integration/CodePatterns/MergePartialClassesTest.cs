@@ -139,15 +139,15 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
             var combinedTree = result.First();
             var root = combinedTree.GetCompilationUnitRoot();
 
-            var classDeclaration = root.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ClassDeclarationSyntax>().First();
+            var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
             Assert.AreEqual("TestClass", classDeclaration.Identifier.Text, "Class name should be TestClass");
 
             //Test Fields
-            var fields = classDeclaration.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.FieldDeclarationSyntax>().ToList();
+            var fields = classDeclaration.DescendantNodes().OfType<FieldDeclarationSyntax>().ToList();
             Assert.AreEqual(2, fields.Count, "Combined class should have two fields");
 
             //Test Methods
-            var methods = classDeclaration.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax>().ToList();
+            var methods = classDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>().ToList();
             Assert.AreEqual(2, methods.Count, "Combined class should have two methods");
             Assert.IsTrue(methods.Any(m => m.Identifier.Text == "Method1"), "Combined class should contain Method1");
             Assert.IsTrue(methods.Any(m => m.Identifier.Text == "Method2"), "Combined class should contain Method2");
@@ -183,15 +183,15 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
             var combinedTree = result.First();
             var root = combinedTree.GetCompilationUnitRoot();
 
-            var structDeclaration = root.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.StructDeclarationSyntax>().First();
+            var structDeclaration = root.DescendantNodes().OfType<StructDeclarationSyntax>().First();
             Assert.AreEqual("TestStruct", structDeclaration.Identifier.Text, "Struct name should be TestStruct");
 
             //Test Fields
-            var fields = structDeclaration.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.FieldDeclarationSyntax>().ToList();
+            var fields = structDeclaration.DescendantNodes().OfType<FieldDeclarationSyntax>().ToList();
             Assert.AreEqual(2, fields.Count, "Combined class should have two fields");
 
             //Test Methods
-            var methods = structDeclaration.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax>().ToList();
+            var methods = structDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>().ToList();
             Assert.AreEqual(2, methods.Count, "Combined class should have two methods");
             Assert.IsTrue(methods.Any(m => m.Identifier.Text == "Method1"), "Combined class should contain Method1");
             Assert.IsTrue(methods.Any(m => m.Identifier.Text == "Method2"), "Combined class should contain Method2");
@@ -256,11 +256,11 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
             var combinedTree = result.First();
             var root = combinedTree.GetCompilationUnitRoot();
 
-            var classDeclaration = root.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ClassDeclarationSyntax>().First();
+            var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
             Assert.AreEqual("TestClassWithFields", classDeclaration.Identifier.Text, "Class name should be TestClassWithFields");
 
             // Test Fields
-            var fields = classDeclaration.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.FieldDeclarationSyntax>().ToList();
+            var fields = classDeclaration.DescendantNodes().OfType<FieldDeclarationSyntax>().ToList();
             Assert.AreEqual(6, fields.Count, "Combined class should have six fields");
 
             // Test specific fields

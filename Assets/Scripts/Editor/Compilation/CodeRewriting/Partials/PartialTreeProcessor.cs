@@ -32,9 +32,8 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 
             var combinedTypes = new Dictionary<string, List<TypeDeclarationSyntax>>();
             var combinedUsingDirectives = new HashSet<UsingDirectiveSyntax>();
-            var combinedTypesDefined = new HashSet<string>();
 
-            ProcessTree(tree, combinedTypes, combinedUsingDirectives, combinedTypesDefined);
+            ProcessTree(tree, combinedTypes, combinedUsingDirectives);
 
             const int fileSearchMaxDepth = 5;
             var otherPartialFiles = PartialClassFinder.FindPartialClassFilesInDirectory(tree.FilePath, fileSearchMaxDepth)
@@ -43,7 +42,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
             foreach (var file in otherPartialFiles)
             {
                 var partialTree = CSharpSyntaxTree.ParseText(File.ReadAllText(file), path: file);
-                ProcessTree(partialTree, combinedTypes, combinedUsingDirectives, combinedTypesDefined);
+                ProcessTree(partialTree, combinedTypes, combinedUsingDirectives);
             }
 
             var combinedTypeDeclarations = combinedTypes
@@ -68,8 +67,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
         private static void ProcessTree(
                 SyntaxTree tree,
                 Dictionary<string, List<TypeDeclarationSyntax>> combinedTypes,
-                HashSet<UsingDirectiveSyntax> combinedUsingDirectives,
-                HashSet<string> combinedTypesDefined)
+                HashSet<UsingDirectiveSyntax> combinedUsingDirectives)
         {
             var root = tree.GetCompilationUnitRoot();
 
@@ -78,7 +76,6 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
             foreach (var typeDecl in root.DescendantNodes().OfType<TypeDeclarationSyntax>())
             {
                 var fullName = NamespaceHelper.GetFullyQualifiedName(typeDecl);
-                combinedTypesDefined.Add(fullName);
 
                 if (!combinedTypes.TryGetValue(fullName, out var declarations))
                 {
