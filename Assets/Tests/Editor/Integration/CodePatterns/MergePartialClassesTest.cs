@@ -139,6 +139,11 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
             var combinedTree = result.First();
             var root = combinedTree.GetCompilationUnitRoot();
 
+            //Test Namespace
+            var namespaceDeclaration = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+            Assert.IsNotNull(namespaceDeclaration, "Namespace should exist");
+            Assert.AreEqual("TestNamespace", namespaceDeclaration.Name.ToString(), "Namespace should be TestNamespace");
+
             var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
             Assert.AreEqual("TestClass", classDeclaration.Identifier.Text, "Class name should be TestClass");
 
@@ -182,6 +187,11 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
 
             var combinedTree = result.First();
             var root = combinedTree.GetCompilationUnitRoot();
+
+            //Test Namespace
+            var namespaceDeclaration = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+            Assert.IsNotNull(namespaceDeclaration, "Namespace should exist");
+            Assert.AreEqual("TestNamespace", namespaceDeclaration.Name.ToString(), "Namespace should be TestNamespace");
 
             var structDeclaration = root.DescendantNodes().OfType<StructDeclarationSyntax>().First();
             Assert.AreEqual("TestStruct", structDeclaration.Identifier.Text, "Struct name should be TestStruct");
@@ -256,6 +266,11 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
             var combinedTree = result.First();
             var root = combinedTree.GetCompilationUnitRoot();
 
+            //Test Namespace
+            var namespaceDeclaration = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+            Assert.IsNotNull(namespaceDeclaration, "Namespace should exist");
+            Assert.AreEqual("TestNamespace", namespaceDeclaration.Name.ToString(), "Namespace should be TestNamespace");
+
             var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
             Assert.AreEqual("TestClassWithFields", classDeclaration.Identifier.Text, "Class name should be TestClassWithFields");
 
@@ -314,6 +329,11 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
             // Assert
             var combinedTree = result.First();
             var root = combinedTree.GetCompilationUnitRoot();
+
+            //Test Namespace
+            var namespaceDeclaration = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+            Assert.IsNotNull(namespaceDeclaration, "Namespace should exist");
+            Assert.AreEqual("TestNamespace", namespaceDeclaration.Name.ToString(), "Namespace should be TestNamespace");
 
             var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
             Assert.AreEqual("TestClass", classDeclaration.Identifier.Text, "Class name should be TestClass");
