@@ -234,6 +234,41 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
         }
 
         [UnityTest]
+        public IEnumerator Partials_NoDuplicateUsingsMergeTest()
+        {
+            // Arrange
+            const string partialClass1 = @"
+            using System;
+            namespace TestNamespace
+            {
+                public partial class TestClass { }
+            }";
+
+            const string partialClass2 = @"
+            using System;
+            namespace TestNamespace
+            {
+                public partial class TestClass { }
+            }";
+
+            var trees = CombineTrees(partialClass1, partialClass2);
+
+            // Act
+            var result = trees.MergePartials(new List<string> { "DEBUG", "UNITY_EDITOR" });
+
+            // Assert
+            var combinedTree = result.First();
+            var root = combinedTree.GetCompilationUnitRoot();
+
+            // Test Usings
+            var usingDirectives = root.Usings;
+            Assert.AreEqual(1, usingDirectives.Count, "Should have one using directive");
+            Assert.IsTrue(usingDirectives.Any(u => u.Name!.ToString() == "System"), "Should have using System");
+
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator Partials_ClassWithFieldsMergeTest()
         {
             // Arrange
@@ -250,6 +285,7 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
             }";
 
             const string partialClass2 = @"
+            using System;
             using System.Collections.Generic;
             namespace TestNamespace
             {

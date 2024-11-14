@@ -32,9 +32,9 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 
             // root key is namespace, inner key is type
             var combinedTypes = new Dictionary<string, Dictionary<string, List<TypeDeclarationSyntax>>>();
-            var combinedUsingDirectives = new HashSet<UsingDirectiveSyntax>();
+            var combinedUsings = new HashSet<string>();
 
-            ProcessTree(tree, combinedTypes, combinedUsingDirectives);
+            ProcessTree(tree, combinedTypes, combinedUsings);
 
             const int fileSearchMaxDepth = 5;
             var otherPartialFiles = PartialClassFinder.FindPartialClassFilesInDirectory(tree.FilePath, fileSearchMaxDepth)
@@ -43,7 +43,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
             foreach (var file in otherPartialFiles)
             {
                 var partialTree = CSharpSyntaxTree.ParseText(File.ReadAllText(file), path: file);
-                ProcessTree(partialTree, combinedTypes, combinedUsingDirectives);
+                ProcessTree(partialTree, combinedTypes, combinedUsings);
             }
 
             var combinedTypeDeclarations = new List<MemberDeclarationSyntax>();
@@ -68,8 +68,11 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
                 }
             }
 
+            var uniqueUsingDirectives = combinedUsings
+                .Select(it => SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(it)));
+
             var newRoot = SyntaxFactory.CompilationUnit()
-                    .WithUsings(SyntaxFactory.List(combinedUsingDirectives))
+                    .WithUsings(SyntaxFactory.List(uniqueUsingDirectives))
                     .WithMembers(SyntaxFactory.List(combinedTypeDeclarations))
                     .WithAdditionalAnnotations(new SyntaxAnnotation("PreprocessorSymbols", string.Join(",", definedPreprocessorSymbols)));
 
@@ -86,11 +89,14 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
         private static void ProcessTree(
                 SyntaxTree tree,
                 Dictionary<string, Dictionary<string, List<TypeDeclarationSyntax>>> combinedTypes,
-                HashSet<UsingDirectiveSyntax> combinedUsingDirectives)
+                HashSet<string> combinedUsings)
         {
             var root = tree.GetCompilationUnitRoot();
 
-            combinedUsingDirectives.UnionWith(root.Usings);
+            foreach (var usingDirective in root.Usings)
+            {
+                combinedUsings.Add(usingDirective.Name!.ToString());
+            }
 
             foreach (var typeDecl in root.DescendantNodes().OfType<TypeDeclarationSyntax>())
             {
