@@ -10,9 +10,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
                 this IEnumerable<SyntaxTree> trees,
                 IEnumerable<string> definedPreprocessorSymbols)
         {
-            return trees
-                    .Select(tree => PartialTreeProcessor.ProcessPartialTree(tree, definedPreprocessorSymbols))
-                    .ToList();
+            return trees.Select(tree => PartialTreeProcessor.ProcessPartialTree(tree, definedPreprocessorSymbols));
         }
     }
 }
