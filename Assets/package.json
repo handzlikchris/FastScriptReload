@@ -1,9 +1,9 @@
 {
     "name": "com.handzlikchris.fastscriptreload",
-    "version": "1.6.1",
+    "version": "1.8",
     "displayName": "Fast Script Reload",
     "description": "Hot Reload implementation for Unity. Iterate on code insanely fast without breaking play session. Supports any editor. 1. Play 2. Make change 3. See results",
-    "unity": "2019.1",
+    "unity": "2022.3",
     "documentationUrl": "https://fastscriptreload.com/projects/fast-script-reload/documentation",
     "keywords": [
         "Hot Reload",
