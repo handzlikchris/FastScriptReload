@@ -1,10 +1,14 @@
-1.7
-- File watching can be done via direct WindowsAPI (contributed by SamPruden)
-- Extended UI to allow for easy choice of file watcher implementation
-- Added partial class rewriting support (contributed by Jlabarca)
-- Calls in extension method to another extension method in same file will be rewritten to use static-call instead of instance call
+1.8
+- Added Unity 6 support
+- Improved extension methods rewriting
+- Partial classes support (contributed by Jlabarca)
+- Unity 2019 / 2020 no longer officially supported
 
-- 1.6
+1.7
+- Optional file watching can be done via direct WindowsAPI (contributed by SamPruden)
+- Extended UI to allow for easy choice of file watcher implementation
+
+1.6
 - Added more Unit Tests to ensure various code patterns can be rewritten correctly
 - Added Watch Only Specific Files and Folders mode (contributed by GhatSmith)
 - Added better Odin support for dynamically added fields (contributed by GhatSmith)
@@ -14,7 +18,7 @@
 
 1.5
 - you can now import FSR as a package from github page
-- hot-reloading internal interfaces / classes would no longer cause compilation error 
+- hot-reloading internal interfaces / classes would no longer cause compilation error
 - OnScriptHotReload method can be added at runtime
 - builder functions will be correctly rewritten
 - hot reload status (red / green) will be visible in project panel next to changed script
@@ -29,29 +33,38 @@
 - added 'Exclude References' options - this allows to remove specific dll references from dynamically compiled code (as in some cases you may get 'type defined in both assembly x.dll and y.dll'
 - destructors will no longer cause compilation error
 - (options opt-in) script rewriting can optionally emit comment - why change was made to help with troubleshooting issues
-- Unity assembly reload can be forced off via LockAssemblyReload if specified in options - sometimes even though Auto-Refresh is turned off Editor still tries to recompile changes in playmode which prevents FSR from working 
+- Unity assembly reload can be forced off via LockAssemblyReload if specified in options - sometimes even though Auto-Refresh is turned off Editor still tries to recompile changes in playmode which prevents FSR from working
 - new fields support (experimental) will be enabled by default
 
+1.3.1
+
+- open source release on github
+
 1.3 - (Experimental) - New fields added in playmode
-New fields can be added and used in code
-New fields can be adjusted in editor (same as standard fields)
-New fields will be initialized to whatever value is specified in code or default value
-Experimental feature - at this stage expect some issues
-Opt-in - disabled by default to enable go to 'Window -> Fast Script Reload -> Start Screen -> New Fields -> enable'
+
+- New fields can be added and used in code
+- New fields can be adjusted in editor (same as standard fields)
+- New fields will be initialized to whatever value is specified in code or default value
+- Experimental feature - at this stage expect some issues
+- Opt-in - disabled by default to enable go to 'Window -> Fast Script Reload -> Start Screen -> New Fields -> enable'
 
 1.2 - Debugger support
-- added debugger support
+
+- Added debugger support (see documentation)
 
 1.1 - Mac support / bug fixes
-**Added Mac support (only INTEL editor version, SILICON still not supported)**
-Added Linux support
-fixed namespace clash with Unity.Collections package
-common code lib will not be included in builds
-added check for auto-refresh in Editor - will proide guidance and option to adjust as otherwise full editor reload is triggered for changes
-added workaround for Unity file-watcher returning wrong file path on some editor versions
-added option to allow disabling DidFieldCountCheck - allowing to detour methods in those cases (eg for Mirror where it'll adjust IL and cause mismatch)
-added option to configure FileWatcher paths/filters as in some cases watching root directory was causing performance issues
-added minor initial-load optimisations - using session-state for items that do not need to be resolved on every reload
+
+- Added Mac support (only INTEL editor version, SILICON still not supported)
+- Added Linux support
+- fixed namespace clash with Unity.Collections package
+- common code lib will not be included in builds
+- added check for auto-refresh in Editor - will proide guidance and option to adjust as otherwise full editor reload is triggered for changes
+- added workaround for Unity file-watcher returning wrong file path on some editor versions
+- added option to allow disabling DidFieldCountCheck - allowing to detour methods in those cases (eg for Mirror where it'll adjust IL and cause mismatch)
+- added option to configure FileWatcher paths/filters as in some cases watching root directory was causing performance issues
+- added minor initial-load optimisations - using session-state for items that do not need to be resolved on every reload
 
 1.0 - First release, included features:
+
 Fast script reload in editor / play-mode (compiles only changed files and hot-reloads them into current play session)
+Hot-reload on device (in build)

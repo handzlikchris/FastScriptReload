@@ -27,7 +27,7 @@ namespace FastScriptReload.Editor
             //WARN: the URL can sometimes be adjusted, make sure updated correctly
             return $"{BaseUrl}/updates/fast-script-reload/{userId}?CurrentVersion={versionId}";
         }
-        public static string VersionId = "1.6";
+        public static string VersionId = "1.8";
         private static readonly string ProjectIconName = "ProductIcon64";
         public static readonly string ProjectName = "fast-script-reload";
 
@@ -1066,7 +1066,13 @@ In the meantime, you can exclude any file from Hot-Reload by
         protected static void AutoDetectAndSetShaderMode()
         {
             var usedShaderMode = FastScriptReloadPreference.ShadersMode.Surface;
+            
+#if UNITY_6000_0_OR_NEWER
+            var renderPipelineAsset = GraphicsSettings.defaultRenderPipeline;
+#else
             var renderPipelineAsset = GraphicsSettings.renderPipelineAsset;
+#endif
+
             if (renderPipelineAsset == null)
             {
                 usedShaderMode = FastScriptReloadPreference.ShadersMode.Surface;
