@@ -221,8 +221,8 @@ namespace FastScriptReload.Runtime
                     LoggerScoped.LogWarning($"Type: {originalType.Name} is not {nameof(MonoBehaviour)}, {ON_HOT_RELOAD_METHOD_NAME} method can't be executed. You can still use static version: {ON_HOT_RELOAD_NO_INSTANCE_STATIC_METHOD_NAME}");
                     return;
                 }
-
-                foreach (var instanceOfType in GameObject.FindObjectsOfType(originalType)) //TODO: perf - could find them in different way?
+                 //TODO: perf - could find them in different way?
+                 foreach (var instanceOfType in Object.FindObjectsByType(originalType, FindObjectsSortMode.None)) // changed from obsolete GameObject.FindObjectsOfType(originalType))
                 {
                     onScriptHotReloadFn.Invoke(instanceOfType, null);
                 }
