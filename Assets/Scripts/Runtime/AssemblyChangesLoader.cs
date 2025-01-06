@@ -221,11 +221,14 @@ namespace FastScriptReload.Runtime
                     LoggerScoped.LogWarning($"Type: {originalType.Name} is not {nameof(MonoBehaviour)}, {ON_HOT_RELOAD_METHOD_NAME} method can't be executed. You can still use static version: {ON_HOT_RELOAD_NO_INSTANCE_STATIC_METHOD_NAME}");
                     return;
                 }
-                 //TODO: perf - could find them in different way?
-                 foreach (var instanceOfType in Object.FindObjectsByType(originalType, FindObjectsSortMode.None)) // changed from obsolete GameObject.FindObjectsOfType(originalType))
-                {
+                       //TODO: perf - could find them in different way?
+#if UNITY_6000_0_OR_NEWER // added new FindObjectsByType
+                foreach (var instanceOfType in Object.FindObjectsByType(originalType, FindObjectsSortMode.None))
                     onScriptHotReloadFn.Invoke(instanceOfType, null);
-                }
+#elif UNITY_2021_1_OR_NEWER // keeping FindObjectOfType for older unity versions
+                foreach (var instanceOfType in Object.FindObjectsOfType(originalType))
+                    onScriptHotReloadFn.Invoke(instanceOfType, null);
+#endif
             });
         }
 
