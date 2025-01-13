@@ -223,10 +223,10 @@ namespace FastScriptReload.Runtime
                 }
                        //TODO: perf - could find them in different way?
 #if UNITY_6000_0_OR_NEWER // added new FindObjectsByType
-                foreach (var instanceOfType in Object.FindObjectsByType(originalType, FindObjectsSortMode.None))
+                foreach (var instanceOfType in UnityEngine.Object.FindObjectsByType(originalType, FindObjectsSortMode.None))
                     onScriptHotReloadFn.Invoke(instanceOfType, null);
 #elif UNITY_2021_1_OR_NEWER // keeping FindObjectOfType for older unity versions
-                foreach (var instanceOfType in Object.FindObjectsOfType(originalType))
+                foreach (var instanceOfType in UnityEngine.Object.FindObjectsOfType(originalType))
                     onScriptHotReloadFn.Invoke(instanceOfType, null);
 #endif
             });
