@@ -82,8 +82,7 @@ namespace FastScriptReload.Tests.Editor.Integration.CodePatterns
         
         protected static string ResolveFullTestFilePath(string relativePath)
         {
-            //TODO: how to resolve test path relative to proj dir for tests??
-            return @$"E:\_src-unity\FastScriptReload\Assets\Tests\{relativePath}";
+            return @$"{Directory.GetCurrentDirectory()}\Assets\Tests\{relativePath}";
         }
 
         public void Setup()

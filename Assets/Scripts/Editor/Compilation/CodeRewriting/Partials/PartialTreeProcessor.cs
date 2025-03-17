@@ -30,11 +30,12 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
                 return tree;
             }
 
-            var combinedTypes = new Dictionary<string, List<TypeDeclarationSyntax>>();
-            var combinedUsingDirectives = new HashSet<UsingDirectiveSyntax>();
-            var combinedTypesDefined = new HashSet<string>();
+            // root key is namespace, inner key is type
+            var combinedTypes = new Dictionary<string, Dictionary<string, List<TypeDeclarationSyntax>>>();
+            (HashSet<string>, HashSet<UsingDirectiveSyntax> syntaxes) combinedUsings =
+                (new HashSet<string>(), new HashSet<UsingDirectiveSyntax>());
 
-            ProcessTree(tree, combinedTypes, combinedUsingDirectives, combinedTypesDefined);
+            ProcessTree(tree, combinedTypes, combinedUsings);
 
             const int fileSearchMaxDepth = 5;
             var otherPartialFiles = PartialClassFinder.FindPartialClassFilesInDirectory(tree.FilePath, fileSearchMaxDepth)
@@ -43,17 +44,35 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
             foreach (var file in otherPartialFiles)
             {
                 var partialTree = CSharpSyntaxTree.ParseText(File.ReadAllText(file), path: file);
-                ProcessTree(partialTree, combinedTypes, combinedUsingDirectives, combinedTypesDefined);
+                ProcessTree(partialTree, combinedTypes, combinedUsings);
             }
 
-            var combinedTypeDeclarations = combinedTypes
-                    .Select(kvp => PartialTypeCombiner.CombinePartialType(kvp.Value))
+            var combinedTypeDeclarations = new List<MemberDeclarationSyntax>();
+            foreach (var (namespaceName, types) in combinedTypes)
+            {
+                var typesInNamespace = types
+                    .Select(type => PartialTypeCombiner.CombinePartialType(type.Value))
                     .ToList<MemberDeclarationSyntax>();
 
+                if (string.IsNullOrEmpty(namespaceName))
+                {
+                    combinedTypeDeclarations.AddRange(typesInNamespace);
+                }
+                else
+                {
+                    var namespaceDeclaration = SyntaxFactory
+                        .NamespaceDeclaration(SyntaxFactory.ParseName(namespaceName))
+                        .WithMembers(SyntaxFactory.List(typesInNamespace));
+
+                    combinedTypeDeclarations.Add(namespaceDeclaration);
+                }
+            }
+
             var newRoot = SyntaxFactory.CompilationUnit()
-                    .WithUsings(SyntaxFactory.List(combinedUsingDirectives))
+                    .WithUsings(SyntaxFactory.List(combinedUsings.syntaxes))
                     .WithMembers(SyntaxFactory.List(combinedTypeDeclarations))
-                    .WithAdditionalAnnotations(new SyntaxAnnotation("PreprocessorSymbols", string.Join(",", definedPreprocessorSymbols)));
+                    .WithAdditionalAnnotations(new SyntaxAnnotation("PreprocessorSymbols", string.Join(",", definedPreprocessorSymbols)))
+                    .NormalizeWhitespace();
 
             return CSharpSyntaxTree.Create(newRoot, null, tree.FilePath)
                     .AddInternalsVisibleToAttribute();
@@ -67,25 +86,41 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
 
         private static void ProcessTree(
                 SyntaxTree tree,
-                Dictionary<string, List<TypeDeclarationSyntax>> combinedTypes,
-                HashSet<UsingDirectiveSyntax> combinedUsingDirectives,
-                HashSet<string> combinedTypesDefined)
+                Dictionary<string, Dictionary<string, List<TypeDeclarationSyntax>>> combinedTypes,
+                (HashSet<string> strings, HashSet<UsingDirectiveSyntax> syntaxes) combinedUsings)
         {
             var root = tree.GetCompilationUnitRoot();
 
-            combinedUsingDirectives.UnionWith(root.Usings);
+            foreach (var usingDirective in root.Usings)
+            {
+                if (combinedUsings.strings.Add(usingDirective.Name!.ToString()))
+                {
+                    combinedUsings.syntaxes.Add(usingDirective);
+                }
+            }
 
             foreach (var typeDecl in root.DescendantNodes().OfType<TypeDeclarationSyntax>())
             {
-                var fullName = NamespaceHelper.GetFullyQualifiedName(typeDecl);
-                combinedTypesDefined.Add(fullName);
-
-                if (!combinedTypes.TryGetValue(fullName, out var declarations))
+                if (!typeDecl.Modifiers.Any(SyntaxKind.PublicKeyword))
                 {
-                    declarations = new List<TypeDeclarationSyntax>();
-                    combinedTypes[fullName] = declarations;
+                    continue;
                 }
-                declarations.Add(typeDecl);
+
+                var namespaceName = NamespaceHelper.GetNamespaceName(typeDecl);
+                var typeName = typeDecl.Identifier.Text;
+
+                if (!combinedTypes.TryGetValue(namespaceName, out var typesInNamespace))
+                {
+                    typesInNamespace = new Dictionary<string, List<TypeDeclarationSyntax>>();
+                    combinedTypes[namespaceName] = typesInNamespace;
+                }
+
+                if (!typesInNamespace.TryGetValue(typeName, out var typeList))
+                {
+                    typeList = new List<TypeDeclarationSyntax>();
+                    typesInNamespace[typeName] = typeList;
+                }
+                typeList.Add(typeDecl);
             }
         }
     }
