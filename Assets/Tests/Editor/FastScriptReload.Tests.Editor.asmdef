@@ -18,8 +18,8 @@
         "ImmersiveVRTools.Common.Editor.dll",
         "ImmersiveVRTools.Common.Runtime.dll",
         "0Harmony.dll",
-        "Microsoft.CodeAnalysis.CSharp.dll",
-        "Microsoft.CodeAnalysis.dll"
+        "Microsoft.CodeAnalysis.FSR.dll",
+        "Microsoft.CodeAnalysis.CSharp.FSR.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [
