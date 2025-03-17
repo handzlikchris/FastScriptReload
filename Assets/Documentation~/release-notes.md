@@ -1,3 +1,6 @@
+1.9
+- Added namespace support for partial classes (contributed by RunninglVlan)
+
 1.8
 - Added Unity 6 support
 - Improved extension methods rewriting
