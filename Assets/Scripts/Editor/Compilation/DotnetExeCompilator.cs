@@ -19,7 +19,7 @@ using UnityEditor;
 namespace FastScriptReload.Editor.Compilation
 {
     [InitializeOnLoad]
-    public class DotnetExeDynamicCompilation: DynamicCompilationBase
+    public class DotnetExeDynamicCompilation : DynamicCompilationBase
     {
         private static string _dotnetExePath;
         private static string _cscDll;
@@ -28,25 +28,39 @@ namespace FastScriptReload.Editor.Compilation
         private static string ApplicationContentsPath = EditorApplication.applicationContentsPath;
         private static readonly List<string> _createdFilesToCleanUp = new List<string>();
         private static readonly Dictionary<string, Assembly> _typeNameAssemblyCache = new Dictionary<string, Assembly>(16);
-
+        private static readonly List<string> _analyzers = new List<string>();
         static DotnetExeDynamicCompilation()
         {
+            const string RoslynAnalyzerExtension = ".dll";
+            const string RoslynAnalyzerKeyword = "RoslynAnalyzer";
 #if UNITY_EDITOR_WIN
             const string dotnetExecutablePath = "dotnet.exe";
 #else
             const string dotnetExecutablePath = "dotnet"; //mac and linux, no extension
 #endif
-                
+
             _dotnetExePath = FindFileOrThrow(dotnetExecutablePath);
             _cscDll = FindFileOrThrow("csc.dll"); //even on mac/linux need to find dll and use, not no extension one
             _tempFolder = Path.GetTempPath();
-            
+
+            foreach (var guid in AssetDatabase.FindAssets("t: " + nameof(DefaultAsset)))
+            {
+                var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                if (!assetPath.EndsWith(RoslynAnalyzerExtension)) continue;
+                var asset = AssetDatabase.LoadAssetAtPath<DefaultAsset>(assetPath);
+                var assetLabels = AssetDatabase.GetLabels(asset);
+                if (assetLabels.Contains(RoslynAnalyzerKeyword))
+                {
+                    _analyzers.Add(Path.GetFullPath(assetPath));
+                }
+            }
+
             EditorApplication.playModeStateChanged += obj =>
             {
                 if (obj == PlayModeStateChange.ExitingPlayMode && _createdFilesToCleanUp.Any())
                 {
                     LoggerScoped.LogDebug($"Removing temporary files: [{string.Join(",", _createdFilesToCleanUp)}]");
-                    
+
                     foreach (var fileToCleanup in _createdFilesToCleanUp)
                     {
                         new FileInfo(fileToCleanup).IsReadOnly = false;
@@ -101,7 +115,7 @@ namespace FastScriptReload.Editor.Compilation
                     out var createInternalVisibleToAsmElapsedMilliseconds);
 
                 var shouldAddUnsafeFlag = createSourceCodeCombinedResult.SourceCode.Contains("unsafe"); //TODO: not ideal as 'unsafe' can be part of comment, not code. But compiling with that flag in more cases shouldn't cause issues
-                var rspFileContent = GenerateCompilerArgsRspFileContents(outLibraryPath, sourceCodeCombinedFilePath, assemblyAttributeFilePath, 
+                var rspFileContent = GenerateCompilerArgsRspFileContents(outLibraryPath, sourceCodeCombinedFilePath, assemblyAttributeFilePath,
                     originalAssemblyPathToAsmWithInternalsVisibleToCompiled, shouldAddUnsafeFlag);
                 CreateFileAndTrackAsCleanup(rspFile, rspFileContent, _createdFilesToCleanUp);
                 CreateFileAndTrackAsCleanup(assemblyAttributeFilePath, DynamicallyCreatedAssemblyAttributeSourceCode, _createdFilesToCleanUp);
@@ -109,7 +123,7 @@ namespace FastScriptReload.Editor.Compilation
                 var exitCode = ExecuteDotnetExeCompilation(_dotnetExePath, _cscDll, rspFile, outLibraryPath, out var outputMessages);
 
                 var compiledAssembly = Assembly.LoadFrom(outLibraryPath);
-                return new CompileResult(outLibraryPath, outputMessages, exitCode, compiledAssembly, createSourceCodeCombinedResult.SourceCode, 
+                return new CompileResult(outLibraryPath, outputMessages, exitCode, compiledAssembly, createSourceCodeCombinedResult.SourceCode,
                     sourceCodeCombinedFilePath, createInternalVisibleToAsmElapsedMilliseconds);
             }
             catch (SourceCodeHasErrorsException e)
@@ -120,7 +134,7 @@ namespace FastScriptReload.Editor.Compilation
             }
             catch (Exception e)
             {
-                LoggerScoped.LogError($"Compilation error: temporary files were not removed so they can be inspected: " 
+                LoggerScoped.LogError($"Compilation error: temporary files were not removed so they can be inspected: "
                                + string.Join(", ", _createdFilesToCleanUp
                                    .Select(f => $"<a href=\"{f}\" line=\"1\">{f}</a>")));
                 if (LogHowToFixMessageOnCompilationError)
@@ -154,7 +168,7 @@ You can also:
 *If you want to prevent that message from reappearing please go to Window -> Fast Script Reload -> Start Screen -> Logging -> tick off 'Log how to fix message on compilation error'*");
 
                 }
-                
+
                 throw new HotReloadCompilationException(e.Message, e, sourceCodeCombinedFilePath);
             }
         }
@@ -208,7 +222,7 @@ You can also:
             return assembly;
         }
 
-        private static string GenerateCompilerArgsRspFileContents(string outLibraryPath, string sourceCodeCombinedFilePath, string assemblyAttributeFilePath, 
+        private static string GenerateCompilerArgsRspFileContents(string outLibraryPath, string sourceCodeCombinedFilePath, string assemblyAttributeFilePath,
             Dictionary<string, string> originalAssemblyPathToAsmWithInternalsVisibleToCompiled, bool addUnsafeFlag)
         {
             var rspContents = new StringBuilder();
@@ -233,6 +247,11 @@ You can also:
                 }
             }
 
+            foreach (var analyzer in _analyzers)
+            {
+                rspContents.AppendLine($"-analyzer:\"{analyzer}\"");
+            }
+
             rspContents.AppendLine($"\"{sourceCodeCombinedFilePath}\"");
             rspContents.AppendLine($"\"{assemblyAttributeFilePath}\"");
 
@@ -255,7 +274,7 @@ You can also:
             rspContents.AppendLine("/nowarn:1702");
             rspContents.AppendLine("/utf8output");
             rspContents.AppendLine("/preferreduilang:en-US");
-            
+
             var rspContentsString = rspContents.ToString();
             return rspContentsString;
         }
