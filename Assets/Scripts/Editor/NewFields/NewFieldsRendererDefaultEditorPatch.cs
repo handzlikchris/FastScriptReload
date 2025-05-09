@@ -22,17 +22,17 @@ namespace FastScriptReload.Editor.NewFields
                 var harmony = new Harmony(nameof(NewFieldsRendererDefaultEditorPatch));
             
                 var renderAdditionalFieldsOnOptimizedGuiPostfix = AccessTools.Method(typeof(NewFieldsRendererDefaultEditorPatch), nameof(OnOptimizedInspectorGUI));
-                var noCustomEditorOriginalRenderingMethdod =  AccessTools.Method("UnityEditor.GenericInspector:OnOptimizedInspectorGUI");
+                var noCustomEditorOriginalRenderingMethdod = AccessTools.Method("UnityEditor.GenericInspector, UnityEditor.CoreModule:OnOptimizedInspectorGUI");
                 harmony.Patch(noCustomEditorOriginalRenderingMethdod, postfix: new HarmonyMethod(renderAdditionalFieldsOnOptimizedGuiPostfix));
             
                 var renderAdditionalFieldsDrawDefaultInspectorPostfix = AccessTools.Method(typeof(NewFieldsRendererDefaultEditorPatch), nameof(DrawDefaultInspector));
-                var customEditorRenderingMethod = AccessTools.Method("UnityEditor.Editor:DrawDefaultInspector");
-                harmony.Patch(customEditorRenderingMethod, postfix: new HarmonyMethod(renderAdditionalFieldsDrawDefaultInspectorPostfix)); 
+                var customEditorRenderingMethod = AccessTools.Method("UnityEditor.Editor, UnityEditor.CoreModule:DrawDefaultInspector");
+                harmony.Patch(customEditorRenderingMethod, postfix: new HarmonyMethod(renderAdditionalFieldsDrawDefaultInspectorPostfix));
 
 #if ODIN_INSPECTOR
                 // Odin Inspector support
                 var renderAdditionalFieldsDrawOdinInspectorPostfix = AccessTools.Method(typeof(NewFieldsRendererDefaultEditorPatch), nameof(DrawOdinInspector));
-                var customOdinEditorRenderingMethod = AccessTools.Method("Sirenix.OdinInspector.Editor.OdinEditor:DrawOdinInspector");
+                var customOdinEditorRenderingMethod = AccessTools.Method("Sirenix.OdinInspector.Editor.OdinEditor, Sirenix.OdinInspector.Editor:DrawOdinInspector");
                 harmony.Patch(customOdinEditorRenderingMethod, postfix: new HarmonyMethod(renderAdditionalFieldsDrawOdinInspectorPostfix));
 #endif
             }
