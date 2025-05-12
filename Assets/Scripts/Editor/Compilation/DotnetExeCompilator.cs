@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using System.Xml.Linq;
 using FastScriptReload.Editor.AssemblyPostProcess;
 using FastScriptReload.Runtime;
 using HarmonyLib;
@@ -34,8 +35,7 @@ namespace FastScriptReload.Editor.Compilation
 
         static DotnetExeDynamicCompilation()
         {
-            const string RoslynAnalyzerExtension = ".dll";
-            const string RoslynAnalyzerKeyword = "RoslynAnalyzer";
+            const string DefaultUnityProjectFilePath = "Assembly-CSharp.csproj";
 #if UNITY_EDITOR_WIN
             const string dotnetExecutablePath = "dotnet.exe";
 #else
@@ -46,16 +46,32 @@ namespace FastScriptReload.Editor.Compilation
             _cscDll = FindFileOrThrow("csc.dll"); //even on mac/linux need to find dll and use, not no extension one
             _tempFolder = Path.GetTempPath();
 
-            foreach (var guid in AssetDatabase.FindAssets("t: " + nameof(DefaultAsset)))
+            if (File.Exists(DefaultUnityProjectFilePath))
             {
-                var assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                if (!assetPath.EndsWith(RoslynAnalyzerExtension)) continue;
-                var asset = AssetDatabase.LoadAssetAtPath<DefaultAsset>(assetPath);
-                var assetLabels = AssetDatabase.GetLabels(asset);
-                if (assetLabels.Contains(RoslynAnalyzerKeyword))
+                try
                 {
-                    _analyzers.Add(Path.GetFullPath(assetPath));
+                    var xmlCSProj = File.ReadAllText(DefaultUnityProjectFilePath);
+                    var xdoc = XDocument.Parse(xmlCSProj);
+                    var analyzers = xdoc.Root.Elements("ItemGroup")
+                        .Elements("Analyzer")
+                        .Select(e => e.Attribute("Include").Value)
+                        .Where(File.Exists)
+                        .ToArray()
+                        ;
+
+                    foreach (var analyzer in analyzers)
+                    {
+                        _analyzers.Add(analyzer);
+                    }
                 }
+                catch (Exception e)
+                {
+                    LoggerScoped.LogWarning($"Unable to collect roslyn analyzers. {e}");
+                }
+            }
+            else
+            {
+                LoggerScoped.LogWarning($"{DefaultUnityProjectFilePath} does not exists, hence analyzers in project are ignored.");
             }
 
             EditorApplication.playModeStateChanged += obj =>
