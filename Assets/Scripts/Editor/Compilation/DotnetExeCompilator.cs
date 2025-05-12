@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using FastScriptReload.Editor.AssemblyPostProcess;
+using FastScriptReload.Runtime;
 using HarmonyLib;
 using ImmersiveVRTools.Editor.Common.Cache;
 using ImmersiveVRTools.Editor.Common.Utilities;
@@ -29,6 +30,8 @@ namespace FastScriptReload.Editor.Compilation
         private static readonly List<string> _createdFilesToCleanUp = new List<string>();
         private static readonly Dictionary<string, Assembly> _typeNameAssemblyCache = new Dictionary<string, Assembly>(16);
         private static readonly List<string> _analyzers = new List<string>();
+        private static readonly Dictionary<string, List<Assembly>> _assemblyNameToFriendAssemblyCache = new Dictionary<string, List<Assembly>>(16);
+
         static DotnetExeDynamicCompilation()
         {
             const string RoslynAnalyzerExtension = ".dll";
@@ -182,13 +185,17 @@ You can also:
                     .Select(GetAssemblyByTypeName)
                     .Where(t => t != null)
                     .Distinct();
+                var friendAssemblies = assembliesForTypesInCombinedFile
+                    .SelectMany(a => GetFriendAssembliesByAssemblyName(a.GetName().Name)) // indirect assemblies...
+                    .Concat(assembliesForTypesInCombinedFile) // ... plus direct assemblies
+                    .Distinct();
 
-                foreach (var assemblyForTypesInCombinedFile in assembliesForTypesInCombinedFile)
+                foreach (var friendAssembly in friendAssemblies)
                 {
                     var createdAssemblyWithInternalsVisibleToNewlyCompiled = AddInternalsVisibleToForAllUserAssembliesPostProcess.CreateAssemblyWithInternalsContentsVisibleTo(
-                        assemblyForTypesInCombinedFile, asmName
+                        friendAssembly, asmName
                     );
-                    originalAssemblyPathToAsmWithInternalsVisibleToCompiled.Add(assemblyForTypesInCombinedFile.Location, createdAssemblyWithInternalsVisibleToNewlyCompiled);
+                    originalAssemblyPathToAsmWithInternalsVisibleToCompiled.Add(friendAssembly.Location, createdAssemblyWithInternalsVisibleToNewlyCompiled);
                 }
             }
             catch (Exception e)
@@ -220,6 +227,41 @@ You can also:
 
             if (assembly != null) _typeNameAssemblyCache.Add(typeName, assembly);
             return assembly;
+        }
+
+        private static List<Assembly> GetFriendAssembliesByAssemblyName(string assemblyName)
+        {
+            const string AssemblyNamePublicKeySeparator = ", ";
+
+            // Assert: assemblyName is in short pattern
+
+            if (!_assemblyNameToFriendAssemblyCache.TryGetValue(assemblyName, out var assemblies))
+            {
+                _assemblyNameToFriendAssemblyCache[assemblyName] = assemblies = new();
+                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    if (assembly.IsDynamic) continue;
+
+                    if (assembly.GetCustomAttribute<DynamicallyCreatedAssemblyAttribute>() != null) continue;
+
+                    foreach (var attr in assembly.GetCustomAttributes<InternalsVisibleToAttribute>())
+                    {
+                        var friendAssemblyName = attr.AssemblyName;
+                        var separatorIndex = friendAssemblyName.IndexOf(AssemblyNamePublicKeySeparator);
+                        if (separatorIndex != ~0)
+                        {
+                            friendAssemblyName = friendAssemblyName[..separatorIndex];
+                        }
+
+                        if (friendAssemblyName == assemblyName)
+                        {
+                            assemblies.Add(assembly);
+                        }
+                    }
+                }
+            }
+
+            return assemblies;
         }
 
         private static string GenerateCompilerArgsRspFileContents(string outLibraryPath, string sourceCodeCombinedFilePath, string assemblyAttributeFilePath,
