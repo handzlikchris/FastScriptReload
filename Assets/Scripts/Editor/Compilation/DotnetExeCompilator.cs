@@ -45,18 +45,25 @@ namespace FastScriptReload.Editor.Compilation
 
             if (File.Exists(DefaultUnityProjectFilePath))
             {
-                var xmlCSProj = File.ReadAllText(DefaultUnityProjectFilePath);
-                var xdoc = XDocument.Parse(xmlCSProj);
-                var analyzers = xdoc.Root.Elements("ItemGroup")
-                    .Elements("Analyzer")
-                    .Select(e => e.Attribute("Include").Value)
-                    .Where(File.Exists)
-                    .ToArray()
-                    ;
-
-                foreach (var analyzer in analyzers)
+                try
                 {
-                    _analyzers.Add(analyzer);
+                    var xmlCSProj = File.ReadAllText(DefaultUnityProjectFilePath);
+                    var xdoc = XDocument.Parse(xmlCSProj);
+                    var analyzers = xdoc.Root.Elements("ItemGroup")
+                        .Elements("Analyzer")
+                        .Select(e => e.Attribute("Include").Value)
+                        .Where(File.Exists)
+                        .ToArray()
+                        ;
+
+                    foreach (var analyzer in analyzers)
+                    {
+                        _analyzers.Add(analyzer);
+                    }
+                }
+                catch (Exception e)
+                {
+                    LoggerScoped.LogWarning($"Unable to collect roslyn analyzers. {e}");
                 }
             }
             else
