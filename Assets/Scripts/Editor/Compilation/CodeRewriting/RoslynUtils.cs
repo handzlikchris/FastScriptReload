@@ -19,7 +19,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
             var fullTypeContibutingAncestorNames = memberNode.Ancestors().OfType<MemberDeclarationSyntax>().Select(da =>
             {
                 if (da is TypeDeclarationSyntax t) return t.Identifier.ToString();
-                else if (da is NamespaceDeclarationSyntax n) return n.Name.ToString();
+                else if (da is BaseNamespaceDeclarationSyntax n) return n.Name.ToString();
                 else throw new Exception("Unable to resolve full field name");
             }).Reverse().ToList();
 

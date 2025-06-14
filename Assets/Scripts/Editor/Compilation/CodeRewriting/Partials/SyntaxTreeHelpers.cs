@@ -13,7 +13,7 @@ namespace FastScriptReload.Editor.Compilation.CodeRewriting
             var currentNode = typeDeclaration.Parent;
             while (currentNode != null)
             {
-                if (currentNode is NamespaceDeclarationSyntax namespaceDeclaration)
+                if (currentNode is BaseNamespaceDeclarationSyntax namespaceDeclaration)
                 {
                     namespaces.Add(namespaceDeclaration.Name.ToString());
                 }
