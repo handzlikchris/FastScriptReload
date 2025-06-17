@@ -250,7 +250,7 @@ namespace FastScriptReload.Editor.Compilation
                     .ToList();
 
                 //types should be added either to root namespace or root of document
-                var rootNamespace = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+                var rootNamespace = root.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault();
                 foreach (var overridenTypeToAdd in userDefinedOverrideTypesWithoutMatchnigInRecompiledFile)
                 {
                     var newMember = FastScriptReloadCodeRewriterBase.AddRewriteCommentIfNeeded(overridenTypeToAdd.Value,
@@ -260,7 +260,7 @@ namespace FastScriptReload.Editor.Compilation
                     if (rootNamespace != null)
                     {
                         rootNamespace =
-                            root.DescendantNodes().OfType<NamespaceDeclarationSyntax>()
+                            root.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>()
                                 .FirstOrDefault(); //need to search again to make sure it didn't change
                         var newRootNamespace = rootNamespace.AddMembers(newMember);
                         root = root.ReplaceNode(rootNamespace, newRootNamespace);
