@@ -8,6 +8,7 @@
 *.apk
 *.DotSettings
 *.vsconfig
+*.DS_Store
 /.vs/*
 /.vsCode
 /Packages/com.unity.asset-store-tools/

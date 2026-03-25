@@ -16,7 +16,8 @@
         "Microsoft.CodeAnalysis.CSharp.FSR.dll",
         "ImmersiveVRTools.Common.Editor.dll",
         "ImmersiveVRTools.Common.Runtime.dll",
-        "System.Collections.Immutable.FSR.dll"
+        "System.Collections.Immutable.FSR.dll",
+        "Mono.Cecil.dll"
     ],
     "autoReferenced": false,
     "defineConstraints": [],
