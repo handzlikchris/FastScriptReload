@@ -1,3 +1,6 @@
+2.0
+- Updated Harmonylib version to support Mac Silicon (contributed by jagheterfredrik)
+
 1.9
 - Added namespace support for partial classes (contributed by RunninglVlan)
 

@@ -701,7 +701,7 @@ That's a Unity setting and it does not change back when removing asset.
 > To change go to 'Edit -> Preferences -> Asset Pipeline -> Auto Refresh -> Enabled'
 
 ## Roadmap
-- add Mac silicon support
+- ~~add Mac silicon support~~ (added with 2.0)
 - ~~add Mac/Linux support~~ (added with 1.1)
 - ~~add debugger support for hot-reloaded scripts~~ (added with 1.2)
 - ~~allow to add new fields (adjustable in Editor)~~ (added with 1.3)
