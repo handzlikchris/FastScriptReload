@@ -13,6 +13,8 @@ using ImmersiveVrToolsCommon.Runtime.Logging;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
+using Memory = FastScriptReload.Runtime.Polyfills.Memory;
+
 namespace FastScriptReload.Runtime
 {
     [PreventHotReload]
