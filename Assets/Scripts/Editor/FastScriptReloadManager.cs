@@ -456,7 +456,7 @@ namespace FastScriptReload.Editor
         
         private static string ResolveRelativeToAssetDirectoryFilePath(UnityEngine.Object obj)
         {
-            return AssetDatabase.GetAssetPath(obj.GetInstanceID());
+            return AssetDatabase.GetAssetPath(obj.GetEntityId());
         }
 
         public void Update()
